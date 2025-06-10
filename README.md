@@ -1,0 +1,1 @@
+Control a  a drone-like robot in an indoor environment by visual information with a LLM.

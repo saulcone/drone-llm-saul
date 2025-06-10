@@ -1,0 +1,7 @@
+opencv-python
+omegaconf
+openai
+flask
+requests
+jsonpickle
+python-dotenv
