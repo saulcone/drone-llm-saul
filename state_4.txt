@@ -17,6 +17,8 @@ Move precisely toward the desired object until you are close enough to stop and 
   - The top and bottom edges of the object are not visible,
   - And it appears centered (within ±10% from the horizontal center).
 - If any of these conditions are not met, continue approaching or adjusting alignment.
+- If the object disappears from view for 2 or more steps, stop advancing and try reorienting with a small rotation.
+- Do not continue forward if only a flat wall or undistinguished surface is visible.
 
 ---
 
@@ -43,8 +45,9 @@ Only return **ONE** movement command from the list below:
 
 Choose the next FSM state:
 
-- `Reach Object`: if the object has not yet been reached or is still misaligned.
+- `Reach Object`: if the object is still visible but not yet reached or aligned.
 - `Describe Object`: if the object is centered, large, and visually close based on the above conditions.
+- `Search Object`: if the object has disappeared from view for 2 or more steps and no recognizable object is in frame.
 
 ---
 
@@ -52,3 +55,4 @@ Choose the next FSM state:
 
 - Avoid overshooting: stop once the object appears large and centered.
 - Do not rotate if the object is already aligned.
+- If the object disappears, rotate slightly instead of moving forward blindly.

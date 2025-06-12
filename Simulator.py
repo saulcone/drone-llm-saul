@@ -127,7 +127,7 @@ if __name__ == "__main__":
 
     state = "Recognize Room"
 
-    query = "Go to the bedhroom and take a photo of the mirror."
+    query = "Go to the bedroom and take a photo of the mirror."
 
     prev_movement = ""
 

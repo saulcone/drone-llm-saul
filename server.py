@@ -24,7 +24,7 @@ app = Flask(__name__)
 
 @app.route('/cmd_vel', methods=['POST'])
 def cmd_vel():
-    if 'image' not in request.files or 'query' not in request.form or 'topology' not in request.form or 'state' not in request.form or 'prev_movement' not in request.form:
+    if 'image' not in request.files or 'query' not in request.form or 'topology' not in request.form or 'state' not in request.form or 'prev_movement' not in request.form or 'mov_history' not in request.form:
         return jsonify({'error': 'Missing image, query, or topology'}), 400
 
     image_file = request.files['image']
@@ -32,6 +32,7 @@ def cmd_vel():
     topology_json = request.form['topology']
     state = request.form['state']    
     previous_movement = request.form.get('prev_movement', None)
+    mov_history = request.form.get('mov_history', None)
 
     try:
         topology = json.loads(topology_json)
@@ -44,7 +45,10 @@ def cmd_vel():
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
     # Call GPT
-    response = gpt_model.generate_trajectory(img, query, topology=topology, state=state, previous_movement=previous_movement)
+    response = gpt_model.generate_trajectory(img, query, topology=topology, 
+                                             state=state, 
+                                             previous_movement=previous_movement,
+                                             mov_history=mov_history)
     gpt_response = jsonpickle.encode(response)
 
     return Response(response=gpt_response, status=200, mimetype="application/json")
