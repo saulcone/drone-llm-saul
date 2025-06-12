@@ -27,10 +27,11 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
+Return **the best** Possible output state
 
 ## 🔄 Possible output state
-- `Recognize Room`: When current room is name  "unknown".
-- `Stay on room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
-- `Search open door`: When you have to go to another room.
-- `Search object`: Once you are in the desired room and your task is search an object in that room.
+- `Search open Door`: When you recognized the current room and you must go to another room.
+- `Search Object`: Once you are in the desired room and your task is search an object in that room.
+- `Recognize Room`: Only when you are not abble to recognize the current room and your room prediction is "unknown".
+- `Stay on Room`: When the user query is go to a specific room (without searching any object) and you identify you are in that room.
 

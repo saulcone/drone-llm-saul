@@ -33,6 +33,7 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
+Return **the best** Possible output state
 
 ## 🔄 Possible output state:
-- `Stay on room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
+- `Stay on Room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.

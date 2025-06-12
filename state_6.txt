@@ -24,6 +24,8 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
+Return **the best** Possible output state
+
 ## 🔄 Possible output state:
 - `Search open Door`: when an open door cannot be found. 
 - `Oriented Towards Door`: When you find an open door that seems to lead to the target. 

@@ -27,7 +27,9 @@ Only return **ONE** command from the following options:
     - `D1`: move 10 cm left
     - `D2`: move 10 cm right
 
+Return **the best** Possible output state
+
 ## 🔄 Possible output state:
     - `Oriented Towards Door`: When the door is still far or you are not facing it perpendicularly. 
     - `Go Through Door`: When the door is very close and you are facing it perpendicularly. 
-    - `Search open door`: If you lose sight of the door. 
+    - `Search open Door`: If you lose sight of the door. 

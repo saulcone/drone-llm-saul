@@ -11,13 +11,14 @@ load_dotenv()
 
 def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
     """Load the system prompt from a file."""
+    print("current state: " + curr_state)
     if curr_state == "Recognize Room":
         state_prompt_path = "state_0.txt"
     # elif curr_state == "Position in the center of room":
     #     state_prompt_path = "state_1.txt"
     elif curr_state == "Stay on Room":
         state_prompt_path = "state_2.txt"
-    elif curr_state == "Search object":
+    elif curr_state == "Search Object":
         state_prompt_path = "state_3.txt"
     elif curr_state == "Reach Object":
         state_prompt_path = "state_4.txt"
@@ -25,8 +26,8 @@ def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
         state_prompt_path = "state_5.txt"
     elif curr_state == "Search open Door":
         state_prompt_path = "state_6.txt"
-    elif curr_state == "Navigate Door":
-        state_prompt_path = "Oriented Towards Door.txt"
+    elif curr_state == "Oriented Towards Door":
+        state_prompt_path = "state_7.txt"
     elif curr_state == "Go Through Door":
         state_prompt_path = "state_8.txt"
     try:
@@ -44,7 +45,7 @@ def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
 
 class GPTDescriptor:
     def __init__(self, model="gpt-4.1", max_tokens=300, temperature=0,
-                 top_p=0.2, prompt_path="drone_system_prompt.txt"):
+                 top_p=0.2):
         self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
         self.model = model
         self.temperature = temperature

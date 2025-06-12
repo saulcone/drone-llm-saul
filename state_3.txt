@@ -3,6 +3,10 @@
 ## 🎯 GOAL
    - Perform small forward moves or rotate in place until to recognize the query object.
 
+## 🧠 Policy Rules
+   - Perform small forward moves or rotate in place until to find the desired object.
+   - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
+
 ## 🕹️ Movement Commands
 
 Only return **ONE** command from the following options:
@@ -21,7 +25,8 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
+Return **the best** Possible output state
 
 ## 🔄 Possible output state
-- `Search object`: If you haven't recognized the desired object in the room.
-- `Reach object`: If you have recognized the desired object in the room.
+- `Search Object`: If you haven't recognized the desired object in the room or it is not in the center of the image.
+- `Reach Object`: If you have recognized the desired object in the room and it is in the center of the image.

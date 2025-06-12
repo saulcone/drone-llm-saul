@@ -22,7 +22,9 @@ Only return **ONE** command from the following options:
 ### C. Right rotation:
     - `C1`: rotate 15°
 
+Return **the best** Possible output state
+
 ## 🔄 Possible output state:
     - `Go Through Door`: When the door is still visible in the image or you are far from the center of the new room.
     - `Recognize Room`: If you have successfully passed through the door and you are near from the center of the new room. 
-    - `Search open door`: If you lose sight of the door. 
+    - `Search open Door`: If you lose sight of the door. 

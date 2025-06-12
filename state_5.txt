@@ -12,5 +12,7 @@ Only return **ONE** command from the following options:
 
 ### E. Stop
 
+Return **the best** Possible output state
+
 ## 🔄 Possible output state:
 - `Final`: always. 
