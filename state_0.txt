@@ -28,7 +28,7 @@ Only return **ONE** command from the following options:
 - `C3`: rotate 90°
 
 
-## 🔄 Possible output state:
+## 🔄 Possible output state
 - `Recognize Room`: When current room is name  "unknown".
 - `Stay on room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
 - `Search open door`: When you have to go to another room.

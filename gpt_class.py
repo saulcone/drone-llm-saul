@@ -9,6 +9,39 @@ import cv2
 load_dotenv()
 
 
+def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
+    """Load the system prompt from a file."""
+    if curr_state == "Recognize Room":
+        state_prompt_path = "state_0.txt"
+    # elif curr_state == "Position in the center of room":
+    #     state_prompt_path = "state_1.txt"
+    elif curr_state == "Stay on Room":
+        state_prompt_path = "state_2.txt"
+    elif curr_state == "Search object":
+        state_prompt_path = "state_3.txt"
+    elif curr_state == "Reach Object":
+        state_prompt_path = "state_4.txt"
+    elif curr_state == "Describe Object":
+        state_prompt_path = "state_5.txt"
+    elif curr_state == "Search open Door":
+        state_prompt_path = "state_6.txt"
+    elif curr_state == "Navigate Door":
+        state_prompt_path = "Oriented Towards Door.txt"
+    elif curr_state == "Go Through Door":
+        state_prompt_path = "state_8.txt"
+    try:
+        with open(system_prompt_path, "r", encoding="utf-8") as f:
+            system_prompt =  f.read()
+        with open(state_prompt_path, "r", encoding="utf-8") as f:
+            state_prompt =  f.read()
+        with open(output_prompt_path, "r", encoding="utf-8") as f:
+            output_prompt =  f.read()        
+        prompt = system_prompt + "\n" + state_prompt + "\n" + output_prompt
+        return prompt
+    except FileNotFoundError:
+        raise RuntimeError(f"System prompt file not found at {prompt}")
+    
+
 class GPTDescriptor:
     def __init__(self, model="gpt-4.1", max_tokens=300, temperature=0,
                  top_p=0.2, prompt_path="drone_system_prompt.txt"):
@@ -17,13 +50,6 @@ class GPTDescriptor:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.top_p = top_p
-        
-        # Load system prompt from file
-        try:
-            with open(prompt_path, "r", encoding="utf-8") as f:
-                self.system_prompt = f.read()
-        except FileNotFoundError:
-            raise RuntimeError(f"System prompt file not found at {prompt_path}")
         
         
     def encode_image_base64(self, image):
@@ -69,9 +95,15 @@ class GPTDescriptor:
                 "type": "text",
                 "text": "Previous movement command: " + previous_movement
             })
+            
+        system_prompt = load_system_prompt(
+            "drone_system_prompt.txt",
+            "output_prompt.txt",
+            state
+        )
 
         messages = [
-            {"role": "system", "content": self.system_prompt},
+            {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_inputs}
         ]        
         
