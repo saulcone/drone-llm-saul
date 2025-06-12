@@ -1,39 +1,29 @@
-## 🎯 Output Format (JSON)
+## 📤 Output Format
 
-Your response **must** follow this format:
+You must respond with a **single valid JSON object** following the exact structure below:
 
 ```json
 {
   "room": "estimated_room_name_or_unknown",
-  "movement": "predicted_robot_movement",
-  "state": "ouput_state",
-  "description": "current visible state description",
-  "door_position": "current position of the open door in the image, only 4 output options: right | left | center | not_visible"
+  "movement": "valid_single_movement_command",
+  "state": "next_FSM_state",
+  "description": "concise description of the visible environment",
+  "door_position": "left | center | right | not_visible"
 }
 ```
 
----
+### ✅ Field Definitions
 
-## 🧪 Example:
+- `"room"`: Name of the current room (from the topological map), or `"unknown"` if not confidently identified.
+- `"movement"`: A single valid movement command (`A1`, `B2`, etc.) allowed by the current FSM state.
+- `"state"`: The predicted FSM state after this movement (e.g., `"Search Object"`, `"Reach Object"`).
+- `"description"`: A brief and neutral description of what the robot sees and the reasoning on the instructions.
+- `"door_position"`: Where the door appears in the frame. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`.
 
-**Input**:  
-- img: image showing a hallway with a visible door  
-- user_query: "Go to the kitchen"  
-- topological_map: { "hallway": ["kitchen", "living room"], ... }  
-- output_state: "Search open Door"
-- previous_movement: "A1"
+### ⚠️ Important
 
-**Output**:
-```json
-{
-  "room": "hallway",
-  "movement": "B3",
-  "state": "Oriented Towards Door",
-  "description": "Visible hallway with a door, move robot to face the door"
-  "door_position": "left"
-}
-```
+- Do **not** add extra text or explanations outside the JSON block.
+- Do **not** return multiple movement commands.
+- Always follow the allowed command list and transition logic defined in the state prompt.
 
----
-
-Use visual context and user intent to always propose the next **safe and efficient low-level movement** and the next state.
+Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.

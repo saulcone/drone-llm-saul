@@ -1,21 +1,27 @@
 ## State: **Recognize Room**
 
-## 🎯 GOAL
-   - Move safely and in order to recognize the current room.
+---
 
+## 🎯 GOAL  
+Explore safely and analyze the surroundings to determine which room the robot is currently in.
 
-## 🧠 Policy Rules
-   - Room name can only be one of the keys in the `topological_map` or "unknown".
-   - Only move forward when there are no obstacles in front of you.
-   - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
+---
 
+## 🧠 POLICY RULES
 
-## 🕹️ Movement Commands
+- Only move forward if there are **no visible obstacles** in front.
+- Use small forward steps or in-place rotations to scan the environment.
+- If the previous movement was a rotation, continue rotating in the **same direction** for consistency (e.g., `B2` → use `B1`, `B2`, or `B3`).
+- Try to maximize field of view coverage to gather more visual clues.
 
-Only return **ONE** command from the following options:
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
 
 ### A. Forward movement:
-- `A1`: forward 10 cm
+- `A1`: move forward 10 cm
 
 ### B. Left rotation:
 - `B1`: rotate 15°
@@ -27,11 +33,20 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
-Return **the best** Possible output state
+---
 
-## 🔄 Possible output state
-- `Search open Door`: When you recognized the current room and you must go to another room.
-- `Search Object`: Once you are in the desired room and your task is search an object in that room.
-- `Recognize Room`: Only when you are not abble to recognize the current room and your room prediction is "unknown".
-- `Stay on Room`: When the user query is go to a specific room (without searching any object) and you identify you are in that room.
+## 🔄 OUTPUT STATE RULES
 
+Choose the next FSM state based on the room recognition status:
+
+- `Recognize Room`: if the room is still “unknown”.
+- `Stay on Room`: if the user wants to stay and the current room is correct.
+- `Search Object`: if the user’s goal is to find an object and the current room matches the query.
+- `Search open Door`: if the room is recognized but the task requires navigating to another room.
+
+---
+
+## ⚠️ NOTES
+
+- Avoid abrupt transitions — change states only when confident about recognition.
+- Never use lateral or stop commands in this state.

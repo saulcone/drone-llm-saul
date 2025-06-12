@@ -1,19 +1,28 @@
-## State: **Search Object**:
+## State: **Search Object**
+
+---
 
 ## 🎯 GOAL
-   - Perform small forward moves or rotate in place until to recognize the query object.
+Scan the current room to locate and center the desired object in the field of view.
 
-## 🧠 Policy Rules
-   - Perform small forward moves or rotate in place until to find the desired object.
-   - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
+---
 
-## 🕹️ Movement Commands
+## 🧠 POLICY RULES
 
-Only return **ONE** command from the following options:
+- Use short forward movements or in-place rotations to explore the surroundings.
+- Prefer rotating in the same direction as the previous rotation if applicable (e.g., if `previous_movement` was `B2`, use `B1`, `B2`, or `B3`).
+- Alternate between rotating and moving forward if the object has not been seen in the last 3 steps.
+- If the object is partially visible but not centered, rotate slightly to center it.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
 
 ### A. Forward movement:
-- `A1`: forward 10 cm
-- `A2`: forward 25 cm
+- `A1`: move forward 10 cm
+- `A2`: move forward 25 cm
 
 ### B. Left rotation:
 - `B1`: rotate 15°
@@ -25,8 +34,18 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
-Return **the best** Possible output state
+---
 
-## 🔄 Possible output state
-- `Search Object`: If you haven't recognized the desired object in the room or it is not in the center of the image.
-- `Reach Object`: If you have recognized the desired object in the room and it is in the center of the image.
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on what the robot sees:
+
+- `Search Object`: if the target object is not yet visible or not centered in the frame.
+- `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
+
+---
+
+## ⚠️ NOTES
+
+- Avoid unnecessary movement: do not move forward if the object might be occluded or outside the frame.
+
