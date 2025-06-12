@@ -1,39 +1,16 @@
-## State: **Describe Object**: 
-   - When close to object, describe position.
-
-
+## State: **Describe Object**
+    
+## 🎯 GOAL
+   - Describes the position of the searched object.
 
 ## 🧠 Policy Rules
+   - Do not move. 
 
-
-- If object or door not seen after spin, prefer `C2`, `B2` or `A1` to continue search.
-- Never use `D1` or `D2` unless in `"Reach object"` or `"Oriented towards door"`.
-- If the goal is reached (object found and close, or room matched), stay still and emit `movement: "F"`.
-
-- If the robot is facing a door, use `D1` or `D2` to align with the door before moving through it until the open door is in the center of the image.
-
+Only return **ONE** command from the following options:
 
 ## 🕹️ Movement Commands
 
-
-### A. Forward movement:
-- `A1`: forward 10 cm
-- `A2`: forward 25 cm
-- `A3`: forward 50 cm
-
-### B. Left rotation:
-- `B1`: rotate 15°
-- `B2`: rotate 45°
-- `B3`: rotate 90°
-
-### C. Right rotation:
-- `C1`: rotate 15°
-- `C2`: rotate 45°
-- `C3`: rotate 90°
-
-### D. Lateral movement:
-(*Only allowed in `Reach Object` or `Oriented Towards Door` states*)
-- `D1`: move 10 cm left
-- `D2`: move 10 cm right
-
 ### E. Stop
+
+## 🔄 Possible output state:
+- `Final`: always. 

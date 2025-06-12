@@ -1,24 +1,18 @@
-## State: **Search open Door**: 
-   - Perform small forward moves or rotate in place until to find an open door.
-
-
+## State: **Search open Door**
+    
+## 🎯 GOAL
+    - Look for the doors of the current room
 
 ## 🧠 Policy Rules
+    - Perform small forward moves or rotate in place until to find an open door.
+    - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
 
-
-- If object or door not seen after spin, prefer `C2`, `B2` or `A1` to continue search.
-- Never use `D1` or `D2` unless in `"Reach object"` or `"Oriented towards door"`.
-- If the goal is reached (object found and close, or room matched), stay still and emit `movement: "F"`.
-
-- If the robot is facing a door, use `D1` or `D2` to align with the door before moving through it until the open door is in the center of the image.
+Only return **ONE** command from the following options:
 
 ## 🕹️ Movement Commands
 
-
 ### A. Forward movement:
 - `A1`: forward 10 cm
-- `A2`: forward 25 cm
-- `A3`: forward 50 cm
 
 ### B. Left rotation:
 - `B1`: rotate 15°
@@ -30,9 +24,6 @@
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
-### D. Lateral movement:
-(*Only allowed in `Reach Object` or `Oriented Towards Door` states*)
-- `D1`: move 10 cm left
-- `D2`: move 10 cm right
-
-### E. Stop
+## 🔄 Possible output state:
+- `Search open Door`: when an open door cannot be found. 
+- `Oriented Towards Door`: When you find an open door that seems to lead to the target. 
