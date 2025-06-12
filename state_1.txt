@@ -1,6 +1,7 @@
 ## State: **Position in the center of room**:
-   - Move until you are posed in the center of the room.
 
+## 🎯 GOAL
+   - Move until you are posed in the center of the room.
 
 
 ## 🧠 Policy Rules
@@ -15,6 +16,7 @@
 
 ## 🕹️ Movement Commands
 
+Only return **ONE** command from the following options:
 
 ### A. Forward movement:
 - `A1`: forward 10 cm
@@ -31,12 +33,7 @@
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
-### D. Lateral movement:
-(*Only allowed in `Reach Object` or `Oriented Towards Door` states*)
-- `D1`: move 10 cm left
-- `D2`: move 10 cm right
+Return **the best** Possible output state
 
-### E. Stop
-
-
-
+## 🔄 Possible output state:
+- `Stay on Room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.

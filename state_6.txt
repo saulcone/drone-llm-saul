@@ -1,18 +1,32 @@
 ## State: **Search open Door**
-    
-## 🎯 GOAL
-    - Look for the doors of the current room
 
-## 🧠 Policy Rules
-    - Perform small forward moves or rotate in place until to find an open door.
-    - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
+---
 
-Only return **ONE** command from the following options:
+## 🎯 GOAL  
+Systematically scan the environment to detect an open door that may lead to another room.
 
-## 🕹️ Movement Commands
+---
+
+## 🧠 POLICY RULES
+
+- Use small in-place rotations and short forward steps to explore the space.
+- Prioritize rotation if the robot has not moved recently or the field of view hasn’t changed.
+- If the previous movement was a rotation, continue rotating in the same direction for consistency and full panoramic coverage.
+  - Example: if `previous_movement` was `B2`, prefer `B1`, `B2`, or `B3`.
+- If a door-like structure is detected but partially occluded or far from the center, rotate slightly toward it.
+- Use forward movement (`A1`) when:
+  - The current view is fully scanned and no door is detected,
+  - Or the scene appears cluttered and needs positional adjustment.
+- Do not switch to another state unless a door is clearly visible.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
 
 ### A. Forward movement:
-- `A1`: forward 10 cm
+- `A1`: move forward 10 cm
 
 ### B. Left rotation:
 - `B1`: rotate 15°
@@ -24,6 +38,19 @@ Only return **ONE** command from the following options:
 - `C2`: rotate 45°
 - `C3`: rotate 90°
 
-## 🔄 Possible output state:
-- `Search open Door`: when an open door cannot be found. 
-- `Oriented Towards Door`: When you find an open door that seems to lead to the target. 
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Select the next FSM state based on visibility of the door:
+
+- `Search open Door`: if no open door is currently visible or recognizable.
+- `Oriented Towards Door`: if an open door is detected and approximately centered, or reachable by slight rotation.
+
+---
+
+## ⚠️ NOTES
+
+- Do not advance through the door in this state — only search and identify.
+- Avoid unnecessary forward motion unless the view is obstructed or very repetitive.
+- Return only a single valid movement command and state.

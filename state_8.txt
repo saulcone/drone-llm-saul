@@ -1,28 +1,50 @@
 ## State: **Go Through Door**
 
-## 🎯 GOAL
-   - Go through the door until you reach the new room.
+---
 
-## 🧠 Policy Rules
-   - Always check that the door is in the center of the image and then move forward.
-   - If the door is slightly to the right rotated in this direction.
-   - If the door is slightly to the left rotated in this direction.
-   - If the door is still visible in the image keep going forward. 
+## 🎯 GOAL  
+Pass through the open door safely and enter the next room.
 
-## 🕹️ Movement Commands
+---
 
-Only return **ONE** command from the following options:
+## 🧠 POLICY RULES
+
+- The door must remain visible and centered while moving forward.
+- Continue moving forward (`A1`) if the door is still clearly visible and centered.
+- Use small rotations (`B1` or `C1`) **only** if the door drifts slightly off-center.
+  - If door shifts to the left → use right rotation (`C1`)
+  - If door shifts to the right → use left rotation (`B1`)
+
+- Do not use lateral movement or stop in this state.
+- Exit this state when the door disappears and a new room is visible.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
 
 ### A. Forward movement:
-    - `A1`: forward 10 cm
+- `A1`: move forward 10 cm
 
 ### B. Left rotation:
-    - `B1`: rotate 15°
+- `B1`: rotate 15°
 
 ### C. Right rotation:
-    - `C1`: rotate 15°
+- `C1`: rotate 15°
 
-## 🔄 Possible output state:
-    - `Go Through Door`: When the door is still visible in the image or you are far from the center of the new room.
-    - `Recognize Room`: If you have successfully passed through the door and you are near from the center of the new room. 
-    - `Search open door`: If you lose sight of the door. 
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- `Go Through Door`: if the door is still visible and the robot hasn’t reached the new room.
+- `Recognize Room`: when the door disappears from view and the robot has likely entered the next space.
+- `Search open Door`: if the door is lost mid-way and you’re unsure of the surroundings.
+
+---
+
+## ⚠️ NOTES
+
+- Use forward motion continuously unless alignment is lost.
+- Avoid oscillating between rotation and forward steps unless the door moves significantly.
+- Do not stop in this state.

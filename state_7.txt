@@ -1,33 +1,56 @@
 ## State: **Oriented Towards Door**
-    
-## 🎯 GOAL
-    - Position yourself directly in front of the door, facing it squarely.
 
-## 🧠 Policy Rules
-    - Make sure the open door is in the center of the image.
-    - Move close to the door before doing lateral movement.
-    - If not aligned, use rotational or lateral movements to adjust until your facing the door in the center of the image. 
-    - You will be close to the door when it represents almost the entire image and you cannot see the top and bottom of the door.
-    - You will be facing the door when you look at it perpendicularly.
+---
 
-Only return **ONE** command from the following options:
+## 🎯 GOAL  
+Align the robot directly in front of an open door, centered and facing it perpendicularly.
 
-## 🕹️ Movement Commands
+---
+
+## 🧠 POLICY RULES
+
+- The door must be centered horizontally in the image and appear **large** (close to the robot).
+- You are considered well-aligned when:
+  - The door occupies most of the image width.
+  - The top and bottom of the door are not visible (i.e., it’s tall and close).
+  - It appears perpendicular to the viewing angle (flat front-on view).
+
+- Use small rotational or lateral movements to adjust alignment:
+  - Use `B1`, `C1` for fine rotation.
+  - Use `D1` or `D2` if the door is off-center but close.
+
+- Use forward movement (`A1`) **only** when already aligned and needing minor positional adjustment.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
 
 ### A. Forward movement:
-    - `A1`: forward 10 cm
+- `A1`: move forward 10 cm
 
 ### B. Left rotation:
-    - `B1`: rotate 15°
+- `B1`: rotate 15°
 
 ### C. Right rotation:
-    - `C1`: rotate 15°
+- `C1`: rotate 15°
 
 ### D. Lateral movement:
-    - `D1`: move 10 cm left
-    - `D2`: move 10 cm right
+- `D1`: move 10 cm left  
+- `D2`: move 10 cm right
 
-## 🔄 Possible output state:
-    - `Oriented Towards Door`: When the door is still far or you are not facing it perpendicularly. 
-    - `Go Through Door`: When the door is very close and you are facing it perpendicularly. 
-    - `Search open door`: If you lose sight of the door. 
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- `Oriented Towards Door`: if the door is still misaligned, far, or not yet centered.
+- `Go Through Door`: when the door is centered, large, and you are aligned to cross.
+- `Search open Door`: if the door is lost from view.
+
+---
+
+## ⚠️ NOTES
+
+- Avoid moving forward prematurely.
+- Favor rotation/lateral movement over forward if the door is not yet properly aligned.
