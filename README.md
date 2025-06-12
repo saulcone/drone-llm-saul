@@ -28,3 +28,7 @@ The project was developed in python 3.10. Please install the python dependencies
 ```bash
 pip install -r requirements.txt
 ```
+
+## Simulated environment
+
+Inside of build directory

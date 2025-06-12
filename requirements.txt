@@ -5,3 +5,4 @@ flask
 requests
 jsonpickle
 python-dotenv
+mlagents # For Unity ML-Agents
