@@ -1,0 +1,36 @@
+## State: **Recognize Room**
+
+## 🎯 GOAL
+   - Move safely and in order to recognize the current room.
+
+
+## 🧠 Policy Rules
+   - Room name can only be one of the keys in the `topological_map` or "unknown".
+   - Only move forward when there are no obstacles in front of you.
+   - If you decide to rotate in place and the previous movement was a rotation, rotate to the same side (e.g., "previous_movement" : B2 --> "movement": B1 | B2 | B3). 
+
+
+## 🕹️ Movement Commands
+
+Only return **ONE** command from the following options:
+
+### A. Forward movement:
+- `A1`: forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45°
+- `B3`: rotate 90°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45°
+- `C3`: rotate 90°
+
+
+## 🔄 Possible output state:
+- `Recognize Room`: When current room is name  "unknown".
+- `Stay on room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
+- `Search open door`: When you have to go to another room.
+- `Search object`: Once you are in the desired room and your task is search an object in that room.
+
