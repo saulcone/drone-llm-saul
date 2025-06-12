@@ -125,7 +125,7 @@ if __name__ == "__main__":
     if spec.action_spec.is_discrete():
         print(f"There are {spec.action_spec.discrete_size} discrete actions")
 
-    state = "Start"
+    state = "Recognize Room"
 
     query = "Go to the bedhroom and take a photo of the mirror."
 
@@ -139,8 +139,14 @@ if __name__ == "__main__":
 
     final_img = None
 
+    mov_history = []
+
     while True:
     
+        mov_history.append(prev_movement)
+        if len(mov_history) > 10:
+            mov_history.pop(0)
+
         decision_steps, terminal_steps = env.get_steps(behavior_name)
         action = spec.action_spec.random_action(len(decision_steps))
 
@@ -177,7 +183,7 @@ if __name__ == "__main__":
             
             final_img = None
 
-            response = get_cmd_vel(img, query, topology, state, prev_movement)
+            response = get_cmd_vel(img, query, topology, state, prev_movement, mov_history)
             
             command = response.get("movement")
             state = response.get("state")
@@ -207,6 +213,6 @@ if __name__ == "__main__":
             else:
                 move_drone(10, [0, 0, 0, 0], env, action)
 
-            prev_movement = command
+            prev_movement = command        
 
     env.close()
