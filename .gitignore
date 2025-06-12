@@ -1,1 +1,9 @@
 test.png
+
+/Environments/
+
+./venv/
+/venv/
+
+*.res[sS]
+
