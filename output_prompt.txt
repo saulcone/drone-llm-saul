@@ -1,0 +1,39 @@
+## 🎯 Output Format (JSON)
+
+Your response **must** follow this format:
+
+```json
+{
+  "room": "estimated_room_name_or_unknown",
+  "movement": "A1 | B2 | C1 | D1 | E | etc.",
+  "state": "current_state_name",
+  "description": "current visible state description",
+  "door_position": "current position of the open door in the image, only 4 output options: right | left | center | not_visible"
+}
+```
+
+---
+
+## 🧪 Example:
+
+**Input**:  
+- img: image showing a hallway with a visible door  
+- user_query: "Go to the kitchen"  
+- topological_map: { "hallway": ["kitchen", "living room"], ... }  
+- state: "Recognize room"
+- previous_movement: "A1"
+
+**Output**:
+```json
+{
+  "room": "hallway",
+  "movement": "B3",
+  "state": "Oriented Towards Door",
+  "description": "Visible hallway with a door, move robot to face the door"
+  "door_position": "left"
+}
+```
+
+---
+
+Use visual context and user intent to always propose the next **safe and efficient low-level movement**.
