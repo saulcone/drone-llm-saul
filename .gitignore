@@ -1,6 +1,7 @@
 test.png
 
 /Environments/
+/build/WAF_environment_Data/ML-Agents/
 
 ./venv/
 /venv/
