@@ -61,6 +61,7 @@ class GPTDescriptor:
     
     def generate_trajectory(self, image, user_query, topology=None, state=None,
                             previous_movement=None,
+                            mov_history=None,
                             img_type="image/jpeg", test=False):
         """Generate a trajectory using the GPT model."""
         if test:

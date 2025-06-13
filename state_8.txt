@@ -1,22 +1,29 @@
-## State: **Go Through Door**
+
+## State: **Oriented Towards Door**
 
 ---
 
 ## 🎯 GOAL  
-Pass through the open door safely and enter the next room.
+Align the robot directly in front of an open door and approach it safely.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- The door must remain visible and centered while moving forward.
-- Continue moving forward (`A1`) if the door is still clearly visible and centered.
-- Use small rotations (`B1` or `C1`) **only** if the door drifts slightly off-center.
-  - If door shifts to the left → use right rotation (`C1`)
-  - If door shifts to the right → use left rotation (`B1`)
+- Use small rotational (`B1`, `C1`) or lateral (`D1`, `D2`) movements to bring the door toward the center of the image.
+- Use forward movement (`A1`) when the door appears **close** (fills much of the image, top/bottom cropped), even if it is slightly off-center (`left` or `right`).
+- You may treat `door_position = "left"` or `"right"` as "near center" when:
+  - The door is clearly visible and not drifting further away
+  - The door remains in the same approximate position over multiple steps
 
-- Do not use lateral movement or stop in this state.
-- Exit this state when the door disappears and a new room is visible.
+---
+
+## 🔄 OSCILLATION ESCAPE STRATEGY
+
+- If the robot switches repeatedly between `D1` and `D2` and the door stays slightly off-center:
+  - Stop correcting.
+  - Issue `A1` to move forward toward the door.
+- Moving forward slightly may naturally center the door without unnecessary correction.
 
 ---
 
@@ -33,18 +40,28 @@ Only return **ONE** movement command from the list below:
 ### C. Right rotation:
 - `C1`: rotate 15°
 
+### D. Lateral movement:
+- `D1`: move 10 cm left  
+- `D2`: move 10 cm right
+
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: if the door is still visible and the robot hasn’t reached the new room.
-- `Recognize Room`: when the door disappears from view and the robot has likely entered the next space.
-- `Search open Door`: if the door is lost mid-way and you’re unsure of the surroundings.
+- If the door is **clearly off-center** (left/right) and not close → stay in `Oriented Towards Door` and adjust with `B1` or `C1`.
+- If the door is **nearly centered** (slightly left/right or described as 'nearly centered and close') → use `B1`/`C1` for fine adjustment.
+- Only transition to `Go Through Door` when the door is described as **centered and close**.
+
+Choose the next FSM state based on door position and visual characteristics:
+
+- `Go Through Door`: if the door is centered (`door_position = "center"`) and appears close (large, cropped top/bottom)
+- `Oriented Towards Door`: if the door is visible but not yet centered or close
+- `Search open Door`: if the door disappears
 
 ---
 
 ## ⚠️ NOTES
 
-- Use forward motion continuously unless alignment is lost.
-- Avoid oscillating between rotation and forward steps unless the door moves significantly.
-- Do not stop in this state.
+- Do not endlessly alternate between `D1` and `D2`.
+- If the door is stable in the frame (left or right) and appears close, stop correcting and proceed forward.
+- Never stay in this state if you are close and almost aligned — act confidently to exit.

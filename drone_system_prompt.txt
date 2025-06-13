@@ -20,4 +20,3 @@ Your output should:
 
 You will be guided by specific state-based rules and movement constraints. Never include multiple actions or narrative text.
 
-Only output a single valid JSON object as defined below.
