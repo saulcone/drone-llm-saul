@@ -5,4 +5,9 @@ flask
 requests
 jsonpickle
 python-dotenv
-mlagents # For Unity ML-Agents
+
+# Simulation packages
+mlagents-envs==0.29.0 # For Unity ML-Agents
+pyinput
+
+#Python >=3.7.2, <3.10.0 

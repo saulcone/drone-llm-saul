@@ -23,7 +23,9 @@ For simulate the environment we use Unity.
 
 ## Installation
 
-The project was developed in python 3.10. Please install the python dependencies:
+This code requires especific version of python (>=3.7.2, <3.10.0 ), because of mlagents-envs (0.29.0) is only working with those specific python version.
+
+Please install the python dependencies:
 
 ```bash
 pip install -r requirements.txt
