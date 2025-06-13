@@ -9,7 +9,7 @@ import cv2
 load_dotenv()
 
 
-def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
+def load_system_prompt(path_dir, system_prompt_path, output_prompt_path, curr_state):
     """Load the system prompt from a file."""
     print("current state: " + curr_state)
     if curr_state == "Recognize Room":
@@ -31,6 +31,9 @@ def load_system_prompt(system_prompt_path, output_prompt_path, curr_state):
     elif curr_state == "Go Through Door":
         state_prompt_path = "state_8.txt"
     try:
+        system_prompt_path = os.path.join(path_dir, system_prompt_path)
+        state_prompt_path = os.path.join(path_dir, state_prompt_path)
+        output_prompt_path = os.path.join(path_dir, output_prompt_path)
         with open(system_prompt_path, "r", encoding="utf-8") as f:
             system_prompt =  f.read()
         with open(state_prompt_path, "r", encoding="utf-8") as f:
@@ -99,9 +102,10 @@ class GPTDescriptor:
             })
             
         system_prompt = load_system_prompt(
-            "drone_system_prompt.txt",
-            "output_prompt.txt",
-            state
+            path_dir="prompts",
+            system_prompt_path="drone_system_prompt.txt",
+            output_prompt_path="output_prompt.txt",
+            curr_state=state
         )
 
         messages = [

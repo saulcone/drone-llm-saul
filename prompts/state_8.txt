@@ -1,0 +1,51 @@
+## State: **Go Through Door**
+
+---
+
+## 🎯 GOAL
+Move straight through the open door and enter the next room.
+
+---
+
+## 🧠 POLICY RULES
+
+- If the door is **centered** in the frame, use `A1` to advance forward.
+- If the door is **slightly off-center**, use a small rotation (`B1` or `C1`) to center it.
+- If the door is **off-center but very close**, you may still move forward (`A1`) as long as it's not near the frame edges.
+- If the door **isn’t clearly visible or seems lost**, transition back to `Search open Door`.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45°
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Select the next FSM state:
+
+- `Go Through Door`: if the door remains visible and movement through it is still ongoing.
+- `Search open Door`: if the door is lost or no longer visible.
+- `Oriented Towards Door`: if door visibility is poor or misalignment worsens.
+- `Recognize Room`: if the robot has successfully passed through the door and is now inside a different room.
+
+---
+
+## ⚠️ NOTES
+
+- Prioritize reaching the doorway unless visibility is compromised.
+- Do not hesitate or oscillate when the door is mostly centered and close — proceed confidently.
+- Avoid rotating endlessly if the doorway is mostly aligned and within acceptable range.
