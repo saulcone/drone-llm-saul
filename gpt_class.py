@@ -14,8 +14,8 @@ def load_system_prompt(path_dir, system_prompt_path, output_prompt_path, curr_st
     print("current state: " + curr_state)
     if curr_state == "Recognize Room":
         state_prompt_path = "state_0.txt"
-    # elif curr_state == "Position in the center of room":
-    #     state_prompt_path = "state_1.txt"
+    elif curr_state == "Position in the center of room":
+        state_prompt_path = "state_1.txt"
     elif curr_state == "Stay on Room":
         state_prompt_path = "state_2.txt"
     elif curr_state == "Search Object":

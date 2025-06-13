@@ -1,4 +1,4 @@
-## State: **Go Through Door** (Updated)
+## State: **Go Through Door**
 
 ---
 
@@ -39,7 +39,7 @@ Do not use any other command in this state.
   - The door becomes partially visible, off-center, or unclear
   - You no longer see the full doorway frame
 
-- Switch to `Recognize Room` once the robot crosses the threshold and the view changes (door no longer centered).
+- Switch to `Position in the center of room` once the robot crosses the threshold and the view changes (door no longer centered).
 
 ---
 
