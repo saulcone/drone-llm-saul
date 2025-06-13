@@ -6,8 +6,8 @@ test.png
 ./venv/
 /venv/
 
-*.res[sS]
-
 __pycache__/
 
 build/WAF_environment_Data/ML-Agents/Timers/Edificio Pruebas_timers.json
+
+build/WAF_environment_Data/sharedassets0.assets.resS
