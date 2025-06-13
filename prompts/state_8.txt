@@ -1,51 +1,50 @@
-## State: **Go Through Door**
+## State: **Go Through Door** (Updated)
 
 ---
 
-## 🎯 GOAL
-Move straight through the open door and enter the next room.
+## 🎯 GOAL  
+Proceed through the centered open door confidently and transition into the next room.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- If the door is **centered** in the frame, use `A1` to advance forward.
-- If the door is **slightly off-center**, use a small rotation (`B1` or `C1`) to center it.
-- If the door is **off-center but very close**, you may still move forward (`A1`) as long as it's not near the frame edges.
-- If the door **isn’t clearly visible or seems lost**, transition back to `Search open Door`.
+- Use `A1` (move forward) **only** if the door is:
+  - Clearly open,
+  - Fully visible or dominant in the center of the image,
+  - Not partially obscured or clipped on the edges.
+
+- If the door appears **partially visible**, **uncentered**, or ambiguous:
+  - Switch back to `Oriented Towards Door` to refine alignment.
+  - Do **not** move forward unless the door is confidently centered and clear.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
-
-### A. Forward movement:
+Only return:
 - `A1`: move forward 10 cm
 
-### B. Left rotation:
-- `B1`: rotate 15°
-- `B2`: rotate 45°
-
-### C. Right rotation:
-- `C1`: rotate 15°
-- `C2`: rotate 45°
+Do not use any other command in this state.
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-Select the next FSM state:
+- Remain in `Go Through Door` if:
+  - The door remains centered and clearly visible
+  - You are not yet through the doorway
 
-- `Go Through Door`: if the door remains visible and movement through it is still ongoing.
-- `Search open Door`: if the door is lost or no longer visible.
-- `Oriented Towards Door`: if door visibility is poor or misalignment worsens.
-- `Recognize Room`: if the robot has successfully passed through the door and is now inside a different room.
+- Switch to `Oriented Towards Door` if:
+  - The door becomes partially visible, off-center, or unclear
+  - You no longer see the full doorway frame
+
+- Switch to `Recognize Room` once the robot crosses the threshold and the view changes (door no longer centered).
 
 ---
 
 ## ⚠️ NOTES
 
-- Prioritize reaching the doorway unless visibility is compromised.
-- Do not hesitate or oscillate when the door is mostly centered and close — proceed confidently.
-- Avoid rotating endlessly if the doorway is mostly aligned and within acceptable range.
+- Do not continue blindly forward if visibility is unclear.
+- Prioritize **confidence in alignment** over blind center-tag trust.
+- It’s better to return and realign than to bump into a frame or wall.
