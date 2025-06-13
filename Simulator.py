@@ -55,7 +55,7 @@ def manual_control():
         
     return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
-def get_cmd_vel(img, query, topology, state, prev_movement, addr = "http://172.18.33.110:5001"):
+def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, addr = "http://172.18.33.110:5001"):
 
     url = addr + '/cmd_vel'
 
@@ -68,7 +68,8 @@ def get_cmd_vel(img, query, topology, state, prev_movement, addr = "http://172.1
     data = {'query': query,
             'topology': json.dumps(topology), 
             'state': state, 
-            'prev_movement': prev_movement}
+            'prev_movement': prev_movement,
+            'mov_history': json.dumps(mov_history)}
     try:
         response = requests.post(url, files=files, data=data)
         print(response.json())
