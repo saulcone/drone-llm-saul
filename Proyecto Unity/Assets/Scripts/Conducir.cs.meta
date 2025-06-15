@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: a41147ec8e14093458d284f3f490040e
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - vivo1: {fileID: 2100000, guid: 607754f7989cacb4f8204b818adfd3a9, type: 2}
+  - vivo2: {fileID: 2100000, guid: fc8ef312266ca3f49810319e898a2809, type: 2}
+  - muerto: {fileID: 2100000, guid: 8cf3dba817b4f27489da81a6b8b77a5e, type: 2}
+  - Carro: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

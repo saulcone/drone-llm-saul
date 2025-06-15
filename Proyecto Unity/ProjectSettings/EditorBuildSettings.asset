@@ -1,0 +1,36 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1045 &1
+EditorBuildSettings:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Scenes:
+  - enabled: 0
+    path: 
+    guid: 00000000000000000000000000000000
+  - enabled: 0
+    path: Assets/Scenes/Circuito Entreno.unity
+    guid: 2d942502cba2eae48a5d724414420677
+  - enabled: 0
+    path: Assets/Scenes/Circuito Pruebas.unity
+    guid: 5a92638e675691e4cb98223159f3482e
+  - enabled: 0
+    path: Assets/Scenes/Casa Entreno.unity
+    guid: fad6aa1f3da22e449b5a80691662d0c1
+  - enabled: 0
+    path: Assets/Scenes/Edificio Pruebas.unity
+    guid: 28ce3728915de82478d3dc980f5f4269
+  - enabled: 0
+    path: Assets/Scenes/Edificio Entreno.unity
+    guid: 46d942ae5bbf060418e8d0fa9acff97b
+  - enabled: 0
+    path: Assets/Scenes/Pista Entreno.unity
+    guid: e8df10a126c42da4fa9f45aaa7e8555b
+  - enabled: 0
+    path: Assets/Scenes/Demostracion.unity
+    guid: d80642723df3b464b86839f1b70bd47d
+  - enabled: 1
+    path: Assets/Scenes/P1.unity
+    guid: a32c0c917c62a5a4790237b3762f310e
+  m_configObjects:
+    com.unity.input.settings: {fileID: 11400000, guid: 9e7be553448fa2546aea5752021cbcf7, type: 2}
