@@ -29,7 +29,11 @@ public class Pilotar : Agent
 
     public override void Heuristic(in ActionBuffers actionsOut)
     {
-        if(Input.GetAxisRaw("Restart") > 0) EndEpisode();
+        if (Input.GetAxisRaw("Restart") > 0)
+        {
+            EndEpisode();
+            Initialize();
+        }
         if (Input.GetAxisRaw("Restart") < 0)
         {
             estado = false;
@@ -39,35 +43,44 @@ public class Pilotar : Agent
 
         ActionSegment<float> contiuousActions = actionsOut.ContinuousActions;
 
-        contiuousActions[0] = Input.GetAxisRaw("Dron4");
-        contiuousActions[1] = Input.GetAxisRaw("Dron3");
-        contiuousActions[2] = Input.GetAxisRaw("Dron2");
-        contiuousActions[3] = Input.GetAxisRaw("Dron1");
+        contiuousActions[0] = Input.GetAxisRaw("Dron1");
+        contiuousActions[1] = Input.GetAxisRaw("Dron2");
+        contiuousActions[2] = Input.GetAxisRaw("Dron3");
+        contiuousActions[3] = Input.GetAxisRaw("Dron4");
 
     }
 
-    public override void Initialize()
+    private void Reser_drone()
     {
-        InitialPos = transform.position;
-        InitialRot = transform.rotation;
 
-        estado = true;
-        Carcasa.material = vivo1; 
-        DronPos = gameObject.transform.GetChild(0);
-
-        punt = 0;
-    }
-
-    public override void OnEpisodeBegin()
-    {
         aux_fb = 0f;
         aux_lr = 0f;
         transform.localPosition = InitialPos;
         transform.localRotation = InitialRot;
         estado = true;
         Carcasa.material = vivo1;
-
         punt = 0;
+
+        Rigidbody rb = GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+    }
+
+    public override void Initialize()
+    {
+        InitialPos = transform.position;
+        InitialRot = transform.rotation;
+        DronPos = gameObject.transform.GetChild(0);
+
+        Reser_drone();
+    }
+
+    public override void OnEpisodeBegin()
+    {
+        Reser_drone();
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -112,10 +125,10 @@ public class Pilotar : Agent
             float moveSpeed = 5f;
             float rotateSpeed = 100f;
 
-            float vud = actions.ContinuousActions[0];
-            float vya = actions.ContinuousActions[1];
-            float vfb = actions.ContinuousActions[2];
-            float vlr = actions.ContinuousActions[3];
+            float vlr = actions.ContinuousActions[0];
+            float vfb = actions.ContinuousActions[1];
+            float vya = actions.ContinuousActions[2];
+            float vud = actions.ContinuousActions[3];
 
             Animar(vud, vya, vfb, vlr);
 
@@ -124,6 +137,13 @@ public class Pilotar : Agent
             transform.localPosition += transform.right * moveSpeed * Time.deltaTime * vlr;
             transform.localPosition += transform.up * moveSpeed * Time.deltaTime * vud;
         }
+    }
+
+    void OnCollisionEnter(Collision collision)
+    {
+        estado = false;
+        Carcasa.material = muerto;
+        print("Muerto");
     }
 
     private void OnTriggerEnter(Collider other)

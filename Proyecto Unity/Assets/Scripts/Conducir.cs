@@ -34,7 +34,7 @@ public class Conducir : Agent
         transform.localRotation = new Quaternion(0f, 0f, 0f, 0f);
         estado = true;
         Carro.material = vivo1;
-        //if (gameObject.name.Length < 10) Carro.material = vivo2;
+        if (gameObject.name.Length < 10) Carro.material = vivo2;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -45,7 +45,7 @@ public class Conducir : Agent
 
     public override void OnActionReceived(ActionBuffers actions)
     {
-        if (estado) 
+        if (estado)
         {
             float velLineal = actions.ContinuousActions[0];
             float velAngular = actions.ContinuousActions[1];

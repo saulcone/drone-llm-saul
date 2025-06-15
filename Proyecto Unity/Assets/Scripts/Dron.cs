@@ -7,11 +7,7 @@ using Unity.MLAgents.Sensors;
 
 public class Dron : Agent
 {
-    Vector3 InitialPos;
-    Quaternion InitialRot;
-
     private bool estado;
-    private int punt;
     [SerializeField] bool animacion;
     float anim_aux = 3f;
     float aux_fb = 0f;
@@ -20,6 +16,8 @@ public class Dron : Agent
 
     [SerializeField] private Camera camara;
     [SerializeField] private GameObject campos;
+    [SerializeField] private GameObject SpawnPos;
+    private static bool spawn_reset = false;
 
     [SerializeField] private RayPerceptionSensorComponentBase sensorAltura;
 
@@ -36,38 +34,41 @@ public class Dron : Agent
         {
             estado = false;
             Carcasa.material = muerto;
-            print("Muerto");
+            // print("Muerto");
         }
 
         ActionSegment<float> contiuousActions = actionsOut.ContinuousActions;
         contiuousActions[0] = Input.GetAxisRaw("Vertical");
         contiuousActions[1] = Input.GetAxisRaw("Horizontal");
-        contiuousActions[2] = Input.GetAxisRaw("Dron");
-        contiuousActions[3] = Input.GetAxisRaw("Dron2");
+        //contiuousActions[2] = Input.GetAxisRaw("Dron1");
+        //contiuousActions[3] = Input.GetAxisRaw("Dron2");
     }
 
     public override void Initialize()
     {
-        InitialPos = transform.position;
-        InitialRot = transform.rotation;
-
         estado = true;
         Carcasa.material = vivo1; 
         DronPos = this.gameObject.transform.GetChild(0);
-
-        punt = 0;
     }
 
     public override void OnEpisodeBegin()
     {
+        if (!spawn_reset)
+        {
+            spawn_reset = true;
+            try {
+                SpawnPos.GetComponentInParent<SpawnRandom>().SetRandomSpawn();
+            }
+            catch {}
+        }
+
         aux_fb = 0f;
         aux_lr = 0f;
-        transform.localPosition = InitialPos;
-        transform.localRotation = InitialRot;
+
+        transform.localPosition = SpawnPos.transform.position;
+        transform.localRotation = SpawnPos.transform.rotation;
         estado = true;
         Carcasa.material = vivo1;
-
-        punt = 0;
     }
 
     public override void CollectObservations(VectorSensor sensor)
@@ -106,11 +107,6 @@ public class Dron : Agent
         camara.transform.SetParent(campos.transform);
     }
 
-    public void Puntuar() 
-    {
-        punt++;
-    }
-
     public override void OnActionReceived(ActionBuffers actions)
     {
         if (estado)
@@ -119,10 +115,11 @@ public class Dron : Agent
             float rotateSpeed = 100f;
             float ruido = 0.1f;
 
-            float vud = actions.ContinuousActions[0];
-            float vya = actions.ContinuousActions[1];
-            float vfb = actions.ContinuousActions[2];
-            float vlr = actions.ContinuousActions[3];
+            // TODO: Modificar las acciones
+            float vud = 0;
+            float vya = actions.ContinuousActions[0];
+            float vfb = actions.ContinuousActions[1];
+            float vlr = 0;
 
             if(ruido != 0) 
             {
@@ -132,7 +129,7 @@ public class Dron : Agent
                 vlr += Random.Range(-ruido, ruido);
             }
 
-            float auxEstado = actions.ContinuousActions[4];
+            float auxEstado = actions.ContinuousActions[2];
 
             if (animacion) Animar(vud, vya, vfb, vlr);
 
@@ -156,6 +153,7 @@ public class Dron : Agent
                 estado = false;
             }  
         }
+        spawn_reset = false;
     }
 
     private void OnTriggerEnter(Collider other)
@@ -164,7 +162,7 @@ public class Dron : Agent
         {
             estado = false;
             Carcasa.material = muerto;
-            print("Muerto");
+            // print("Muerto");
         }
 
         if (other.TryGetComponent<Meta>(out Meta meta))

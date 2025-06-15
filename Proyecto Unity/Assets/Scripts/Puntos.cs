@@ -23,7 +23,7 @@ public class Puntos : MonoBehaviour
 
             if (other.TryGetComponent<Dron>(out Dron dron))
             {
-                dron.Puntuar();
+                
             }
 
             drones.Add(id);
