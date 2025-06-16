@@ -125,7 +125,7 @@ def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, addr = 
         print("Error decoding response:", e)
         return {"movement": "", "state": "Start"}
 
-def move_drone(cont, movement, env=None, action=None):
+def move_drone(cont, movement, env=None, action=None, behavior_drone=None):
 
     for i in range(cont):
         pred = np.array([[movement[0], movement[1], movement[2], movement[3], 0]], dtype=np.float32)
@@ -195,7 +195,7 @@ def run_simulation(args, topology):
         else:
 
             img, real_img, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
-            show_observations((img, height, pos, yaw, collision_state))
+            show_observations(img, height, pos, yaw, collision_state)
 
             response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history)
             command = response.get("movement")
@@ -215,7 +215,7 @@ def run_simulation(args, topology):
                 "D2": (10, [0.1, 0, 0, 0])
             }
 
-            move_drone(*move_map.get(command, (10, [0, 0, 0, 0])), env, action)
+            move_drone(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
             prev_movement = command
 
     env.close()
@@ -224,12 +224,12 @@ def run_simulation(args, topology):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Drone Control Simulator")
-    parser.add_argument('--manual', action='store_true', help='Enable manual control mode')
-    parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
-    parser.add_argument('--spawn_id', type=int, default=1, help='Spawn point for the drone')
-    parser.add_argument('--n_exec', type=int, default=1, help='Number of executions to run')
-    parser.add_argument('--addr', type=str, default="http://172.18.33.110:5001", help='Address of the server')
-    parser.add_argument('--query', type=str, default="Go to the bedroom and take a photo of the mirror.", help='Query for the drone')
+    parser.add_argument('--manual', '-m', action='store_true', help='Enable manual control mode')
+    parser.add_argument('--seed', '-s', type=int, default=42, help='Random seed for reproducibility')
+    parser.add_argument('--spawn_id', '-i', type=int, default=1, help='Spawn point for the drone')
+    parser.add_argument('--n_exec', '-n', type=int, default=1, help='Number of executions to run')
+    parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
+    parser.add_argument('--query', '-q', type=int, default=1, help='Query id for the drone')
     args = parser.parse_args()
 
     topology = {"living room": ["bedroom", "bathroom"], "bedroom": ["living room"], "bathroom": ["living room"]}
