@@ -7,6 +7,8 @@ import uuid
 import platform
 import argparse
 import time
+import math
+import os
 
 from io import BytesIO
 from pynput import keyboard
@@ -70,6 +72,7 @@ def read_obs(env, behavior_drone):
 
 def show_observations(img, height, pos, yaw, state):
 
+    os.system('cls' if platform.system() == 'Windows' else 'clear')
     print(f"Height: {height}")
     print(f"Position: {pos}")
     print(f"Yaw: {yaw}")
@@ -140,6 +143,98 @@ def move_drone_fast(cont, movement, env=None, action=None):
     env.set_actions(behavior_drone, action)
     env.step()
 
+# --- Score sistem ---
+def calculate_room(pos):
+    x, y, z = pos
+
+    # Bedroom (Cuarto): [(−1, −3.25), (4, −9.25)]
+    if -1 <= x <= 4 and -9.25 <= z <= -3.25:
+        return "bedroom"
+
+    # Bathroom (Baño): [(−5.45, −9.2), (−1.05, −4.8)]
+    elif -5.45 <= x <= -1.05 and -9.2 <= z <= -4.8:
+        return "bathroom"
+
+    # Living room (Salón): unión de dos zonas
+    # Parte 1: [(−5.45, −3.15), (−1, −4.7)]
+    if -5.45 <= x <= -1 and -4.7 <= z <= -3.15:
+        return "living room"
+    # Parte 2: [(−5.45, −3.15), (2.75, 5.35)]
+    elif -5.45 <= x <= 2.75 and -3.15 <= z <= 5.35:
+        return "living room"
+
+    return None
+
+def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
+
+    close = False
+    facing = False
+
+    # Distancia euclidiana
+    dx = x2 - x1
+    dz = z2 - z1
+    distance = math.sqrt(dx**2 + dz**2)
+
+    if distance < dist:
+        close = True
+
+    # Ángulo entre los puntos en grados
+    angle_to_target = math.degrees(math.atan2(dx, dz)) % 360
+
+    # Diferencia angular mínima entre yaw y dirección (también en [0, 360))
+    angle_diff = abs((yaw - angle_to_target + 180) % 360 - 180)
+
+    if angle_diff <= angle or angle_diff >= (360-angle):
+        facing = True
+
+    return close, facing
+
+def calculate_goal(goal_id, pos, yaw):
+
+    # Umbrales de distancia y ángulo
+    dist_threshold = 2.0  # Distancia mínima para considerar "cerca"
+    angle_threshold = 25  # Ángulo mínimo para considerar "de frente"
+
+    # Diccionario de objetivos con coordenadas
+    goals = {
+        3: ("tv", (2.5, 1.2)),             # "Find the TV in the living room"
+        4: ("refrigerator", (-4.5, 3.65)), # "Find the refrigerator in the living room"
+        5: ("tap", (-5.2, -1.1)),          # "Find the faucet in the living room"
+        6: ("mirror", (3.75, -5.65)),      # "Find the mirror in the bedroom"
+        7: ("cabinet", (3.25, -4.0)),      # "Find the cabinet in the bedroom"
+        8: ("sink", (-3.95, -5.25)),       # "Find the sink in the bathroom"
+        9: ("toilet", (-5.25, -6.85)),     # "Find the toilet in the bathroom"
+    }
+
+    if goal_id not in goals:
+        return False  # ID inválido
+
+    _, (gx, gz) = goals[goal_id]  # Ajuste de índice para el diccionario
+    x, y, z = pos
+
+    close, facing = is_close_and_facing(x, z, gx, gz, yaw, dist=dist_threshold, angle=angle_threshold)
+
+    return close, facing
+
+def get_query(query_id):
+    queries = [
+        "Go to the bathroom",
+        "Go to the bedroom",
+        "Go to the living room",
+        "Find the TV in the living room",
+        "Find the refrigerator in the living room",
+        "Find the faucet in the living room",
+        "Find the mirror in the bedroom",
+        "Find the cabinet in the bedroom",
+        "Find the sink in the bathroom",
+        "Find the toilet in the bathroom"
+    ]
+    if 0 <= query_id < len(queries):
+        return queries[query_id]
+    else:
+        return ""
+
+# --- Main Simulation Function ---
 def run_simulation(args, topology):
 
     key_ctrl = KeyController()
@@ -159,8 +254,8 @@ def run_simulation(args, topology):
     behavior_drone = list(env.behavior_specs)[0]
 
     state = "Recognize Room"
-    query = args.query
-
+    query_id = args.query
+    query = get_query(query_id)
     prev_movement = ""
     mov_history = []
 
@@ -191,6 +286,10 @@ def run_simulation(args, topology):
 
             img, real_img, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
             show_observations(img, height, pos, yaw, collision_state)
+
+            room = calculate_room(pos)
+            goal_state = calculate_goal(query_id, pos, yaw)
+            print(f"Query: {query}  | Room: {room} | Close: {goal_state[0]} | Facing: {goal_state[1]}")
 
         else:
 
