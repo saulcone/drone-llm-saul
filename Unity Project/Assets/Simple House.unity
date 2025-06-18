@@ -881,6 +881,11 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cac0319ecc188c24fb3b931b90a2519d, type: 3}
+--- !u!1 &585931948 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 797608836708171691, guid: cac0319ecc188c24fb3b931b90a2519d, type: 3}
+  m_PrefabInstance: {fileID: 585931947}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1069846034
 GameObject:
   m_ObjectHideFlags: 0
@@ -1334,10 +1339,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4986918396274464985, guid: d893b99c6d4ce0e468b9275bb8f259e7, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 5381104135938160057, guid: d893b99c6d4ce0e468b9275bb8f259e7, type: 3}
       propertyPath: m_Name
       value: SpawnPoints
       objectReference: {fileID: 0}
+    - target: {fileID: 8983510260088107949, guid: d893b99c6d4ce0e468b9275bb8f259e7, type: 3}
+      propertyPath: drone
+      value: 
+      objectReference: {fileID: 585931948}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -1351,7 +1364,7 @@ SceneRoots:
   - {fileID: 1147395030}
   - {fileID: 1069846036}
   - {fileID: 7367117634327704202}
-  - {fileID: 585931947}
   - {fileID: 335242385}
+  - {fileID: 585931947}
   - {fileID: 5929565955705330238}
   - {fileID: 2843610307942221425}

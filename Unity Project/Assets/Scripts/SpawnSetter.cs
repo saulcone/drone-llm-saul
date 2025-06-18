@@ -6,6 +6,8 @@ using Unity.MLAgents.SideChannels;
 public class SpawnSetter : MonoBehaviour
 {
     [SerializeField] public GameObject spawn;
+    [SerializeField] public GameObject drone;
+
     IntReceiverSideChannel intChannel;
 
     public void Awake()
@@ -41,6 +43,7 @@ public class SpawnSetter : MonoBehaviour
         {
             Transform childTransform = transform.GetChild(index);
             spawn.transform.SetPositionAndRotation(childTransform.position, childTransform.rotation);
+            drone.transform.SetPositionAndRotation(childTransform.position, childTransform.rotation);
         }
         else
         {
