@@ -379,7 +379,6 @@ def run_simulation(args, topology, json_data=None):
 
             log_data = {
                 "step": str(total_steps),
-                "height": str(height),
                 "position": str(pos),
                 "yaw": str(yaw),
                 "collision_state": str(collision_state),
@@ -394,7 +393,7 @@ def run_simulation(args, topology, json_data=None):
 
             json_data["Step_" + str(total_steps)] = log_data
 
-        if total_steps >= max_steps:
+        if total_steps >= max_steps and not args.manual:
             print(f"Reached maximum steps: {max_steps}. Ending simulation.")
             result = "max_steps_reached"
             break
@@ -430,7 +429,8 @@ def run_simulation(args, topology, json_data=None):
 
 def run_experiment(args, topology):
 
-    spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
+    #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
+    spawn_range = [1, 4, 5, 7, 8, 9, 10]  #Solo siete spawns 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
         for repeat in range(args.num_repeats):
@@ -471,7 +471,7 @@ if __name__ == "__main__":
     parser.add_argument('--experiment_name', '-n', type=str, default="default_experiment", help='Name of the experiment for logging')
     parser.add_argument('--manual', '-m', action='store_true', help='Enable manual control mode')
     #parser.add_argument('--seed', '-s', type=int, default=42, help='Random seed for reproducibility')
-    parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone')
+    parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone (1-10)')
     parser.add_argument('--num_repeats', '-r', type=int, default=1, help='Number of repeats for each spawn point')
     parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=0, help='Query id for the drone (0-9)')
