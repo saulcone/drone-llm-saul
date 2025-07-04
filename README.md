@@ -34,3 +34,17 @@ pip install -r requirements.txt
 ## Simulated environment
 
 Inside of build directory
+
+⚙️ Argumentos disponibles
+Argumento	Alias	Tipo	Descripción
+--fast	-f	flag	Activa el modo de movimiento rápido del dron.
+--save_logs	-l	flag	Guarda registros de las observaciones durante el vuelo.
+--run_experiment	-e	flag	Ejecuta múltiples repeticiones del simulador en modo experimento.
+--experiment_name	-n	string	Nombre del experimento para registrar los resultados (por defecto: default_experiment).
+--manual	-m	flag	Activa el modo de control manual.
+--spawn_id	-i	int	Punto de aparición del dron (1-10). Por defecto -1 para aleatorio.
+--num_repeats	-r	int	Número de repeticiones de cada punto de aparición (por defecto: 1).
+--addr	-a	string	Dirección del servidor que controla la simulación (por defecto: http://172.18.33.110:5001).
+--query	-q	int	ID de consulta del dron (0-9). Por defecto: -1.
+--save_video	-v	flag	Guarda vídeo de la simulación.
+--max_steps	-s	int	Máximo número de pasos para evitar bucles infinitos (por defecto: 100).

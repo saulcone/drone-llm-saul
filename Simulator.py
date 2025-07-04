@@ -447,32 +447,34 @@ def run_experiment(args, topology):
 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
-        for repeat in range(args.num_repeats):
+        for query in query_range:  # Queries from 0 to 9
+            for repeat in range(args.num_repeats):
 
-            # Create output directory for the experiment
-            output_dir = f"experiments/{args.experiment_name}"
-            os.makedirs(output_dir, exist_ok=True)
+                # Create output directory for the experiment
+                output_dir = f"experiments/{args.experiment_name}"
+                os.makedirs(output_dir, exist_ok=True)
 
-            args.spawn_id = spawn_id
-            args.output_file = f"{output_dir}/spawn_{spawn_id}_repeat_{repeat+1}.json" if args.save_logs else None
-            args.output_video = f"{output_dir}/spawn_{spawn_id}_repeat_{repeat+1}.mp4" if args.save_video else None
+                args.spawn_id = spawn_id
+                args.query = query
+                args.output_file = f"{output_dir}/spawn_{spawn_id}_query_{query}_repeat_{repeat+1}.json" if args.save_logs else None
+                args.output_video = f"{output_dir}/spawn_{spawn_id}_query_{query}_repeat_{repeat+1}.mp4" if args.save_video else None
 
-            print(f"Experiment: {args.experiment_name} | Spawn: {spawn_id} | Repeat: {repeat+1}/{args.num_repeats}")
+                print(f"Experiment: {args.experiment_name} | Spawn: {spawn_id} | Query: {query} | Repeat: {repeat+1}")
 
-            # Save experiment info, query, and topology
-            if args.save_logs:
+                # Save experiment info, query, and topology
+                if args.save_logs:
 
-                experiment_info = {
-                    "experiment_name": args.experiment_name,
-                    "query": get_query(args.query),
-                    "query_id": args.query,
-                    "topology": json.dumps(topology),
-                    "spawn_id": spawn_id,
-                }
+                    experiment_info = {
+                        "experiment_name": args.experiment_name,
+                        "query": get_query(args.query),
+                        "query_id": args.query,
+                        "topology": json.dumps(topology),
+                        "spawn_id": spawn_id,
+                    }
 
-                json_data = {"Experiment_Info": experiment_info}
+                    json_data = {"Experiment_Info": experiment_info}
 
-            run_simulation(args, topology, json_data=json_data if args.save_logs else None)
+                run_simulation(args, topology, json_data=json_data if args.save_logs else None)
 
 # --- Main ---
 if __name__ == "__main__":
