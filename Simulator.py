@@ -63,7 +63,7 @@ def read_obs(env, behavior_drone):
 
     img = obs[0][0]
 
-    real_img = cv2.resize(img, (640, 480)) * 255.0  # Convert to 0-255 range
+    real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0  # Convert to 0-255 range
     real_img = np.clip(real_img, 0, 255).astype(np.uint8)
 
     height = obs[1][0][0]
@@ -197,6 +197,12 @@ def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
     if distance < dist:
         close = True
 
+    if distance < 0.5:
+        angle = angle * 3
+
+    elif distance < 1:
+        angle = angle * 2
+
     # Ángulo entre los puntos en grados
     angle_to_target = math.degrees(math.atan2(dx, dz)) % 360
 
@@ -294,6 +300,7 @@ def run_simulation(args, topology, json_data=None):
     description = ""
     door_position = ""
     total_steps = 0
+    total_time = 0.0
     max_steps = args.max_steps  # Maximum steps to prevent infinite loop
     result = None
 
@@ -313,7 +320,7 @@ def run_simulation(args, topology, json_data=None):
 
     # Video writer
     if args.save_video:
-        frame_size = (640, 480)  # ajusta según tus imágenes
+        frame_size = (480, 360)  # ajusta según tus imágenes
         fps = 24 if args.manual else 1
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
@@ -341,7 +348,7 @@ def run_simulation(args, topology, json_data=None):
         if args.save_video:
             img_text = f"Step: {total_steps}"
             img_with_text = cv2.putText(real_img.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-            video_writer.write(cv2.cvtColor(img_with_text, cv2.COLOR_RGB2BGR))
+            video_writer.write(img_with_text)
 
         if manual:
 
@@ -361,7 +368,10 @@ def run_simulation(args, topology, json_data=None):
         else:
 
             # Get command velocity from the server
+            start_time = time.time()
             response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history)
+            elapsed_time = time.time() - start_time
+            total_time += elapsed_time
             command = response.get("movement")
             state = response.get("state")
             pred_room = response.get("room", "")
@@ -389,6 +399,7 @@ def run_simulation(args, topology, json_data=None):
                 "description": description,
                 "door_position": door_position,
                 "goal_state": goal_state,
+                "elapsed_time": elapsed_time,
             }
 
             json_data["Step_" + str(total_steps)] = log_data
@@ -412,6 +423,7 @@ def run_simulation(args, topology, json_data=None):
 
         end_info = {
             "total_steps": total_steps,
+            "total_time": total_time,
             "result": result
         }
 
@@ -430,7 +442,9 @@ def run_simulation(args, topology, json_data=None):
 def run_experiment(args, topology):
 
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
-    spawn_range = [1, 4, 5, 7, 8, 9, 10]  #Solo siete spawns 
+    spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
+    query_range = [0, 1, 2, 3, 6, 8] if args.query == -1 else [args.query]
+
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
         for repeat in range(args.num_repeats):
@@ -474,9 +488,9 @@ if __name__ == "__main__":
     parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone (1-10)')
     parser.add_argument('--num_repeats', '-r', type=int, default=1, help='Number of repeats for each spawn point')
     parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
-    parser.add_argument('--query', '-q', type=int, default=0, help='Query id for the drone (0-9)')
+    parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
-    parser.add_argument('--max_steps', '-s', type=int, default=50, help='Maximum steps to prevent infinite loop')
+    parser.add_argument('--max_steps', '-s', type=int, default=100, help='Maximum steps to prevent infinite loop')
 
     args = parser.parse_args()
 
