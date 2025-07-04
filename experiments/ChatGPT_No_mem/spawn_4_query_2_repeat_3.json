@@ -1,0 +1,42 @@
+{
+  "Experiment_Info": {
+    "experiment_name": "ChatGPT_No_mem",
+    "query": "Go to the living room",
+    "query_id": 2,
+    "topology": "{\"living room\": [\"bedroom\", \"bathroom\"], \"bedroom\": [\"living room\"], \"bathroom\": [\"living room\"]}",
+    "spawn_id": 4
+  },
+  "Step_1": {
+    "step": "1",
+    "position": "[0.  1.5 0. ]",
+    "yaw": "0.0",
+    "collision_state": "1.0",
+    "command": "A1",
+    "state": "Stay on Room",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "A brown sofa and armchair are visible with a window and a door on the left; typical living room furniture.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.4556846618652344
+  },
+  "Step_2": {
+    "step": "2",
+    "position": "[-1.         1.5        1.3999996]",
+    "yaw": "0.0",
+    "collision_state": "1.0",
+    "command": "E",
+    "state": "Final",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "The robot is in a room with a brown door on the left, a window with white curtains, and a brown sofa visible in the foreground.",
+    "door_position": "left",
+    "goal_state": true,
+    "elapsed_time": 2.2180440425872803
+  },
+  "End_Info": {
+    "total_steps": 2,
+    "total_time": 4.673728704452515,
+    "result": "goal_reached"
+  }
+}
