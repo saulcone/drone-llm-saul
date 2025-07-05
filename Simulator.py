@@ -369,7 +369,7 @@ def run_simulation(args, topology, json_data=None):
 
             # Get command velocity from the server
             start_time = time.time()
-            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history)
+            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, addr=args.addr)
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
             command = response.get("movement")
@@ -443,7 +443,7 @@ def run_experiment(args, topology):
 
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
     spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
-    query_range = [0, 1, 2, 3, 6, 8] if args.query == -1 else [args.query]
+    query_range = [0, 1, 2, 4, 6, 8] if args.query == -1 else [args.query]
 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10

@@ -15,10 +15,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A living room with a brown sofa, window with curtains, and a closed door on the left.",
+    "description": "A living room with a brown sofa set, a window with curtains, and a closed door on the left.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 1.8181872367858887
+    "elapsed_time": 1.9909722805023193
   },
   "Step_2": {
     "step": "2",
@@ -29,10 +29,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A kitchen area is visible with a stove and refrigerator; no open door is currently visible.",
+    "description": "A kitchen area with a stove and refrigerator is visible; no open door can be seen.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 1.5471258163452148
+    "elapsed_time": 2.0150701999664307
   },
   "Step_3": {
     "step": "3",
@@ -43,10 +43,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "The scene shows a kitchen area with a stove, countertop, and chairs; no door is visible.",
+    "description": "A kitchen area is visible with a stove, countertop, and chairs; no door is visible in the current view.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 2.1448681354522705
+    "elapsed_time": 2.1427907943725586
   },
   "Step_4": {
     "step": "4",
@@ -57,10 +57,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A kitchen or dining area is visible with a table, chairs, and a counter; no open door is visible.",
+    "description": "A dining or kitchen area is visible with a table, chairs, and a counter. Two closed doors are seen on the left; no open door is visible.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 1.9022796154022217
+    "elapsed_time": 2.5039501190185547
   },
   "Step_5": {
     "step": "5",
@@ -71,10 +71,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A doorway to the left reveals a room with a bed and nightstand, likely the bedroom; another door in the center leads to a room with a checkered floor.",
+    "description": "Two open doorways are visible; the left doorway clearly leads to a bedroom with a bed and nightstand visible.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 2.7273197174072266
+    "elapsed_time": 3.636984348297119
   },
   "Step_6": {
     "step": "6",
@@ -85,10 +85,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A doorway to the left leads to a bedroom with a bed and nightstand visible. The door is centered and not yet very close.",
+    "description": "A door to the left leads to a bedroom with a bed and nightstand visible. The door is centered and not yet close.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.5593688488006592
+    "elapsed_time": 2.308537006378174
   },
   "Step_7": {
     "step": "7",
@@ -99,10 +99,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A bedroom door is visible to the left, with a bed and window inside; the door is not centered.",
+    "description": "A bedroom door is visible to the left, with a bed and nightstand inside. The door is not centered in the view.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 1.8253798484802246
+    "elapsed_time": 3.053088665008545
   },
   "Step_8": {
     "step": "8",
@@ -113,10 +113,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doors are visible; the left door leads to a bedroom with a bed and chair, but the door is off-center to the left.",
+    "description": "Two open doors are visible; the door to the left leads to a bedroom with a bed and chair, but it is not centered in the frame.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 2.569478988647461
+    "elapsed_time": 2.0369467735290527
   },
   "Step_9": {
     "step": "9",
@@ -127,10 +127,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A bedroom door is visible on the left side of the image, with a bed and window inside. The door is not centered.",
+    "description": "A bedroom door is visible on the left side of the frame, with a bed and window inside. The door is not centered.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 2.1671550273895264
+    "elapsed_time": 3.2584571838378906
   },
   "Step_10": {
     "step": "10",
@@ -141,10 +141,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doors are visible; the door to the left leads to a bedroom with a bed and chair, but it is not centered in the frame.",
+    "description": "Two open doors are visible; the left door leads to a bedroom with a bed and chair, but the door is off-center to the left.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 2.3267006874084473
+    "elapsed_time": 2.71513295173645
   },
   "Step_11": {
     "step": "11",
@@ -155,13 +155,97 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doorways are visible; the left doorway leads to a bedroom with a bed and window, the right to a tiled room. The bedroom door is left of center.",
+    "description": "A bedroom door is visible on the left side of the frame, with a bed and window inside. The door is not centered.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 1.715191125869751
+    "elapsed_time": 2.2471578121185303
   },
   "Step_12": {
     "step": "12",
+    "position": "[-0.54077184  1.5         0.46231037]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D2",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "Two open doors are visible; the left door leads to a bedroom with a bed and chair, but the door is off-center to the left.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.324298620223999
+  },
+  "Step_13": {
+    "step": "13",
+    "position": "[-1.0392306   1.5         0.50154126]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D1",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "A bedroom door is visible on the left side of the image, with a bed and window inside. The door is not centered.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.3378374576568604
+  },
+  "Step_14": {
+    "step": "14",
+    "position": "[-0.54077184  1.5         0.46231037]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D2",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "Two open doors are visible; the door to the left leads to a bedroom with a bed and chair, but it is not centered in the frame.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.3727338314056396
+  },
+  "Step_15": {
+    "step": "15",
+    "position": "[-1.0392306   1.5         0.50154126]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D1",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "A bedroom door is visible on the left side of the frame, with a bed and window inside. The door is not centered.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 1.6798346042633057
+  },
+  "Step_16": {
+    "step": "16",
+    "position": "[-0.54077184  1.5         0.46231037]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D2",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "Two open doors are visible; the left door leads to a bedroom with a bed and chair, but the door is off-center to the left.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.2307116985321045
+  },
+  "Step_17": {
+    "step": "17",
+    "position": "[-1.0392306   1.5         0.50154126]",
+    "yaw": "184.50015",
+    "collision_state": "1.0",
+    "command": "D1",
+    "state": "Oriented Towards Door",
+    "room": "living room",
+    "pred_room": "living room",
+    "description": "A bedroom door is visible on the left side of the frame, with a bed and window inside. The door is not centered.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 2.1743509769439697
+  },
+  "Step_18": {
+    "step": "18",
     "position": "[-0.54077184  1.5         0.46231037]",
     "yaw": "184.50015",
     "collision_state": "1.0",
@@ -169,13 +253,13 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doors are visible; the left door leads to a bedroom with a bed and chair, the right to another room with a checkered floor. The bedroom door is slightly left of center.",
+    "description": "Two open doors are visible; the door to the left leads to a bedroom with a bed and chair, but it is not centered in the frame.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 3.0793426036834717
+    "elapsed_time": 1.8670458793640137
   },
-  "Step_13": {
-    "step": "13",
+  "Step_19": {
+    "step": "19",
     "position": "[-0.04231317  1.5         0.4230795 ]",
     "yaw": "184.50015",
     "collision_state": "1.0",
@@ -186,10 +270,10 @@
     "description": "A door is centered ahead leading to a room with a chair and window, likely the bedroom. The door is not yet very close.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.7688634395599365
+    "elapsed_time": 1.6915366649627686
   },
-  "Step_14": {
-    "step": "14",
+  "Step_20": {
+    "step": "20",
     "position": "[-0.08154413  1.5        -0.07537916]",
     "yaw": "184.50015",
     "collision_state": "1.0",
@@ -200,24 +284,24 @@
     "description": "A door is centered ahead, leading to a room with a bed and chair, likely the bedroom. The door is not yet very close.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.1571781635284424
+    "elapsed_time": 5.879939079284668
   },
-  "Step_15": {
-    "step": "15",
+  "Step_21": {
+    "step": "21",
     "position": "[-0.12077509  1.5        -0.5738378 ]",
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A1",
-    "state": "Go Through Door",
+    "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A door is centered ahead leading to a bedroom with a bed, chair, and window visible.",
+    "description": "A door is centered ahead leading to a bedroom with a bed and chair visible. The door is not yet very close.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.884631395339966
+    "elapsed_time": 1.7645602226257324
   },
-  "Step_16": {
-    "step": "16",
+  "Step_22": {
+    "step": "22",
     "position": "[-0.16000599  1.5        -1.0722965 ]",
     "yaw": "184.50015",
     "collision_state": "1.0",
@@ -225,70 +309,56 @@
     "state": "Go Through Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A clearly visible, open door is centered ahead leading into a bedroom with a bed and chair visible.",
+    "description": "A bedroom door is directly ahead, centered and appears close. The bed and chair are visible inside.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.8142147064208984
+    "elapsed_time": 2.0297305583953857
   },
-  "Step_17": {
-    "step": "17",
+  "Step_23": {
+    "step": "23",
     "position": "[-0.19923687  1.5        -1.5707546 ]",
-    "yaw": "184.50015",
-    "collision_state": "1.0",
-    "command": "A1",
-    "state": "Go Through Door",
-    "room": "living room",
-    "pred_room": "unknown",
-    "description": "A bedroom is visible through a clearly open, centered doorway with a bed, chair, and window in view.",
-    "door_position": "center",
-    "goal_state": false,
-    "elapsed_time": 1.4668407440185547
-  },
-  "Step_18": {
-    "step": "18",
-    "position": "[-0.23846775  1.5        -2.069213  ]",
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A1",
     "state": "Position in the center of room",
     "room": "living room",
     "pred_room": "bedroom",
-    "description": "The view shows a bed, nightstand, and chair, indicating entry into the bedroom; the door is no longer centered.",
-    "door_position": "not_visible",
+    "description": "A bedroom is clearly visible ahead with a bed, chair, and window; the doorway is fully open and centered.",
+    "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.811851978302002
+    "elapsed_time": 1.8207480907440186
   },
-  "Step_19": {
-    "step": "19",
-    "position": "[-0.27769864  1.5        -2.5676723 ]",
+  "Step_24": {
+    "step": "24",
+    "position": "[-0.23846775  1.5        -2.069213  ]",
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A3",
     "state": "Recognize Room",
     "room": "living room",
     "pred_room": "bedroom",
-    "description": "A bed, nightstand, and chair are visible, indicating a bedroom. The door is partially visible on the right.",
+    "description": "A bed, nightstand, and chair are visible, indicating a bedroom. The robot is near the door.",
     "door_position": "right",
     "goal_state": false,
-    "elapsed_time": 1.9127862453460693
+    "elapsed_time": 1.663069486618042
   },
-  "Step_20": {
-    "step": "20",
-    "position": "[-0.33654505  1.5        -3.3153605 ]",
+  "Step_25": {
+    "step": "25",
+    "position": "[-0.3365451  1.5       -3.31536  ]",
     "yaw": "184.50015",
     "collision_state": "0.0",
     "command": "B2",
     "state": "Stay on Room",
     "room": "bedroom",
     "pred_room": "bedroom",
-    "description": "A bed, nightstand, and chair are visible, indicating a bedroom environment.",
+    "description": "A bed, nightstand, and chair are visible, indicating a bedroom. No obstacles in front.",
     "door_position": "right",
     "goal_state": true,
-    "elapsed_time": 1.6369562149047852
+    "elapsed_time": 1.5758874416351318
   },
   "End_Info": {
-    "total_steps": 20,
-    "total_time": 40.83572053909302,
+    "total_steps": 25,
+    "total_time": 59.321372747421265,
     "result": "collision_detected"
   }
 }

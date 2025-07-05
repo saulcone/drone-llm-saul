@@ -15,10 +15,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A living room with a brown sofa and a door on the left side; no bathroom features visible.",
+    "description": "A living room with a brown sofa set, a window with curtains, and a closed door on the left side.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 1.899308443069458
+    "elapsed_time": 2.071094274520874
   },
   "Step_2": {
     "step": "2",
@@ -29,10 +29,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A kitchen area is visible with a stove and refrigerator; no open door is currently visible.",
+    "description": "A kitchen area with a stove and refrigerator is visible; a closed double door is on the right side. No open door is visible.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 1.676105260848999
+    "elapsed_time": 3.254333972930908
   },
   "Step_3": {
     "step": "3",
@@ -43,10 +43,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A kitchen area is visible with a stove, counter, and chairs; no door is visible in the current view.",
+    "description": "A kitchen area is visible with a stove, countertop, and chairs; no door is visible in the current view.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 1.97462797164917
+    "elapsed_time": 2.205430746078491
   },
   "Step_4": {
     "step": "4",
@@ -57,10 +57,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A dining area with a table and chairs is visible; a closed double door is on the left, and a kitchen counter with a window is on the right. No open door is visible.",
-    "door_position": "not_visible",
+    "description": "A dining area with a table and chairs is visible. There is a partially open door on the left side, but the room beyond cannot be confidently identified.",
+    "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 1.9863908290863037
+    "elapsed_time": 1.931133508682251
   },
   "Step_5": {
     "step": "5",
@@ -71,10 +71,10 @@
     "state": "Search open Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doorways are visible; the left leads to a bedroom, the center to a room with black and white checkered flooring that cannot yet be confidently identified.",
+    "description": "Two open doorways are visible: one to the left showing a bedroom, and one in the center showing a room with black and white checkered flooring that cannot yet be confidently identified.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.753645658493042
+    "elapsed_time": 1.9349801540374756
   },
   "Step_6": {
     "step": "6",
@@ -85,10 +85,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "Two open doors are visible; the door in the center leads to a room with a black-and-white checkered floor, likely the bathroom.",
+    "description": "Two open doors are visible: one to the left leading to a bedroom, and one in the center with a checkered tile floor, likely the bathroom.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 3.0304481983184814
+    "elapsed_time": 2.290773868560791
   },
   "Step_7": {
     "step": "7",
@@ -99,10 +99,10 @@
     "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A checkered-floor room (likely the bathroom) is visible through a centered open doorway ahead; bedroom is to the left.",
+    "description": "A checkered-floor room (likely the bathroom) is visible through a centered open doorway ahead.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 3.661712646484375
+    "elapsed_time": 2.2247114181518555
   },
   "Step_8": {
     "step": "8",
@@ -110,13 +110,13 @@
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A1",
-    "state": "Go Through Door",
+    "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A doorway with a checkered floor is centered ahead, likely leading to the bathroom. Bedroom is visible to the left.",
+    "description": "A doorway with a checkered floor (likely the bathroom) is directly ahead and centered; bedroom is visible to the left.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 5.669281005859375
+    "elapsed_time": 1.9100728034973145
   },
   "Step_9": {
     "step": "9",
@@ -124,13 +124,13 @@
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A1",
-    "state": "Go Through Door",
+    "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A clearly visible, open doorway is centered ahead with a checkered floor beyond, likely leading to the bathroom.",
+    "description": "A doorway with a checkered floor is centered ahead, likely leading to the bathroom. The door is not yet very close.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.0123860836029053
+    "elapsed_time": 2.1752407550811768
   },
   "Step_10": {
     "step": "10",
@@ -138,13 +138,13 @@
     "yaw": "184.50015",
     "collision_state": "1.0",
     "command": "A1",
-    "state": "Go Through Door",
+    "state": "Oriented Towards Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A clearly visible, open doorway is centered ahead with a checkered tile floor beyond; bedroom is visible to the left.",
+    "description": "A doorway with a checkered tile floor is directly ahead, slightly off-center but appears close. Bedroom is visible to the left.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.5352535247802734
+    "elapsed_time": 2.2356486320495605
   },
   "Step_11": {
     "step": "11",
@@ -155,10 +155,10 @@
     "state": "Go Through Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A clearly visible, open doorway is centered ahead, leading to a room with a black and white checkered floor.",
+    "description": "A doorway with a checkered tile floor beyond is centered and appears close; part of a bedroom is visible to the left.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.807265043258667
+    "elapsed_time": 1.7536537647247314
   },
   "Step_12": {
     "step": "12",
@@ -169,10 +169,10 @@
     "state": "Go Through Door",
     "room": "living room",
     "pred_room": "unknown",
-    "description": "A doorway is clearly visible and centered, leading into a room with a checkered floor and ceiling lights.",
+    "description": "A doorway is clearly visible and centered, leading to a room with a checkered floor and ceiling lights.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.0014946460723877
+    "elapsed_time": 2.0930111408233643
   },
   "Step_13": {
     "step": "13",
@@ -183,10 +183,10 @@
     "state": "Go Through Door",
     "room": "living room",
     "pred_room": "living room",
-    "description": "A clearly open door is centered in view, leading to a room with a checkered floor and gray walls.",
+    "description": "A clearly visible open door is centered ahead, leading to a room with a checkered tile floor and gray walls.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 1.7805402278900146
+    "elapsed_time": 1.687314510345459
   },
   "Step_14": {
     "step": "14",
@@ -200,11 +200,11 @@
     "description": "A checkered floor room is visible through a mostly centered open doorway; the door frame is clear and the path ahead is unobstructed.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 2.742234468460083
+    "elapsed_time": 2.2255775928497314
   },
   "End_Info": {
     "total_steps": 14,
-    "total_time": 34.530694007873535,
+    "total_time": 29.992977142333984,
     "result": "collision_detected"
   }
 }
