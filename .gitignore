@@ -1,6 +1,6 @@
 Environments/
-build
-build_linux
+build/
+build_linux/
 build/WAF_environment_Data/ML-Agents/
 build/WAF_environment_Data/ML-Agents/Timers/Edificio Pruebas_timers.json
 build/WAF_environment_Data/sharedassets0.assets.resS
