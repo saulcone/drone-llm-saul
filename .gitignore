@@ -1,20 +1,13 @@
-test.png
-
 Environments/
 build/WAF_environment_Data/ML-Agents/
+build/WAF_environment_Data/ML-Agents/Timers/Edificio Pruebas_timers.json
+build/WAF_environment_Data/sharedassets0.assets.resS
+build_linux/WAF_environment_Data/sharedassets0.assets.resS
 
 ./venv/
 /venv/
 
 experiments/
-
-__pycache__/
-
-build/WAF_environment_Data/ML-Agents/Timers/Edificio Pruebas_timers.json
-build/WAF_environment_Data/sharedassets0.assets.resS
-build_linux/WAF_environment_Data/sharedassets0.assets.resS
-
-./experiments/
 
 __pycache__/
 gpt_class.cpython-311.pyc
