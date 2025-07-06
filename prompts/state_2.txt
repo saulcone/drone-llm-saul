@@ -26,7 +26,8 @@ Only return **ONE** movement command from the list below:
 
 ## 🔄 OUTPUT STATE RULES
 
-- Always remain in `Stay on Room` unless external input or user query changes the goal.
+- Always return:  
+  `Final` → This indicates the navigation and inspection task is complete.
 
 ---
 

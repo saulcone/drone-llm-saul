@@ -1,0 +1,29 @@
+## 📤 Output Format
+
+You must respond with a **single valid JSON object** following the exact structure below:
+
+```json
+{
+  "room": "estimated_room_name_or_unknown",
+  "movement": "valid_single_movement_command",
+  "state": "next_FSM_state",
+  "description": "concise description of the visible environment",
+  "door_position": "left | center | right | not_visible"
+}
+```
+
+### ✅ Field Definitions
+
+- `"room"`: Name of the current room (from the topological map), or `"unknown"` if not confidently identified.
+- `"movement"`: A single valid movement command (`A1`, `B2`, etc.) allowed by the current FSM state.
+- `"state"`: The predicted FSM state after this movement (e.g., `"Search Object"`, `"Reach Object"`).
+- `"description"`: A brief and neutral description of what the robot sees and the reasoning on the instructions.
+- `"door_position"`: Where the door appears in the frame. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`.
+
+### ⚠️ Important
+
+- Do **not** add extra text or explanations outside the JSON block.
+- Do **not** return multiple movement commands.
+- Always follow the allowed command list and transition logic defined in the state prompt.
+
+Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.
