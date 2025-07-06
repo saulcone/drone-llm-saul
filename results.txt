@@ -1,0 +1,14 @@
+Nombre	Estado	Resultado
+spawn_4_query_0_repeat_1.json	concluido	collision_detected
+spawn_4_query_0_repeat_2.json	concluido	goal_reached
+spawn_4_query_0_repeat_3.json	concluido	goal_reached
+spawn_4_query_0_repeat_4.json	concluido	collision_detected
+spawn_4_query_0_repeat_5.json	concluido	collision_detected
+spawn_4_query_1_repeat_1.json	concluido	collision_detected
+spawn_4_query_1_repeat_2.json	concluido	collision_detected
+spawn_4_query_1_repeat_3.json	concluido	collision_detected
+spawn_4_query_1_repeat_4.json	concluido	collision_detected
+spawn_4_query_1_repeat_5.json	concluido	collision_detected
+spawn_4_query_2_repeat_1.json	concluido	goal_reached
+spawn_4_query_2_repeat_2.json	concluido	goal_reached
+spawn_4_query_2_repeat_3.json	concluido	goal_reached

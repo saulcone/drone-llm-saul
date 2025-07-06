@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 275010384534854080}
   - component: {fileID: 7231230964107998999}
   - component: {fileID: 5581793205188649891}
+  - component: {fileID: 450952789834626604}
   - component: {fileID: 5665366799684267879}
   - component: {fileID: 7739173572809571590}
   m_Layer: 3
@@ -32,8 +33,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.4, y: 0.4, z: 0.4}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 6245156003329243064}
   - {fileID: 3361329704033520658}
@@ -138,6 +139,26 @@ MonoBehaviour:
   m_ObservationType: 0
   m_ObservationStacks: 1
   m_Compression: 1
+--- !u!114 &450952789834626604
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797608836708171691}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 282f342c2ab144bf38be65d4d0c4e07d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_Camera: {fileID: 4506854536358769522}
+  m_SensorName: CameraSensorBack
+  m_Width: 1280
+  m_Height: 720
+  m_Grayscale: 0
+  m_ObservationType: 0
+  m_ObservationStacks: 1
+  m_Compression: 1
 --- !u!114 &5665366799684267879
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -159,6 +180,7 @@ MonoBehaviour:
   finished: {fileID: 2100000, guid: 6b3b798ed456a2242867be5d5480a057, type: 2}
   dead: {fileID: 2100000, guid: 8cf3dba817b4f27489da81a6b8b77a5e, type: 2}
   bodyRenderer: {fileID: 7869106718578406036}
+  spawn: {fileID: 0}
 --- !u!114 &7739173572809571590
 MonoBehaviour:
   m_ObjectHideFlags: 0
