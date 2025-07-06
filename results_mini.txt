@@ -1,6 +1,0 @@
-Nombre	Estado	Resultado
-Go to the living room | spawn 4	repeat 5	5/5 conseguidos
-Go to the bedroom | spawn 4	repeat 5	4/5 conseguidos
-Go to the bathroom | spawn 10	repeat 5	5/5 conseguidos
-Go to the bedroom | spawn 8	repeat 5	5/5 conseguidos
-Go to the bathroom | spawn 4	repeat 5	2/5 conseguidos
