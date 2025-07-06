@@ -308,6 +308,7 @@ def run_simulation(args, topology, json_data=None):
     door_position = ""
     total_steps = 0
     total_time = 0.0
+    elapsed_time = 0.0
     max_steps = args.max_steps  # Maximum steps to prevent infinite loop
     result = None
 
@@ -328,10 +329,11 @@ def run_simulation(args, topology, json_data=None):
     # Video writer
     if args.save_video:
         frame_size = (480, 360)  # ajusta según tus imágenes
+        frame_size_2 = (1280, 720)  # ajusta según tus imágenes de la cámara trasera
         fps = 24 if args.manual else 1
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
-        video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size)
+        video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size_2)
 
     while True:
 
@@ -357,7 +359,6 @@ def run_simulation(args, topology, json_data=None):
             img_text = f"Step: {total_steps}"
             img_with_text = cv2.putText(real_img.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             video_writer.write(img_with_text)
-
             img_with_text_2 = cv2.putText(real_img_2.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             video_writer_2.write(img_with_text_2)
 
@@ -448,6 +449,7 @@ def run_simulation(args, topology, json_data=None):
         video_writer.release()
         video_writer_2.release()
         print(f"Video saved to {args.output_video}")
+        print(f"Video (back) saved to {args.output_video.replace('.mp4', '_back.mp4')}")
 
     env.close()
 
@@ -504,7 +506,7 @@ if __name__ == "__main__":
     parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
-    parser.add_argument('--max_steps', '-s', type=int, default=100, help='Maximum steps to prevent infinite loop')
+    parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')
 
     args = parser.parse_args()
 
