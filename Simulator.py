@@ -293,9 +293,10 @@ def run_simulation(args, topology, json_data=None):
     behavior_drone = list(env.behavior_specs)[0]
 
     int_channel.send_int(args.spawn_id)
+
     decision_steps, _ = env.get_steps(behavior_drone)
     action = spec.action_spec.random_action(len(decision_steps))
-    move_drone(10, [0, 0, 0, 0], env=env, action=action, behavior_drone=behavior_drone)
+    move_drone(20, [0, 0, 0, 0], env, action, behavior_drone)
 
     state = "Recognize Room"
     query_id = args.query
