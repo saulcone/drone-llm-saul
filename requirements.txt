@@ -6,6 +6,9 @@ requests
 jsonpickle
 python-dotenv
 
+google-genai
+pillow
+
 # Simulation packages
 mlagents-envs==0.29.0 # For Unity ML-Agents
 pyinput
