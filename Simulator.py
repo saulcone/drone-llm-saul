@@ -62,19 +62,26 @@ def read_obs(env, behavior_drone):
     obs = decision_steps.obs
 
     img = obs[0][0]
+    img_2 = obs[1][0]
 
     real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0  # Convert to 0-255 range
     real_img = np.clip(real_img, 0, 255).astype(np.uint8)
 
-    height = obs[1][0][0]
-    pos = obs[2][0][:3]
-    yaw = obs[2][0][3]
-    collision_state = obs[2][0][4]
+    real_img_2 = cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR) * 255.0
+    real_img_2 = np.clip(real_img_2, 0, 255).astype(np.uint8)
+
+    height = obs[2][0][0]
+    pos = obs[3][0][:3]
+    yaw = obs[3][0][3]
+    collision_state = obs[3][0][4]
 
     cv2.imshow("Image", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
     cv2.waitKey(1)
 
-    return img, real_img, height, pos, yaw, collision_state
+    #cv2.imshow("Image 2", cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR))
+    #cv2.waitKey(1)
+
+    return img, real_img, real_img_2, height, pos, yaw, collision_state
 
 def show_observations(img, height, pos, yaw, state):
 
@@ -324,6 +331,7 @@ def run_simulation(args, topology, json_data=None):
         fps = 24 if args.manual else 1
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
+        video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size)
 
     while True:
 
@@ -341,7 +349,7 @@ def run_simulation(args, topology, json_data=None):
         if key_ctrl.is_pressed('r'):
             env.reset()
 
-        img, real_img, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
+        img, real_img, real_img_2, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
         room = calculate_room(pos)
         goal_state = calculate_goal(query_id, pos, yaw, room, pred_room)
 
@@ -349,6 +357,9 @@ def run_simulation(args, topology, json_data=None):
             img_text = f"Step: {total_steps}"
             img_with_text = cv2.putText(real_img.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             video_writer.write(img_with_text)
+
+            img_with_text_2 = cv2.putText(real_img_2.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            video_writer_2.write(img_with_text_2)
 
         if manual:
 
@@ -435,6 +446,7 @@ def run_simulation(args, topology, json_data=None):
 
     if args.save_video:
         video_writer.release()
+        video_writer_2.release()
         print(f"Video saved to {args.output_video}")
 
     env.close()
