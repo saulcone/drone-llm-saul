@@ -72,7 +72,8 @@ def actualizar_tabla(json_folder):
         root.title("Monitor Experimentos Agrupados")
 
     # escribir en results.txt
-    with open("results_mini.txt", "w", encoding="utf-8") as f:
+    output_path = os.path.join(json_folder, "results_mini.txt")
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("Nombre\tEstado\tResultado\n")
         for nombre, estado, resultado in experimentos:
             f.write(f"{nombre}\t{estado}\t{resultado}\n")
