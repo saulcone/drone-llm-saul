@@ -417,6 +417,9 @@ def run_simulation(args, topology, json_data=None):
 
             json_data["Step_" + str(total_steps)] = log_data
 
+            with open(args.output_file, "w") as info_file:
+                json.dump(json_data, info_file, indent=2)
+
         if total_steps >= max_steps and not args.manual:
             print(f"Reached maximum steps: {max_steps}. Ending simulation.")
             result = "max_steps_reached"
