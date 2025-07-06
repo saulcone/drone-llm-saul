@@ -17,3 +17,6 @@ build/WAF_environment_Data/sharedassets0.assets.resS
 build_linux/WAF_environment_Data/sharedassets0.assets.resS
 
 ./experiments/
+
+__pycache__/
+gpt_class.cpython-311.pyc

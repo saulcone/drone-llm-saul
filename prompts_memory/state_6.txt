@@ -1,0 +1,73 @@
+## State: **Search open Door**
+
+---
+
+## 🎯 GOAL  
+Systematically explore the environment to detect an open door that may lead to the **goal room**, either directly or through a connected path via other rooms based on the topological map.
+
+---
+
+## 🧠 POLICY RULES (priority ordered)
+
+1️⃣ **FIRST PRIORITY**  
+If an open door is visible (`door_position ≠ "not_visible"`), but the content beyond the door cannot be confidently identified:  
+- You MUST move forward (`A1`) to improve the view  
+- You MUST NOT rotate, even if the previous movement was a rotation  
+- Stay in `Search open Door`.
+
+2️⃣ **SECOND PRIORITY**  
+If an open door is visible **and** you can confidently identify the room beyond:  
+- If it is the **goal room**, immediately switch to `Oriented Towards Door` with movement = `E`  
+- If it is **directly** connected to the goal room, switch to `Oriented Towards Door` with movement = `E`  
+- If it is **indirectly** connected to the goal room (multi-step path), switch to `Oriented Towards Door` with movement = `E`  
+- If it has no connection (direct or indirect), stay in `Search open Door`.
+
+3️⃣ **THIRD PRIORITY**  
+If no door is visible (`door_position = "not_visible"`):  
+- Continue standard exploration  
+- Use small in-place rotations and short forward steps  
+- Prioritize rotation if the robot has not moved recently or the field of view hasn’t changed significantly  
+- If the previous movement was a rotation, continue rotating in the same direction for consistency.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°  
+- `B2`: rotate 45°  
+- `B3`: rotate 90°
+
+### C. Right rotation:
+- `C1`: rotate 15°  
+- `C2`: rotate 45°  
+- `C3`: rotate 90°
+
+### E. Transition:
+- `E`: issue exclusively when switching to `Oriented Towards Door` — it signals a valid path has been found, and no physical movement should be combined with this.
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- `Oriented Towards Door`: only if
+  - An open door is visible, **AND**
+  - The room beyond is the goal room, or directly/indirectly connected to the goal room,
+  - **AND** you must return movement = `E` when performing this state change
+- `Search open Door`: if
+  - No door is visible, **OR**
+  - The visible room has no valid path to the goal room, **OR**
+  - The visible room cannot yet be identified confidently
+
+---
+
+## ⚠️ NOTES
+
+- Never combine `E` with any other movement.
+- Do **not** transition to `Oriented Towards Door` unless confident in the destination room.
+- Always respect the priority order: 1️⃣ > 2️⃣ > 3️⃣.

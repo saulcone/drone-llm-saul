@@ -1,0 +1,37 @@
+## State: **Stay on Room**
+
+---
+
+## 🎯 GOAL  
+Remain stationary in the center of the desired room.
+
+---
+
+## 🧠 POLICY RULES
+
+- Do not move the robot.
+- Confirm that the robot is in the correct room and centrally positioned.
+- Only issue the stop command (`E`) to remain idle.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### E. Stop:
+- `E`: stop movement (robot remains in place)
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- Always return:  
+  `Final` → This indicates the navigation and inspection task is complete.
+
+---
+
+## ⚠️ NOTES
+
+- Do not issue any movement or rotation commands in this state.
+- This state reflects a terminal or idle phase until reactivated.

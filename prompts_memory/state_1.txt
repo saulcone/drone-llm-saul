@@ -1,0 +1,24 @@
+## State: **Position in the center of room**:
+
+## 🎯 GOAL
+   - Move to the center of the room.
+
+
+## 🧠 Policy Rules
+
+- If the robot is facing a door, use `D1` or `D2` to align with the door before moving through it until the open door is in the center of the image.
+
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return:
+- `A3`: forward 50 cm
+
+
+Do not use any other command in this state.
+
+---
+
+## 🔄 OUTPUT STATE Rules
+
+- `Recognize Room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.

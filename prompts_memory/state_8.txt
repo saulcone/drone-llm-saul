@@ -1,0 +1,50 @@
+## State: **Go Through Door**
+
+---
+
+## 🎯 GOAL  
+Proceed through the centered open door confidently and transition into the next room.
+
+---
+
+## 🧠 POLICY RULES
+
+- Use `A1` (move forward) **only** if the door is:
+  - Clearly open,
+  - Fully visible and dominant in the center of the image,
+  - Not partially obscured or clipped on the edges.
+
+- If the door appears **partially visible**, **uncentered**, or ambiguous:
+  - Switch back to `Oriented Towards Door` to refine alignment.
+  - Do **not** move forward unless the door is confidently centered and clear.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return:
+- `A1`: move forward 10 cm
+
+Do not use any other command in this state.
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- `Go Through Door`: if:
+  - The door remains centered and clearly visible
+  - You are not yet through the doorway
+
+- `Oriented Towards Door`: if:
+  - The door becomes partially visible, off-center, or unclear
+  - You no longer see the full doorway frame
+
+- `Position in the center of room`: once the robot crosses the threshold and the view changes (door no longer centered).
+
+---
+
+## ⚠️ NOTES
+
+- Do not continue blindly forward if visibility is unclear.
+- Prioritize **confidence in alignment** over blind center-tag trust.
+- It’s better to return and realign than to bump into a frame or wall.
