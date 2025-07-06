@@ -1,0 +1,51 @@
+## State: **Search Object**
+
+---
+
+## 🎯 GOAL
+Scan the current room to locate and center the desired object in the field of view.
+
+---
+
+## 🧠 POLICY RULES
+
+- Use short forward movements or in-place rotations to explore the surroundings.
+- Prefer rotating in the same direction as the previous rotation if applicable (e.g., if `previous_movement` was `B2`, use `B1`, `B2`, or `B3`).
+- Alternate between rotating and moving forward if the object has not been seen in the last 3 steps.
+- If the object is partially visible but not centered, rotate slightly to center it.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+- `A2`: move forward 25 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45°
+- `B3`: rotate 90°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45°
+- `C3`: rotate 90°
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on what the robot sees:
+
+- `Search Object`: if the target object is not yet visible or not centered in the frame.
+- `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
+
+---
+
+## ⚠️ NOTES
+
+- Avoid unnecessary movement: do not move forward if the object might be occluded or outside the frame.
+
