@@ -8,6 +8,19 @@ from omegaconf import OmegaConf
 from reasoning.VLMModel import ReasoningModel
 import json
 import argparse
+import logging
+
+logging.basicConfig(
+    format="%(message)s", 
+    # format="%(asctime)s - %(levelname)s - %(module)s - %(message)s", 
+    # datefmt="%m/%d/%Y %I:%M:%S %p",
+)
+logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger("werkzeug").setLevel(logging.INFO)
+logging.getLogger("openai").setLevel(logging.INFO) 
+logging.getLogger("httpcore").setLevel(logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 # Load config
 cfg = OmegaConf.load("config.yaml")
