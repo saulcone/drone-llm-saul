@@ -223,7 +223,7 @@ def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
 
 def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
-    goal_rooms = ["bathroom", "bedroom", "living room"]
+    goal_rooms = ["bathroom", "bedroom", "living room & kitchen"]
     # Reach room goals
     if goal_id < len(goal_rooms):
         if room == goal_rooms[goal_id] and pred_room == room:
@@ -237,9 +237,9 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
     # Diccionario de objetivos con coordenadas
     goals = {
-        3: ("tv", (2.5, 1.2), "living room"),             # "Find the TV in the living room"
-        4: ("refrigerator", (-4.5, 3.65), "living room"), # "Find the refrigerator in the living room"
-        5: ("tap", (-5.2, -1.1), "living room"),          # "Find the faucet in the living room"
+        3: ("tv", (2.5, 1.2), "living room & kitchen"),             # "Find the TV in the living room"
+        4: ("refrigerator", (-4.5, 3.65), "living room & kitchen"), # "Find the refrigerator in the living room"
+        5: ("tap", (-5.2, -1.1), "living room & kitchen"),          # "Find the faucet in the living room"
         6: ("mirror", (3.75, -5.65), "bedroom"),      # "Find the mirror in the bedroom"
         7: ("cabinet", (3.25, -4.0), "bedroom"),      # "Find the cabinet in the bedroom"
         8: ("sink", (-3.95, -5.25), "bathroom"),       # "Find the sink in the bathroom"
@@ -262,8 +262,8 @@ def get_query(query_id):
         "Go to the bedroom",
         "Go to the living room or kitchen",
         "Find the TV in the living room",
-        "Find the refrigerator in the living room",
-        "Find the faucet in the living room",
+        "Find the refrigerator in the living room or kitchen",
+        "Find the faucet in the living room or kitchen",
         "Find the mirror in the bedroom",
         "Find the cabinet in the bedroom",
         "Find the sink in the bathroom",
@@ -466,7 +466,7 @@ def run_experiment(args, topology):
 
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
     spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
-    query_range = [0, 1, 2, 4, 6, 8] if args.query == -1 else [args.query]
+    query_range = [0, 1, 4] if args.query == -1 else [args.query]
 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10

@@ -14,7 +14,13 @@ def leer_experimentos(json_folder):
     """
     resultados = []
 
-    for archivo in os.listdir(json_folder):
+    # ordenar archivos por nombre
+    try:
+        archivos = sorted(os.listdir(json_folder))
+    except FileNotFoundError:
+        print(f"Error: la carpeta {json_folder} no existe.")
+        return resultados
+    for archivo in archivos:
         if archivo.endswith(".json"):
             try:
                 with open(os.path.join(json_folder, archivo), "r") as f:
