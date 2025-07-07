@@ -46,7 +46,7 @@ Only return **ONE** movement command from the list below:
 - `D2`: move 10 cm right
 
 ### E. Transition:
-- `E`: issue exclusively when transitioning to `Search Object` after the object is missing for 2+ steps
+- `E`: issue exclusively when transitioning to `Search Object` after the object is missing for 2+ steps or when transitioning to `Describe Object`
 
 ---
 
@@ -65,4 +65,5 @@ Choose the next FSM state:
 - Avoid overshooting: stop once the object appears large and approximately centered.
 - Do not rotate if the object is already aligned.
 - If the object disappears from view for 2+ steps, stop and transition back to `Search Object` with movement `E`.
+- If the output state is `Describe Object`, always move with `E`.
 - Prioritize lateral adjustments over forward movement if the object is strongly off to one side.
