@@ -435,6 +435,11 @@ def run_simulation(args, topology, json_data=None):
             result = "collision_detected"
             break
 
+        if not goal_state and state == "Final":
+            print("Final state reached without goal! Ending simulation.")
+            result = "false_goal_reached"
+            break
+
     if args.save_logs and json_data:
 
         end_info = {
