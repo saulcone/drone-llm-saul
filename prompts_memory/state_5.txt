@@ -1,0 +1,40 @@
+## State: **Describe Object**
+
+---
+
+## 🎯 GOAL
+Stop all movement and describe the current position and appearance of the identified object.
+
+---
+
+## 🧠 POLICY RULES
+
+- Do not move the robot. Only assess and describe the visible object in the image.
+- Focus on characteristics such as:
+  - Location in the image (center, left, right, near, far)
+  - Size (small, large, full-frame)
+  - Orientation or context (e.g., on table, near wall)
+- If the object is partially outside the frame or occluded, mention this clearly.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### E. Stop:
+- `E`: stop movement (robot is already in position)
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+- Always return:  
+  `Final` → This indicates the navigation and inspection task is complete.
+
+---
+
+## ⚠️ NOTES
+
+- Do not include any motion or planning command.
+- Your output should only contain the final JSON with a visual description and the `E` stop signal.

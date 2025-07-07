@@ -5,19 +5,35 @@ from flask import Flask, Response, request, jsonify
 from werkzeug.utils import secure_filename
 import jsonpickle
 from omegaconf import OmegaConf
-from gpt_class import GPTDescriptor
+from reasoning.VLMModel import ReasoningModel
 import json
+import argparse
+import logging
+
+logging.basicConfig(
+    format="%(message)s", 
+    # format="%(asctime)s - %(levelname)s - %(module)s - %(message)s", 
+    # datefmt="%m/%d/%Y %I:%M:%S %p",
+)
+logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger("werkzeug").setLevel(logging.INFO)
+logging.getLogger("openai").setLevel(logging.INFO) 
+logging.getLogger("httpcore").setLevel(logging.INFO)
+logging.getLogger("httpx").setLevel(logging.WARNING)
+logger = logging.getLogger(__name__)
 
 # Load config
 cfg = OmegaConf.load("config.yaml")
 cfg = OmegaConf.to_container(cfg, resolve=True)
 cfg = OmegaConf.create(cfg)
 
-gpt_model = GPTDescriptor(
-    cfg.chatgpt.model,
-    cfg.chatgpt.max_tokens,
-    cfg.chatgpt.temperature,
-    cfg.chatgpt.top_p
+print("Model: ", cfg.model)
+vlm_model = ReasoningModel.create_model(
+    cfg.model,
+    max_tokens = cfg.max_tokens,
+    temperature = cfg.temperature,
+    top_p = cfg.top_p,
+    reasoning_effort = cfg.reasoning_effort,
 )
 
 app = Flask(__name__)
@@ -44,15 +60,21 @@ def cmd_vel():
     np_arr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # Call GPT
-    response = gpt_model.generate_trajectory(img, query, topology=topology, 
-                                             state=state, 
-                                             previous_movement=previous_movement,
-                                             mov_history=mov_history)
+    # Call Reasoning model
+    response = vlm_model.generate_trajectory(img, query, topology=topology, 
+                            state=state,previous_movement=previous_movement,
+                            mov_history=mov_history)
     gpt_response = jsonpickle.encode(response)
 
     return Response(response=gpt_response, status=200, mimetype="application/json")
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5001, use_reloader=False)
+    parser = argparse.ArgumentParser(description='Run the reasoning server.')
+    parser.add_argument('--host', type=str, default='0.0.0.0',
+                        help='Host address to run the server on')
+    parser.add_argument('--port', type=int, default=5001,
+                        help='Port to run the server on')
+    args = parser.parse_args()
+    
+    app.run(debug=True, host=args.host, port=args.port, use_reloader=False)

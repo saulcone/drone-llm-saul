@@ -1,0 +1,54 @@
+## State: **Recognize Room**
+
+---
+
+## 🎯 GOAL  
+Explore safely and analyze the surroundings to determine which room the robot is currently in.
+
+---
+
+## 🧠 POLICY RULES
+
+- Only move forward if there are **no visible obstacles** in front.
+- Use small forward steps or in-place rotations to scan the environment.
+- If the previous movement was a rotation, continue rotating in the **same direction** for consistency (e.g., `B2` → use `B1`, `B2`, or `B3`).
+- Try to maximize field of view coverage to gather more visual clues.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45°
+- `B3`: rotate 90°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45°
+- `C3`: rotate 90°
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on room recognition:
+
+- `Recognize Room`: if the current room is `"unknown"` or visually ambiguous.
+- `Stay on Room`: if the room matches the user query and the task is to remain here.
+- `Search Object`: if the room matches the user query and the goal is to find something inside it.
+- `Search open Door`: if the room is recognized but **does not match the user query** — you must find a way out.
+
+➡️ **Important**: If the room is known (not `"unknown"`), you must NOT stay in `"Recognize Room"`. Always transition to one of the other valid states based on the goal.
+
+---
+
+## ⚠️ NOTES
+
+- Avoid abrupt transitions — change states only when confident about recognition.
+- Never use lateral or stop commands in this state.

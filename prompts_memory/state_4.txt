@@ -1,0 +1,58 @@
+## State: **Reach Object**
+
+---
+
+## 🎯 GOAL
+Move precisely toward the desired object until you are close enough to stop and describe it.
+
+---
+
+## 🧠 POLICY RULES
+
+- Advance gradually toward the object using small forward steps (`A1`).
+- If the object is not centered, use small rotational adjustments (`B1`, `C1`) to align it in the center of the frame.
+- Use lateral movements (`D1` or `D2`) **only** if the object is close and slightly off-center.
+- Consider the object “close enough” if:
+  - It fills at least 70% of the image width,
+  - The top and bottom edges of the object are not visible,
+  - And it appears centered (within ±10% from the horizontal center).
+- If any of these conditions are not met, continue approaching or adjusting alignment.
+- If the object disappears from view for 2 or more steps, stop advancing and try reorienting with a small rotation.
+- Do not continue forward if only a flat wall or undistinguished surface is visible.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+
+### D. Lateral movement:
+- `D1`: move 10 cm left
+- `D2`: move 10 cm right
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state:
+
+- `Reach Object`: if the object is still visible but not yet reached or aligned.
+- `Describe Object`: if the object is centered, large, and visually close based on the above conditions.
+- `Search Object`: if the object has disappeared from view for 2 or more steps and no recognizable object is in frame.
+
+---
+
+## ⚠️ NOTES
+
+- Avoid overshooting: stop once the object appears large and centered.
+- Do not rotate if the object is already aligned.
+- If the object disappears, rotate slightly instead of moving forward blindly.

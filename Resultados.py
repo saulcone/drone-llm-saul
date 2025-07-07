@@ -14,7 +14,13 @@ def leer_experimentos(json_folder):
     """
     resultados = []
 
-    for archivo in os.listdir(json_folder):
+    # ordenar archivos por nombre
+    try:
+        archivos = sorted(os.listdir(json_folder))
+    except FileNotFoundError:
+        print(f"Error: la carpeta {json_folder} no existe.")
+        return resultados
+    for archivo in archivos:
         if archivo.endswith(".json"):
             try:
                 with open(os.path.join(json_folder, archivo), "r") as f:
@@ -63,7 +69,8 @@ def actualizar_tabla(json_folder):
         root.title("Monitor Experimentos")
 
     # escribir resultados en results.txt
-    with open("results.txt", "w", encoding="utf-8") as f:
+    output_path = os.path.join(json_folder, "results.txt")
+    with open(output_path, "w", encoding="utf-8") as f:
         f.write("Nombre\tEstado\tResultado\n")
         for nombre, estado, resultado in experimentos:
             f.write(f"{nombre}\t{estado}\t{resultado}\n")

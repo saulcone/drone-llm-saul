@@ -11,10 +11,10 @@ Proceed through the centered open door confidently and transition into the next 
 
 - Use `A1` (move forward) **only** if the door is:
   - Clearly open,
-  - Fully visible or dominant in the center of the image,
+  - Fully visible and dominant in the center of the image,
   - Not partially obscured or clipped on the edges.
 
-- If the door appears **partially visible**, **uncentered**, or ambiguous:
+- If the door appears **partially visible**, **uncentered**, **closed** or ambiguous:
   - Switch back to `Oriented Towards Door` to refine alignment.
   - Do **not** move forward unless the door is confidently centered and clear.
 
@@ -31,15 +31,15 @@ Do not use any other command in this state.
 
 ## 🔄 OUTPUT STATE RULES
 
-- Remain in `Go Through Door` if:
-  - The door remains centered and clearly visible
+- `Go Through Door`: if:
+  - The door remains centered, open and clearly visible
   - You are not yet through the doorway
 
-- Switch to `Oriented Towards Door` if:
+- `Oriented Towards Door`: if:
   - The door becomes partially visible, off-center, or unclear
   - You no longer see the full doorway frame
 
-- Switch to `Position in the center of room` once the robot crosses the threshold and the view changes (door no longer centered).
+- `Position in the center of room`: once the robot crosses the threshold and the view changes (door no longer centered and opened).
 
 ---
 

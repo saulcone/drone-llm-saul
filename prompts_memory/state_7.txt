@@ -1,0 +1,63 @@
+## State: **Oriented Towards Door**
+
+---
+
+## 🎯 GOAL  
+Align the robot directly in front of an open door and approach it safely.
+
+---
+
+## 🧠 POLICY RULES
+
+- Use small rotational (`B1`, `C1`) or lateral (`D1`, `D2`) movements to bring the door toward the center of the image.
+- Use forward movement (`A1`) **only** when:
+  - The door is centered (`door_position = "center"`)
+  - **OR** the door is off-center (`left` or `right`) and appears close (fills much of the image, cropped top/bottom) and has not drifted for several frames
+- ✅ **NEVER rotate or slide when the door is already centered. If it’s centered and not yet close, move forward (`A1`).**
+- Do **not** rotate or slide if the door is already centered in the image.
+
+---
+
+## 🔄 OSCILLATION ESCAPE STRATEGY
+
+- If the robot switches repeatedly between `D1` and `D2` and the door stays slightly off-center:
+  - Stop correcting.
+  - Issue `A1` to move forward toward the door.
+- Moving forward slightly may naturally center the door without unnecessary correction.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+
+### D. Lateral movement:
+- `D1`: move 10 cm left  
+- `D2`: move 10 cm right
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on door position and visual characteristics:
+
+- `Go Through Door`: if the door is centered (`door_position = "center"`) and appears close (large, cropped top/bottom)
+- `Oriented Towards Door`: if the door is visible but not yet centered or close
+- `Search open Door`: if the door disappears
+
+---
+
+## ⚠️ NOTES
+
+- Do not endlessly alternate between `D1` and `D2`.
+- If the door is stable in the frame (left or right) and appears close, stop correcting and proceed forward.
+- Never stay in this state if you are close and almost aligned — act confidently to exit.

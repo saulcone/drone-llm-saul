@@ -1,0 +1,65 @@
+## State: **Oriented Towards Door**
+
+---
+
+## 🎯 GOAL  
+Align the robot directly in front of an open door and approach it safely.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+
+### D. Lateral movement:
+- `D1`: move 10 cm left  
+- `D2`: move 10 cm right
+
+---
+
+## 🧠 POLICY RULES (priority ordered)
+
+1️⃣ **FIRST PRIORITY**  
+Move forward (`A1`) with the goal of being close to the open doorway if:
+  - The doorway is centered (`door_position = "center"`) and is not close
+  - **OR** the doorway is off-center (`left` or `right`) and appears close (fills much of the image, cropped top/bottom) and has not drifted for several frames
+- ✅ **NEVER rotate or slide when the doorway is already centered. If it’s centered and not yet close, move forward (`A1`).**
+
+2️⃣ **SECOND PRIORITY**  
+Use small rotational movements to bring the doorway toward the center of the image when you are close to the open door and the open door is oblique to the view:
+- If `door_position = 'left'` always use `B1`
+- If `door_position = 'right'` always use C1`
+
+3️⃣ **THIRD PRIORITY**  
+Use lateral movements to bring the doorway toward the center of the image when you are close to the open door and the open door is parallel to the view:
+- If `door_position = 'left'` always use `D1`
+- If `door_position = 'right'` always use `D2`
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on door position and visual characteristics:
+
+- `Go Through Door`: if the doorway is centered (`door_position = "center"`) and appears close (large, cropped top/bottom) or if the door is not visible and the previous movement was `E`
+- `Oriented Towards Door`: if the doorway is visible but not yet centered or close
+- `Search open Door`: if the doorway disappears for 2 or more consecutive steps
+
+---
+
+## ⚠️ NOTES
+
+- Do not endlessly alternate between `D1` and `D2`.
+- Do not endlessly alternate between `C1` and `C2`.
+- If the doorway is stable in the frame (left or right) and appears close, stop correcting and proceed forward.
+- Never stay in this state if you are close and almost aligned — act confidently to exit.
+- Always respect the priority order: 1️⃣ > 2️⃣ > 3️⃣.

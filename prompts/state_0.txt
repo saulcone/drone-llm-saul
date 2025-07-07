@@ -40,7 +40,7 @@ Only return **ONE** movement command from the list below:
 Choose the next FSM state based on room recognition:
 
 - `Recognize Room`: if the current room is `"unknown"` or visually ambiguous.
-- `Stay on Room`: if the room matches the user query and the task is to remain here.
+- `Stay on Room`: if the room matches the user query and the task is to go to that room.
 - `Search Object`: if the room matches the user query and the goal is to find something inside it.
 - `Search open Door`: if the room is recognized but **does not match the user query** — you must find a way out.
 

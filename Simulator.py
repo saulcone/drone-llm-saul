@@ -62,19 +62,26 @@ def read_obs(env, behavior_drone):
     obs = decision_steps.obs
 
     img = obs[0][0]
+    img_2 = obs[1][0]
 
     real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0  # Convert to 0-255 range
     real_img = np.clip(real_img, 0, 255).astype(np.uint8)
 
-    height = obs[1][0][0]
-    pos = obs[2][0][:3]
-    yaw = obs[2][0][3]
-    collision_state = obs[2][0][4]
+    real_img_2 = cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR) * 255.0
+    real_img_2 = np.clip(real_img_2, 0, 255).astype(np.uint8)
+
+    height = obs[2][0][0]
+    pos = obs[3][0][:3]
+    yaw = obs[3][0][3]
+    collision_state = obs[3][0][4]
 
     cv2.imshow("Image", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
     cv2.waitKey(1)
 
-    return img, real_img, height, pos, yaw, collision_state
+    #cv2.imshow("Image 2", cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR))
+    #cv2.waitKey(1)
+
+    return img, real_img, real_img_2, height, pos, yaw, collision_state
 
 def show_observations(img, height, pos, yaw, state):
 
@@ -177,10 +184,10 @@ def calculate_room(pos):
     # Living room (Salón): unión de dos zonas
     # Parte 1: [(−5.45, −3.15), (−1, −4.7)]
     if -5.45 <= x <= -1 and -4.7 <= z <= -3.15:
-        return "living room"
+        return "living room & kitchen"
     # Parte 2: [(−5.45, −3.15), (2.75, 5.35)]
     elif -5.45 <= x <= 2.75 and -3.15 <= z <= 5.35:
-        return "living room"
+        return "living room & kitchen"
 
     return None
 
@@ -216,7 +223,7 @@ def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
 
 def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
-    goal_rooms = ["bathroom", "bedroom", "living room"]
+    goal_rooms = ["bathroom", "bedroom", "living room & kitchen"]
     # Reach room goals
     if goal_id < len(goal_rooms):
         if room == goal_rooms[goal_id] and pred_room == room:
@@ -225,14 +232,14 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
             return False
 
     # Umbrales de distancia y ángulo
-    dist_threshold = 2.0  # Distancia mínima para considerar "cerca"
+    dist_threshold = 3.0  # Distancia mínima para considerar "cerca"
     angle_threshold = 25  # Ángulo mínimo para considerar "de frente"
 
     # Diccionario de objetivos con coordenadas
     goals = {
-        3: ("tv", (2.5, 1.2), "living room"),             # "Find the TV in the living room"
-        4: ("refrigerator", (-4.5, 3.65), "living room"), # "Find the refrigerator in the living room"
-        5: ("tap", (-5.2, -1.1), "living room"),          # "Find the faucet in the living room"
+        3: ("tv", (2.5, 1.2), "living room & kitchen"),             # "Find the TV in the living room"
+        4: ("refrigerator", (-4.5, 3.65), "living room & kitchen"), # "Find the refrigerator in the living room"
+        5: ("tap", (-5.2, -1.1), "living room & kitchen"),          # "Find the faucet in the living room"
         6: ("mirror", (3.75, -5.65), "bedroom"),      # "Find the mirror in the bedroom"
         7: ("cabinet", (3.25, -4.0), "bedroom"),      # "Find the cabinet in the bedroom"
         8: ("sink", (-3.95, -5.25), "bathroom"),       # "Find the sink in the bathroom"
@@ -253,10 +260,10 @@ def get_query(query_id):
     queries = [
         "Go to the bathroom",
         "Go to the bedroom",
-        "Go to the living room",
+        "Go to the living room or kitchen",
         "Find the TV in the living room",
-        "Find the refrigerator in the living room",
-        "Find the faucet in the living room",
+        "Find the refrigerator in the living room or kitchen",
+        "Find the faucet in the living room or kitchen",
         "Find the mirror in the bedroom",
         "Find the cabinet in the bedroom",
         "Find the sink in the bathroom",
@@ -286,9 +293,10 @@ def run_simulation(args, topology, json_data=None):
     behavior_drone = list(env.behavior_specs)[0]
 
     int_channel.send_int(args.spawn_id)
+
     decision_steps, _ = env.get_steps(behavior_drone)
     action = spec.action_spec.random_action(len(decision_steps))
-    move_drone(10, [0, 0, 0, 0], env=env, action=action, behavior_drone=behavior_drone)
+    move_drone(20, [0, 0, 0, 0], env, action, behavior_drone)
 
     state = "Recognize Room"
     query_id = args.query
@@ -301,6 +309,7 @@ def run_simulation(args, topology, json_data=None):
     door_position = ""
     total_steps = 0
     total_time = 0.0
+    elapsed_time = 0.0
     max_steps = args.max_steps  # Maximum steps to prevent infinite loop
     result = None
 
@@ -321,9 +330,11 @@ def run_simulation(args, topology, json_data=None):
     # Video writer
     if args.save_video:
         frame_size = (480, 360)  # ajusta según tus imágenes
+        frame_size_2 = (1280, 720)  # ajusta según tus imágenes de la cámara trasera
         fps = 24 if args.manual else 1
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
+        video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size_2)
 
     while True:
 
@@ -341,7 +352,7 @@ def run_simulation(args, topology, json_data=None):
         if key_ctrl.is_pressed('r'):
             env.reset()
 
-        img, real_img, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
+        img, real_img, real_img_2, height, pos, yaw, collision_state = read_obs(env, behavior_drone)
         room = calculate_room(pos)
         goal_state = calculate_goal(query_id, pos, yaw, room, pred_room)
 
@@ -349,6 +360,8 @@ def run_simulation(args, topology, json_data=None):
             img_text = f"Step: {total_steps}"
             img_with_text = cv2.putText(real_img.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             video_writer.write(img_with_text)
+            img_with_text_2 = cv2.putText(real_img_2.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+            video_writer_2.write(img_with_text_2)
 
         if manual:
 
@@ -369,7 +382,7 @@ def run_simulation(args, topology, json_data=None):
 
             # Get command velocity from the server
             start_time = time.time()
-            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history)
+            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, addr=args.addr)
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
             command = response.get("movement")
@@ -404,6 +417,9 @@ def run_simulation(args, topology, json_data=None):
 
             json_data["Step_" + str(total_steps)] = log_data
 
+            with open(args.output_file, "w") as info_file:
+                json.dump(json_data, info_file, indent=2)
+
         if total_steps >= max_steps and not args.manual:
             print(f"Reached maximum steps: {max_steps}. Ending simulation.")
             result = "max_steps_reached"
@@ -417,6 +433,11 @@ def run_simulation(args, topology, json_data=None):
         if collision_state == 0.0:
             print("Collision detected! Ending simulation.")
             result = "collision_detected"
+            break
+
+        if not goal_state and state == "Final":
+            print("Final state reached without goal! Ending simulation.")
+            result = "false_goal_reached"
             break
 
     if args.save_logs and json_data:
@@ -435,7 +456,9 @@ def run_simulation(args, topology, json_data=None):
 
     if args.save_video:
         video_writer.release()
+        video_writer_2.release()
         print(f"Video saved to {args.output_video}")
+        print(f"Video (back) saved to {args.output_video.replace('.mp4', '_back.mp4')}")
 
     env.close()
 
@@ -443,7 +466,7 @@ def run_experiment(args, topology):
 
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
     spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
-    query_range = [0, 1, 2, 3, 6, 8] if args.query == -1 else [args.query]
+    query_range = [0, 1, 4] if args.query == -1 else [args.query]
 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
@@ -492,11 +515,11 @@ if __name__ == "__main__":
     parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
-    parser.add_argument('--max_steps', '-s', type=int, default=100, help='Maximum steps to prevent infinite loop')
+    parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')
 
     args = parser.parse_args()
 
-    topology = {"living room": ["bedroom", "bathroom"], "bedroom": ["living room"], "bathroom": ["living room"]}
+    topology = {"living room & kitchen": ["bedroom", "bathroom"], "bedroom": ["living room & kitchen"], "bathroom": ["living room & kitchen"]}
 
     if args.run_experiment:
         run_experiment(args, topology)
