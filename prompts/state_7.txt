@@ -26,26 +26,23 @@ Only return **ONE** movement command from the list below:
 
 ---
 
-## 🧠 POLICY RULES
+## 🧠 POLICY RULES (priority ordered)
 
-- Use small rotational (`B1`, `C1`) or lateral (`D1`, `D2`) movements to bring the door approximately to the center of the image.
-- Use forward movement (`A1`) **only** when:
-  - The door is approximately centered (`door_position = "center"`)
-  - ✅ **NEVER rotate or slide when the door is already centered. If it’s centered and not yet close, move forward (`A1`).**
-- Do **not** rotate or slide if the door is already centered in the image.
-- If the door position is on the left you are not allow to do lateral movement to the righ (`D2`) neither 
-right rotation (`C1`)
-- If the door position is on the right you are not allow to do lateral movement to the left (`D1`) neither 
-left rotation (`B1`)
+1️⃣ **FIRST PRIORITY**  
+Move forward (`A1`) with the goal of being close to the door if:
+  - The door is centered (`door_position = "center"`) 
+  - **OR** the door is off-center (`left` or `right`) and is not  close (fills much of the image, cropped top/bottom)
+- ✅ **NEVER rotate or slide when the door is already centered. If it’s centered and not yet  close, move forward (`A1`).**
 
----
+2️⃣ **SECOND PRIORITY**  
+Use small rotational movements to bring the door toward the center of the image only when you are super close to the open door and the open door is oblique to the view:
+- If `door_position = 'left'` always use `B1`
+- If `door_position = 'right'` always use C1`
 
-## 🔄 OSCILLATION ESCAPE STRATEGY
-
-- If the robot switches repeatedly between `D1` and `D2` and the door stays slightly off-center:
-  - Stop correcting.
-  - Issue `A1` to move forward toward the door.
-- Moving forward slightly may naturally center the door without unnecessary correction.
+3️⃣ **THIRD PRIORITY**  
+Use lateral movements to bring the door toward the center of the image only when you are super close to the open door and the open door is parallel to the view:
+- If `door_position = 'left'` always use `D1`
+- If `door_position = 'right'` always use `D2`
 
 ---
 
@@ -53,14 +50,16 @@ left rotation (`B1`)
 
 Choose the next FSM state based on door position and visual characteristics:
 
-- `Go Through Door`: if the door is centered (`door_position = "center"`) and appears close (large, cropped top/bottom)
-- `Oriented Towards Door`: if the door is visible but not yet centered or close
-- `Search open Door`: if the door disappears
+- `Go Through Door`: if the door is centered (`door_position = "center"`) and appears  close (large, cropped top/bottom) or if the door is not visible and the previous movement was `E`
+- `Oriented Towards Door`: if the door is visible but not yet centered or  close
+- `Search open Door`: if the door disappears for 2 or more consecutive steps
 
 ---
 
 ## ⚠️ NOTES
 
 - Do not endlessly alternate between `D1` and `D2`.
-- If the door is stable in the frame (left or right) and appears close, stop correcting and proceed forward.
-- Never stay in this state if you are close and almost aligned — act confidently to exit.
+- Do not endlessly alternate between `C1` and `C2`.
+- If the door is stable in the frame (left or right) and appears  close, stop correcting and proceed forward.
+- Never stay in this state if you are  close and almost aligned — act confidently to exit.
+- Always respect the priority order: 1️⃣ > 2️⃣ > 3️⃣.

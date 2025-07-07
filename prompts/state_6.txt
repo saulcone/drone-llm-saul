@@ -33,8 +33,8 @@ Only return **ONE** movement command from the list below:
 
 1️⃣ **FIRST PRIORITY**  
 If an open door is visible (`door_position ≠ "not_visible"`), but the content beyond the door cannot be confidently identified:  
-- You MUST move forward (`A1`) to improve the view  
-- You MUST NOT rotate, even if the previous movement was a rotation  
+- You MUST move forward (`A1`) to improve the view if you are not in danger of a collision with that movement
+- You MUST NOT rotate, even if the previous movement was a rotation, except if you are in danger of a collision moving forward. 
 - Stay in `Search open Door`.
 
 2️⃣ **SECOND PRIORITY**  
