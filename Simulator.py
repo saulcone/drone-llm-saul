@@ -184,10 +184,10 @@ def calculate_room(pos):
     # Living room (Salón): unión de dos zonas
     # Parte 1: [(−5.45, −3.15), (−1, −4.7)]
     if -5.45 <= x <= -1 and -4.7 <= z <= -3.15:
-        return "living room"
+        return "living room & kitchen"
     # Parte 2: [(−5.45, −3.15), (2.75, 5.35)]
     elif -5.45 <= x <= 2.75 and -3.15 <= z <= 5.35:
-        return "living room"
+        return "living room & kitchen"
 
     return None
 
@@ -223,7 +223,7 @@ def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
 
 def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
-    goal_rooms = ["bathroom", "bedroom", "living room"]
+    goal_rooms = ["bathroom", "bedroom", "living room & kitchen"]
     # Reach room goals
     if goal_id < len(goal_rooms):
         if room == goal_rooms[goal_id] and pred_room == room:
@@ -232,14 +232,14 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
             return False
 
     # Umbrales de distancia y ángulo
-    dist_threshold = 2.0  # Distancia mínima para considerar "cerca"
+    dist_threshold = 3.0  # Distancia mínima para considerar "cerca"
     angle_threshold = 25  # Ángulo mínimo para considerar "de frente"
 
     # Diccionario de objetivos con coordenadas
     goals = {
-        3: ("tv", (2.5, 1.2), "living room"),             # "Find the TV in the living room"
-        4: ("refrigerator", (-4.5, 3.65), "living room"), # "Find the refrigerator in the living room"
-        5: ("tap", (-5.2, -1.1), "living room"),          # "Find the faucet in the living room"
+        3: ("tv", (2.5, 1.2), "living room & kitchen"),             # "Find the TV in the living room"
+        4: ("refrigerator", (-4.5, 3.65), "living room & kitchen"), # "Find the refrigerator in the living room"
+        5: ("tap", (-5.2, -1.1), "living room & kitchen"),          # "Find the faucet in the living room"
         6: ("mirror", (3.75, -5.65), "bedroom"),      # "Find the mirror in the bedroom"
         7: ("cabinet", (3.25, -4.0), "bedroom"),      # "Find the cabinet in the bedroom"
         8: ("sink", (-3.95, -5.25), "bathroom"),       # "Find the sink in the bathroom"
@@ -260,10 +260,10 @@ def get_query(query_id):
     queries = [
         "Go to the bathroom",
         "Go to the bedroom",
-        "Go to the living room",
+        "Go to the living room or kitchen",
         "Find the TV in the living room",
-        "Find the refrigerator in the living room",
-        "Find the faucet in the living room",
+        "Find the refrigerator in the living room or kitchen",
+        "Find the faucet in the living room or kitchen",
         "Find the mirror in the bedroom",
         "Find the cabinet in the bedroom",
         "Find the sink in the bathroom",
@@ -435,6 +435,11 @@ def run_simulation(args, topology, json_data=None):
             result = "collision_detected"
             break
 
+        if not goal_state and state == "Final":
+            print("Final state reached without goal! Ending simulation.")
+            result = "false_goal_reached"
+            break
+
     if args.save_logs and json_data:
 
         end_info = {
@@ -461,7 +466,7 @@ def run_experiment(args, topology):
 
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
     spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
-    query_range = [0, 1, 2, 4, 6, 8] if args.query == -1 else [args.query]
+    query_range = [0, 1, 4] if args.query == -1 else [args.query]
 
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
@@ -514,7 +519,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    topology = {"living room": ["bedroom", "bathroom"], "bedroom": ["living room"], "bathroom": ["living room"]}
+    topology = {"living room & kitchen": ["bedroom", "bathroom"], "bedroom": ["living room & kitchen"], "bathroom": ["living room & kitchen"]}
 
     if args.run_experiment:
         run_experiment(args, topology)
