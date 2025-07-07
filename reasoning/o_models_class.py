@@ -4,9 +4,12 @@ from dotenv import load_dotenv
 import base64
 import json
 import cv2
+import logging
 
 from reasoning.load_prompts import load_system_prompt
 from reasoning.VLMModel import VLMBaseModel
+
+logger = logging.getLogger(__name__)
 
 # Load the API key from the .env file
 load_dotenv()
@@ -79,12 +82,24 @@ class OModelDescriptor(VLMBaseModel):
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                response_format={"type": "json_object"},         
-                max_completion_tokens=self.max_tokens, # controls response length)
+                response_format={"type": "json_object"},
+                max_completion_tokens=self.max_tokens, # controls response length) 
             )
+            logger.debug("completion_tokens: %s", response.usage.completion_tokens)
+            logger.debug("reasoning_tokens: %s", response.usage.completion_tokens_details.reasoning_tokens)
 
             chatgpt_response_json = response.choices[0].message.content.strip()
             return json.loads(chatgpt_response_json)
 
-        except Exception as e:
-            print(f"An error occurred decoding chatgpt json response: {str(e)}")
+        except Exception:
+            logger.exception("An error occurred while generating trajectory with OpenAI API")
+
+
+# ChatCompletion(id='chatcmpl-BqOTkFCB1WaKMDqQrYzsdrcSzbyi2',
+#                choices=[Choice(finish_reason='stop', index=0, 
+#                                logprobs=None, 
+#                                message=ChatCompletionMessage(content='{\n  "room": "bedroom",\n  "movement": "B2",\n  "state": "Search Object",\n  "description": "Bed with headboard, window with curtain, nightstand and lamp; no mirror visible",\n  "door_position": "not_visible"\n}', 
+#                                                              refusal=None, role='assistant', annotations=[], audio=None, function_call=None, tool_calls=None))], 
+#                created=1751826852, model='o4-mini-2025-04-16', object='chat.completion', service_tier='default', 
+#                system_fingerprint=None, 
+#                usage=CompletionUsage(completion_tokens=396, prompt_tokens=1286, total_tokens=1682, completion_tokens_details=CompletionTokensDetails(accepted_prediction_tokens=0, audio_tokens=0, reasoning_tokens=320, rejected_prediction_tokens=0), prompt_tokens_details=PromptTokensDetails(audio_tokens=0, cached_tokens=0)))

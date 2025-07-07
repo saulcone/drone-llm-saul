@@ -4,12 +4,14 @@ from dotenv import load_dotenv
 import base64
 import json
 import cv2
+import logging
 
 from reasoning.load_prompts import load_system_prompt
 from reasoning.VLMModel import VLMBaseModel
 
 # Load the API key from the .env file
 load_dotenv()
+logger = logging.getLogger(__name__)
     
 
 class GPTDescriptor(VLMBaseModel):
@@ -87,6 +89,8 @@ class GPTDescriptor(VLMBaseModel):
                 frequency_penalty=0, # affect repetition
                 presence_penalty=0, # affect repetition                
             )
+            logger.debug("completion_tokens: %s", response.usage.completion_tokens)
+            logger.debug("reasoning_tokens: %s", response.usage.completion_tokens_details.reasoning_tokens)
 
             chatgpt_response_json = response.choices[0].message.content.strip()
             return json.loads(chatgpt_response_json)
