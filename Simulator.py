@@ -184,10 +184,10 @@ def calculate_room(pos):
     # Living room (Salón): unión de dos zonas
     # Parte 1: [(−5.45, −3.15), (−1, −4.7)]
     if -5.45 <= x <= -1 and -4.7 <= z <= -3.15:
-        return "living room"
+        return "living room & kitchen"
     # Parte 2: [(−5.45, −3.15), (2.75, 5.35)]
     elif -5.45 <= x <= 2.75 and -3.15 <= z <= 5.35:
-        return "living room"
+        return "living room & kitchen"
 
     return None
 
@@ -260,7 +260,7 @@ def get_query(query_id):
     queries = [
         "Go to the bathroom",
         "Go to the bedroom",
-        "Go to the living room",
+        "Go to the living room or kitchen",
         "Find the TV in the living room",
         "Find the refrigerator in the living room",
         "Find the faucet in the living room",
@@ -519,7 +519,7 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    topology = {"living room": ["bedroom", "bathroom"], "bedroom": ["living room"], "bathroom": ["living room"]}
+    topology = {"living room & kitchen": ["bedroom", "bathroom"], "bedroom": ["living room & kitchen"], "bathroom": ["living room & kitchen"]}
 
     if args.run_experiment:
         run_experiment(args, topology)
