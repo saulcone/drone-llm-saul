@@ -232,7 +232,7 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
             return False
 
     # Umbrales de distancia y ángulo
-    dist_threshold = 2.0  # Distancia mínima para considerar "cerca"
+    dist_threshold = 3.0  # Distancia mínima para considerar "cerca"
     angle_threshold = 25  # Ángulo mínimo para considerar "de frente"
 
     # Diccionario de objetivos con coordenadas
