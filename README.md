@@ -35,16 +35,26 @@ pip install -r requirements.txt
 
 Inside of build directory
 
-⚙️ Argumentos disponibles
-Argumento	Alias	Tipo	Descripción
---fast	-f	flag	Activa el modo de movimiento rápido del dron.
---save_logs	-l	flag	Guarda registros de las observaciones durante el vuelo.
---run_experiment	-e	flag	Ejecuta múltiples repeticiones del simulador en modo experimento.
---experiment_name	-n	string	Nombre del experimento para registrar los resultados (por defecto: default_experiment).
---manual	-m	flag	Activa el modo de control manual.
---spawn_id	-i	int	Punto de aparición del dron (1-10). Por defecto -1 para aleatorio.
---num_repeats	-r	int	Número de repeticiones de cada punto de aparición (por defecto: 1).
---addr	-a	string	Dirección del servidor que controla la simulación (por defecto: http://172.18.33.110:5001).
---query	-q	int	ID de consulta del dron (0-9). Por defecto: -1.
---save_video	-v	flag	Guarda vídeo de la simulación.
---max_steps	-s	int	Máximo número de pasos para evitar bucles infinitos (por defecto: 100).
+⚙️ Available Arguments
+
+Argument	Alias	Type	Description
+--fast	-f	flag	Enables the drone's fast-movement mode.
+--save_logs	-l	flag	Saves logs of observations during the flight.
+--run_experiment	-e	flag	Runs multiple simulator repetitions in experiment mode.
+--experiment_name	-n	string	Name of the experiment used to record results (default: default_experiment).
+--manual	-m	flag	Enables manual control mode.
+--spawn_id	-i	int	Drone spawn point (1–10). Default is -1 for random.
+--num_repeats	-r	int	Number of repetitions for each spawn point (default: 1).
+--addr	-a	string	Address of the server controlling the simulation (default: http://172.18.33.110:5001).
+--query	-q	int	Drone query ID (0–9). Default: -1.
+--save_video	-v	flag	Saves a video of the simulation.
+--max_steps	-s	int	Maximum number of steps to avoid infinite loops (default: 100).
+
+⚠️ Potential Sources of Errors and Clarifications
+
+- "A camera taggeg 'MainCamera' is missing" : Ensure that all cameras in the scene, the MainCamera, and the rear and front cameras of the drone
+  are referenced in the CamManager2 script within the CamManager Hierarchy Element.
+
+- If Unity is unable to generate any of the files when starting the project, you can find the complete project at this link:
+  https://drive.google.com/file/d/1_Xyb0pSYdjYu-3azR9fbGEUyhfeFfP4o/view?usp=sharing
+
