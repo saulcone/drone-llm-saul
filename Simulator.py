@@ -55,31 +55,41 @@ class IntSenderChannel(SideChannel):
         msg.write_int32(value)
         self.queue_message_to_send(msg)
 
-# --- Funciones principales ---
 def read_obs(env, behavior_drone):
-
     decision_steps, _ = env.get_steps(behavior_drone)
     obs = decision_steps.obs
 
+    # Sensor 0: Siempre es la Cámara Frontal
     img = obs[0][0]
-    img_2 = obs[1][0]
-
-    real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0  # Convert to 0-255 range
+    real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0
     real_img = np.clip(real_img, 0, 255).astype(np.uint8)
 
-    real_img_2 = cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR) * 255.0
-    real_img_2 = np.clip(real_img_2, 0, 255).astype(np.uint8)
+    # Lógica adaptativa según el número de sensores recibidos
+    if len(obs) == 3:
+        # CASO ACTUAL: Falta la cámara trasera
+        # Creamos una imagen negra vacía para que el resto del código no falle
+        real_img_2 = np.zeros((720, 1280, 3), dtype=np.uint8)
 
-    height = obs[2][0][0]
-    pos = obs[3][0][:3]
-    yaw = obs[3][0][3]
-    collision_state = obs[3][0][4]
+        # Los sensores se han movido un puesto hacia arriba
+        height = obs[1][0][0]       # Altura ahora es obs[1]
+        pos_data = obs[2][0]        # Posición ahora es obs[2]
+
+    else:
+        # CASO ORIGINAL (4 sensores): Frontal, Trasera, Altura, Posición
+        img_2 = obs[1][0]
+        real_img_2 = cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR) * 255.0
+        real_img_2 = np.clip(real_img_2, 0, 255).astype(np.uint8)
+
+        height = obs[2][0][0]
+        pos_data = obs[3][0]
+
+    # Extraer datos comunes del vector de posición
+    pos = pos_data[:3]
+    yaw = pos_data[3]
+    collision_state = pos_data[4]
 
     cv2.imshow("Image", cv2.cvtColor(img, cv2.COLOR_RGB2BGR))
     cv2.waitKey(1)
-
-    #cv2.imshow("Image 2", cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR))
-    #cv2.waitKey(1)
 
     return img, real_img, real_img_2, height, pos, yaw, collision_state
 
