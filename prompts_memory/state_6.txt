@@ -3,71 +3,43 @@
 ---
 
 ## 🎯 GOAL  
-Systematically explore the environment to detect an open door that may lead to the **goal room**, either directly or through a connected path via other rooms based on the topological map.
+Find an open door that leads to the goal room based on the `topological_map`.
 
 ---
 
-## 🧠 POLICY RULES (priority ordered)
+## 🧠 POLICY RULES (Priority Ordered)
 
-1️⃣ **FIRST PRIORITY**  
-If an open door is visible (`door_position ≠ "not_visible"`), but the content beyond the door cannot be confidently identified:  
-- You MUST move forward (`A1`) to improve the view  
-- You MUST NOT rotate, even if the previous movement was a rotation  
-- Stay in `Search open Door`.
+1️⃣ **Unknown Room Beyond Door**:
+   - If you see an open door (`door_position` != "not_visible") but can't identify the room behind it:
+   - MUST move forward (`A1`) to see inside. Do NOT rotate away.
 
-2️⃣ **SECOND PRIORITY**  
-If an open door is visible **and** you can confidently identify the room beyond:  
-- If it is the **goal room**, immediately switch to `Oriented Towards Door` with movement = `E`  
-- If it is **directly** connected to the goal room, switch to `Oriented Towards Door` with movement = `E`  
-- If it is **indirectly** connected to the goal room (multi-step path), switch to `Oriented Towards Door` with movement = `E`  
-- If it has no connection (direct or indirect), stay in `Search open Door`.
+2️⃣ **Path Validation (Topological Reasoning)**:
+   - If you identify the room beyond the door:
+   - Check `topological_map`: Is this room the goal? OR does it connect to the goal?
+   - **YES**: Switch to `Oriented Towards Door` (return `movement: "E"`).
+   - **NO**: Ignore this door and continue searching (rotate/explore).
 
-3️⃣ **THIRD PRIORITY**  
-If no door is visible (`door_position = "not_visible"`):  
-- Continue standard exploration  
-- Use small in-place rotations and short forward steps  
-- Prioritize rotation if the robot has not moved recently or the field of view hasn’t changed significantly  
-- If the previous movement was a rotation, continue rotating in the same direction for consistency.
+3️⃣ **Search Strategy**:
+   - If no door is visible, explore using rotations (`B2`, `C2`) and short moves (`A1`).
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
+Only return **ONE** movement command:
 
-### A. Forward movement:
-- `A1`: move forward 10 cm
+### A. Forward:
+- `A1`: 10 cm
 
-### B. Left rotation:
-- `B1`: rotate 15°  
-- `B2`: rotate 45°  
-- `B3`: rotate 90°
-
-### C. Right rotation:
-- `C1`: rotate 15°  
-- `C2`: rotate 45°  
-- `C3`: rotate 90°
+### B/C. Rotation:
+- `B1`, `B2`, `B3` | `C1`, `C2`, `C3`
 
 ### E. Transition:
-- `E`: issue exclusively when switching to `Oriented Towards Door` — it signals a valid path has been found, and no physical movement should be combined with this.
+- `E`: ONLY used to signal "Door Found and Validated" -> Switch state.
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Oriented Towards Door`: only if
-  - An open door is visible, **AND**
-  - The room beyond is the goal room, or directly/indirectly connected to the goal room,
-  - **AND** you must return movement = `E` when performing this state change
-- `Search open Door`: if
-  - No door is visible, **OR**
-  - The visible room has no valid path to the goal room, **OR**
-  - The visible room cannot yet be identified confidently
-
----
-
-## ⚠️ NOTES
-
-- Never combine `E` with any other movement.
-- Do **not** transition to `Oriented Towards Door` unless confident in the destination room.
-- Always respect the priority order: 1️⃣ > 2️⃣ > 3️⃣.
+- `Oriented Towards Door`: Open door found AND validates against map (leads to goal).
+- `Search open Door`: No door seen, or door leads to wrong room.

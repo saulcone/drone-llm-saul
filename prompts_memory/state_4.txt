@@ -3,56 +3,47 @@
 ---
 
 ## 🎯 GOAL
-Move precisely toward the desired object until you are close enough to stop and describe it.
+Move precisely toward the desired object until it is close enough to describe.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- Advance gradually toward the object using small forward steps (`A1`).
-- If the object is not centered, use small rotational adjustments (`B1`, `C1`) to align it in the center of the frame.
-- Use lateral movements (`D1` or `D2`) **only** if the object is close and slightly off-center.
-- Consider the object “close enough” if:
-  - It fills at least 70% of the image width,
-  - The top and bottom edges of the object are not visible,
-  - And it appears centered (within ±10% from the horizontal center).
-- If any of these conditions are not met, continue approaching or adjusting alignment.
-- If the object disappears from view for 2 or more steps, stop advancing and try reorienting with a small rotation.
-- Do not continue forward if only a flat wall or undistinguished surface is visible.
+- **Approach Strategy**:
+  - Use `A1` (forward 10cm) as the primary move.
+  - If object drifts off-center (>10%), use `B1` or `C1` to realign.
+  - Use `D1`/`D2` (lateral) ONLY if you are very close and fine-tuning is needed.
+
+- **Stop Condition ("Close Enough")**:
+  - The object fills >40% of the image width.
+  - OR the object's top/bottom edges are cropped (too close).
+  - AND the object is centered.
+
+- **Failure Recovery**:
+  - If the object disappears for **2 consecutive steps**, return `movement: "E"` and switch state to `Search Object`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
+Only return **ONE** movement command:
 
-### A. Forward movement:
-- `A1`: move forward 10 cm
+### A. Forward:
+- `A1`: 10 cm
 
-### B. Left rotation:
-- `B1`: rotate 15°
+### B/C. Rotation (Fine-tuning):
+- `B1`: Left 15° | `C1`: Right 15°
 
-### C. Right rotation:
-- `C1`: rotate 15°
+### D. Lateral (Only if close):
+- `D1`: Left 10 cm | `D2`: Right 10 cm
 
-### D. Lateral movement:
-- `D1`: move 10 cm left
-- `D2`: move 10 cm right
+### E. Transition:
+- `E`: Use ONLY to abort back to `Search Object` or transition to `Describe Object`.
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-Choose the next FSM state:
-
-- `Reach Object`: if the object is still visible but not yet reached or aligned.
-- `Describe Object`: if the object is centered, large, and visually close based on the above conditions.
-- `Search Object`: if the object has disappeared from view for 2 or more steps and no recognizable object is in frame.
-
----
-
-## ⚠️ NOTES
-
-- Avoid overshooting: stop once the object appears large and centered.
-- Do not rotate if the object is already aligned.
-- If the object disappears, rotate slightly instead of moving forward blindly.
+- `Reach Object`: Object visible but not yet "Close Enough".
+- `Describe Object`: Object is centered, large (>40%), and close.
+- `Search Object`: Object lost/occluded.

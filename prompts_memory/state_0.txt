@@ -3,52 +3,47 @@
 ---
 
 ## 🎯 GOAL  
-Explore safely and analyze the surroundings to determine which room the robot is currently in.
+Explore safely and analyze the surroundings to determine which room the robot is currently in using the Topological Map data.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- Only move forward if there are **no visible obstacles** in front.
-- Use small forward steps or in-place rotations to scan the environment.
-- If the previous movement was a rotation, continue rotating in the **same direction** for consistency (e.g., `B2` → use `B1`, `B2`, or `B3`).
-- Try to maximize field of view coverage to gather more visual clues.
+- **If the room is UNKNOWN**:
+  - You MUST perform a visual scan. Use `E` (360° spin) if you haven't scanned recently.
+  - Or use small rotations (`B2`, `C2`) to find visual landmarks.
+  
+- **If the room is KNOWN**:
+  - Verify if it matches the `user_query` goal.
+  - Do NOT stay in "Recognize Room" once identified. Transition immediately.
+
+- **Movement Safety**:
+  - Only move forward (`A1`) if there are **no visible obstacles** in front.
+  - If the previous movement was a rotation, continue rotating in the **same direction**.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
+Only return **ONE** movement command:
 
-### A. Forward movement:
+### A. Forward:
 - `A1`: move forward 10 cm
 
 ### B. Left rotation:
-- `B1`: rotate 15°
-- `B2`: rotate 45°
-- `B3`: rotate 90°
+- `B1`: 15° | `B2`: 45° | `B3`: 90°
 
 ### C. Right rotation:
-- `C1`: rotate 15°
-- `C2`: rotate 45°
-- `C3`: rotate 90°
+- `C1`: 15° | `C2`: 45° | `C3`: 90°
+
+### E. Scan:
+- `E`: 360° visual scan
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-Choose the next FSM state based on room recognition:
-
-- `Recognize Room`: if the current room is `"unknown"` or visually ambiguous.
-- `Stay on Room`: if the room matches the user query and the task is to remain here.
-- `Search Object`: if the room matches the user query and the goal is to find something inside it.
-- `Search open Door`: if the room is recognized but **does not match the user query** — you must find a way out.
-
-➡️ **Important**: If the room is known (not `"unknown"`), you must NOT stay in `"Recognize Room"`. Always transition to one of the other valid states based on the goal.
-
----
-
-## ⚠️ NOTES
-
-- Avoid abrupt transitions — change states only when confident about recognition.
-- Never use lateral or stop commands in this state.
+- `Recognize Room`: If current room is "unknown" or ambiguous.
+- `Stay on Room`: If room identified == goal room (and task is just "Go to").
+- `Search Object`: If room identified == goal room (and task is "Find object").
+- `Search open Door`: If room identified != goal room (you need to navigate out).

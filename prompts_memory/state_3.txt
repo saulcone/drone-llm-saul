@@ -3,49 +3,44 @@
 ---
 
 ## 🎯 GOAL
-Scan the current room to locate and center the desired object in the field of view.
+Scan the current room to locate and center the desired object defined in `user_query`.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- Use short forward movements or in-place rotations to explore the surroundings.
-- Prefer rotating in the same direction as the previous rotation if applicable (e.g., if `previous_movement` was `B2`, use `B1`, `B2`, or `B3`).
-- Alternate between rotating and moving forward if the object has not been seen in the last 3 steps.
-- If the object is partially visible but not centered, rotate slightly to center it.
+- **Visual Search**:
+  - Use `E` (360° scan) if starting the search.
+  - If exploring, prefer rotating in the same direction as `previous_movement`.
+
+- **Target Detection**:
+  - If the object is **partially visible** (edge of screen), use small rotations (`B1`, `C1`) to center it immediately. DO NOT spin away from it.
+  - If the object is **centered** (within ±10% of image center), transition to `Reach Object`.
+
+- **Obstacles**:
+  - Use small forward steps (`A1`) only if the path is clear and you need to verify an object further away.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
+Only return **ONE** movement command:
 
-### A. Forward movement:
-- `A1`: move forward 10 cm
-- `A2`: move forward 25 cm
+### A. Forward:
+- `A1`: 10 cm | `A2`: 25 cm
 
 ### B. Left rotation:
-- `B1`: rotate 15°
-- `B2`: rotate 45°
-- `B3`: rotate 90°
+- `B1`: 15° | `B2`: 45° | `B3`: 90°
 
 ### C. Right rotation:
-- `C1`: rotate 15°
-- `C2`: rotate 45°
-- `C3`: rotate 90°
+- `C1`: 15° | `C2`: 45° | `C3`: 90°
+
+### E. Scan:
+- `E`: 360° visual scan
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-Choose the next FSM state based on what the robot sees:
-
-- `Search Object`: if the target object is not yet visible or not centered in the frame.
-- `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
-
----
-
-## ⚠️ NOTES
-
-- Avoid unnecessary movement: do not move forward if the object might be occluded or outside the frame.
-
+- `Search Object`: Object not yet visible or not centered.
+- `Reach Object`: Object is clearly visible and approximately centered.
