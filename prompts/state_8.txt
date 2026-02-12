@@ -43,6 +43,12 @@ Do not use any other command in this state.
 
 ---
 
+- **ABORT CONDITION**:
+  - If the door appears **CLOSED**, **BLOCKED**, or is a **CABINET**:
+  - **IMMEDIATELY** switch state to `Search open Door`.
+  - Return movement `E` (or a small rotation `B1`/`C1`).
+  - **Do NOT move `A1` against a closed surface.**
+
 ## ⚠️ NOTES
 
 - Do not continue blindly forward if visibility is unclear.
