@@ -69,12 +69,19 @@ class DoorDetector:
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
             
-            # 1. Alineación Lateral
+            # --- Lógica de Seguridad Mejorada ---
+
+            # Si el offset es masivo (ej. > 150px), NO usar D1/D2.
+            # Es más seguro que el VLM rote (B1/C1).
+            if abs(offset) > 150:
+                return None, f"Offset too large ({offset}px). Let VLM rotate instead of sliding."
+
+            # 1. Alineación Lateral (Solo para ajustes finos)
             if abs(offset) > self.center_threshold:
                 if offset < 0:
-                    return "D1", f"Gemini Safety: Door offset {offset}px LEFT"
+                    return "D1", f"Gemini Safety: Small offset {offset}px LEFT"
                 else:
-                    return "D2", f"Gemini Safety: Door offset {offset}px RIGHT"
+                    return "D2", f"Gemini Safety: Small offset {offset}px RIGHT"
 
             # 2. Entrada Franca
             if door_width > (width * self.width_threshold_enter):

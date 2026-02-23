@@ -22,6 +22,9 @@ Only return ONE command:
 If the object directly in front is CLOSED (closed door, cabinet, closet), it is a WALL. 
 Rotate (`B2` or `C2`) to look away.
 
+⚠️ **FALSE DOOR WARNING (CHIMNEY/FIREPLACE)**:
+If a gap or void is located directly adjacent to a fireplace or chimney, it is **NOT** a passable doorway — it is an architectural recess. Be very skeptical. Do NOT select it as a door candidate. Keep searching.
+
 1️⃣ **FIRST PRIORITY (VISUAL PREDICTION)**:
 If you see an **open door**:
 - If it looks like the target room OR you are unsure, switch to `Oriented Towards Door` (`E`).

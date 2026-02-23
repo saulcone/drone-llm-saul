@@ -7,27 +7,27 @@ Align the robot directly in front of an OPEN door without getting too close and 
 
 ---
 
+## State: **Oriented Towards Door**
+
+---
+
 ## 🧠 POLICY RULES (Strict Priority)
 
-🚨 **CRITICAL ABORT (CLOSED DOORS)**:
-- If you are facing a **CLOSED DOOR, CABINET, or CLOSET**, you are in the wrong state.
-- **IMMEDIATELY** switch state to `Search open Door` and return `B2` or `C2` to look away. 
-- **NEVER use `A1` against a closed surface.**
+🚨 **CRITICAL SAFETY (OBSTACLE AVOIDANCE)**:
+- If there is a **FIREPLACE, COLUMN, or LARGE PIECE OF FURNITURE** directly in front or slightly to the side:
+- **STRICTLY FORBIDDEN** to use lateral movements (`D1`, `D2`). 
+- If you need to align, use small rotations (`B1`, `C1`) and then move forward (`A1`) ONLY if the path is 100% clear.
+- If an obstacle is too close, return `B2` or `C2` to back away/rotate.
 
-1️⃣ **ALIGNMENT LOCK (STRICT)**:
-- If `"door_position"` evaluates to `"left"`, your `"movement"` MUST be `"B1"`.
-- If `"door_position"` evaluates to `"right"`, your `"movement"` MUST be `"C1"`.
-- 🛑 **RULE**: You are strictly FORBIDDEN from outputting `"A1"` if the door is off-center. Do not attempt to approach diagonally.
+1️⃣ **ALIGNMENT LOCK**:
+- (Mantenemos lo anterior: si la puerta está a un lado, rotar B1/C1).
 
-2️⃣ **LATERAL CORRECTION**:
-- Use `D1`/`D2` ONLY if `"door_position"` is `"center"` but you are physically offset (parallel shift).
+2️⃣ **LATERAL MOVEMENT (D1/D2) - USE WITH CAUTION**:
+- ONLY use `D1` or `D2` if the scene is wide open.
+- If you see the edge of a fireplace or wall near you, **DO NOT MOVE LATERALLY**. You will collide.
 
-3️⃣ **FIELD OF VIEW PRESERVATION (DO NOT GET TOO CLOSE)**:
-- Do **NOT** use `A1` if the door frame or walls are clipping out of the edges of the image (meaning you are extremely close and losing context).
-- If you are fully centered and the door appears very close (occupying most of the view), you must transition to `Go Through Door`.
-
-4️⃣ **FORWARD APPROACH**:
-- Only use `"movement": "A1"` if `"door_position"` is EXACTLY `"center"`, the door is an OPEN VOID, and you still have good visual context (not glued to the frame).
+3️⃣ **FIELD OF VIEW PRESERVATION**:
+- (Mantenemos la regla de no pegarse demasiado para no perder visión).
 
 ---
 
