@@ -10,22 +10,28 @@ Proceed through the centered OPEN door confidently without hugging the doorframe
 ## 🧠 POLICY RULES
 
 🚨 **CRITICAL ABORT (BLINDNESS & CABINETS)**:
-- If your view is suddenly completely blocked by a surface (e.g., you are glued to a wall or doorframe and lost all visual context), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
-- **YOU MUST ABORT**. Switch state to `Search open Door`.
-- Return movement `E`, `B2`, or `C2` to abort and regain field of view. 
-- **IT IS STRICTLY FORBIDDEN TO USE `A1` IF YOUR VISION IS BLOCKED.**
+- If your view is suddenly completely blocked by a surface (you are glued to a wall/doorframe), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
+  - **YOU MUST ABORT**. Switch state to `Search open Door`.
+  - Return `B2` or `C2` to rotate away and regain field of view.
+  - **IT IS STRICTLY FORBIDDEN TO USE `A1` IF YOUR VISION IS BLOCKED.**
+
+- **Drift Correction (lateral)**:
+  - If you are moving through the door but drifting towards one side frame, slide away: `D1` (drift right → slide left) or `D2` (drift left → slide right).
+  - Do NOT rotate to correct drift — you would lose the door in your view.
 
 - **Forward Movement**:
-- Use `A1` **only** if the door is clearly an **open void**, fully visible, and you can see the room ahead.
+  - Use `A1` **only** if the door is clearly an **open void**, fully visible, and you can see the room ahead.
 
 - **Refine Alignment**:
-- If the open door becomes uncentered or you drift too close to one of the side frames, switch to `Oriented Towards Door` to recenter.
+  - If the open door becomes very uncentered (more than half the frame), switch to `Oriented Towards Door` to recenter before proceeding.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 - `A1`: move forward 10 cm (ONLY IF PATH IS CLEAR AND OPEN)
-- `E`, `B1`, `B2`, `C1`, `C2`: Use to abort or regain vision if blocked.
+- `D1`: slide 10 cm left (to correct rightward drift while keeping camera on door)
+- `D2`: slide 10 cm right (to correct leftward drift while keeping camera on door)
+- `B2`, `C2`: rotate 45° — use ONLY to abort when path is blocked
 
 ---
 

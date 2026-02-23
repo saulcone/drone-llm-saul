@@ -13,33 +13,31 @@ Align the robot directly in front of an OPEN door without getting too close and 
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-🚨 **CRITICAL SAFETY (OBSTACLE AVOIDANCE)**:
-- If there is a **FIREPLACE, COLUMN, or LARGE PIECE OF FURNITURE** directly in front or slightly to the side:
-- **STRICTLY FORBIDDEN** to use lateral movements (`D1`, `D2`). 
-- If you need to align, use small rotations (`B1`, `C1`) and then move forward (`A1`) ONLY if the path is 100% clear.
-- If an obstacle is too close, return `B2` or `C2` to back away/rotate.
-
 ⚠️ **ZERO PRIORITY — ANTI-OSCILLATION (CHECK THIS FIRST)**:
-- Look at your `previous_movement` and `mov_history`.
-- If the last **3 or more** commands contain alternating rotations (`B1` and `C1` mixed, or the same rotation repeated), you are **stuck in a loop**.
-- When this happens, **IMMEDIATELY return `A1`** to move forward and commit to crossing the door. The alignment is good enough — stop oscillating.
-- This rule overrides all alignment rules below.
+- Inspect `mov_history`. If the last **3 or more** commands contain alternating rotations (`B1`/`C1` mixed, or the same rotation repeated), you are **stuck in a loop**.
+- **IMMEDIATELY return `A1`** — the alignment is good enough, commit to crossing.
+- This rule overrides everything below.
 
-1️⃣ **ALIGNMENT LOCK**:
-- If the door is clearly to one side AND you have NOT been oscillating, rotate towards it:
-  - Door on the left → `B1`
-  - Door on the right → `C1`
-- Use `B2`/`C2` only if the door is very far to the side (more than half the frame width).
+🚨 **FIRST PRIORITY — OBSTACLE ON ONE SIDE**:
+- If there is a FIREPLACE, COLUMN, or LARGE OBJECT **very close** to your left or right:
+  - Do NOT move laterally towards it (`D1`/`D2`).
+  - Use small rotations (`B1`/`C1`) to re-angle, then forward (`A1`).
+  - If it is blocking the path entirely, retreat with `B2` or `C2`.
+
+1️⃣ **ALIGNMENT — PREFER LATERAL SLIDING (DEFAULT METHOD)**:
+- The goal is to keep the door centered in the frame **without rotating the camera away from it**.
+- If the door is slightly off-center:
+  - Door on the **left** → slide left: `D1`
+  - Door on the **right** → slide right: `D2`
+- Use `D1`/`D2` even for small offsets. This keeps the camera pointing at the door the whole time.
+- **Only use rotations (`B1`/`C1`) when** the door is very far to the side (more than half the frame width) AND lateral sliding is blocked by an obstacle.
 
 2️⃣ **FORWARD COMMIT — When aligned enough**:
-- If the door occupies a large portion of the frame and is roughly centered (within ~30° of center), return `A1` to start crossing. Do NOT keep rotating for a perfect alignment.
+- If the door is roughly centered (within ~1/4 of the frame from center) AND occupies a large portion of the frame, return `A1` to start crossing.
+- Do NOT keep adjusting for pixel-perfect alignment.
 
-3️⃣ **LATERAL MOVEMENT (D1/D2) - USE WITH CAUTION**:
-- ONLY use `D1` or `D2` if the scene is wide open.
-- If you see the edge of a fireplace or wall near you, **DO NOT MOVE LATERALLY**. You will collide.
-
-4️⃣ **FIELD OF VIEW PRESERVATION**:
-- Do not get too close to the door frame or you will lose visual context.
+3️⃣ **FIELD OF VIEW PRESERVATION**:
+- Do not get so close to the door frame that you lose visual context. If the frame edge fills more than 1/3 of the image, slide away from it (`D1` or `D2`).
 
 ---
 
