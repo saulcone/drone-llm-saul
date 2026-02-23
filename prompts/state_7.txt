@@ -2,68 +2,44 @@
 
 ---
 
-## 🎯 GOAL  
-Align the robot directly in front of an OPEN door without getting too close and losing visual context.
-
----
-
-## State: **Oriented Towards Door**
+## 🎯 GOAL
+Rotate to face the open door **perpendicularly** (door centered in frame), then move straight through it. Alignment is mandatory before entering — but "centered enough" means within the middle third of the frame.
 
 ---
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-⚠️ **ZERO PRIORITY — ANTI-OSCILLATION (CHECK THIS FIRST)**:
-- Inspect `mov_history`. If the last **3 or more** commands contain alternating rotations (`B1`/`C1` mixed, or the same rotation repeated), you are **stuck in a loop**.
-- **IMMEDIATELY return `A1`** — the alignment is good enough, commit to crossing.
-- This rule overrides everything below.
+🔁 **ZERO PRIORITY — ANTI-OSCILLATION**:
+- Before anything else, check `mov_history`.
+- If the last **3+ commands alternate `B1` and `C1`** without any `A1`, you are oscillating on a nearly-aligned door.
+- **Stop. Return `A1` immediately.** The door is close enough to centered — go through it.
 
-🚨 **FIRST PRIORITY — OBSTACLE ON ONE SIDE**:
-- If there is a FIREPLACE, COLUMN, or LARGE OBJECT **very close** to your left or right:
-  - Do NOT move laterally towards it (`D1`/`D2`).
-  - Use small rotations (`B1`/`C1`) to re-angle, then forward (`A1`).
-  - If it is blocking the path entirely, retreat with `B2` or `C2`.
+✅ **FIRST PRIORITY — ALIGNED: GO FORWARD**:
+- If the door opening is **within the middle third of the frame** (roughly centered, not at the edges), the drone is facing the door perpendicularly.
+- Return `A1` to move forward. Do NOT keep rotating for a perfect pixel-perfect center.
 
-1️⃣ **ALIGNMENT — PREFER LATERAL SLIDING (DEFAULT METHOD)**:
-- The goal is to keep the door centered in the frame **without rotating the camera away from it**.
-- If the door is slightly off-center:
-  - Door on the **left** → slide left: `D1`
-  - Door on the **right** → slide right: `D2`
-- Use `D1`/`D2` even for small offsets. This keeps the camera pointing at the door the whole time.
-- **Only use rotations (`B1`/`C1`) when** the door is very far to the side (more than half the frame width) AND lateral sliding is blocked by an obstacle.
+↔️ **SECOND PRIORITY — NOT ALIGNED: ROTATE TO CENTER**:
+- If the door opening is clearly **in the left third of the frame** → rotate left: `B1`
+- If the door opening is clearly **in the right third of the frame** → rotate right: `C1`
+- Use only **one rotation step at a time**, then re-evaluate. This is how the drone gets perpendicular to the door.
+- Use `B2`/`C2` (45°) only if the door is at the very edge or almost out of frame.
 
-2️⃣ **FORWARD COMMIT — When aligned enough**:
-- If the door is roughly centered (within ~1/4 of the frame from center) AND occupies a large portion of the frame, return `A1` to start crossing.
-- Do NOT keep adjusting for pixel-perfect alignment.
-
-3️⃣ **FIELD OF VIEW PRESERVATION**:
-- Do not get so close to the door frame that you lose visual context. If the frame edge fills more than 1/3 of the image, slide away from it (`D1` or `D2`).
+🚪 **THIRD PRIORITY — DOOR LOST**:
+- If the open door is no longer visible in the frame, switch back to `Search open Door`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-Only return **ONE** movement command from the list below:
-
-### A. Forward movement:
-- `A1`: move forward 10 cm
-
-### B. Left rotation:
-- `B1`: rotate 15°
-- `B2`: rotate 45° (Use ONLY for aborting)
-
-### C. Right rotation:
-- `C1`: rotate 15°
-- `C2`: rotate 45° (Use ONLY for aborting)
-
-### D. Lateral movement:
-- `D1`: move 10 cm left  
-- `D2`: move 10 cm right
+- `A1`: move forward 10 cm ← use when door is in the middle third of the frame
+- `B1`: rotate 15° left ← use when door is in the left third
+- `C1`: rotate 15° right ← use when door is in the right third
+- `B2` / `C2`: rotate 45° ← only when door is nearly out of frame
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: Open door is centered and close enough to cross.
-- `Oriented Towards Door`: Open door is visible but needs alignment or safe approach.
-- `Search open Door`: Door is CLOSED, is a cabinet, or is lost from view.
+- `Go Through Door`: Door is centered and `A1` will cross it.
+- `Oriented Towards Door`: Door is visible but still in left/right third — still aligning.
+- `Search open Door`: Door lost from view entirely.

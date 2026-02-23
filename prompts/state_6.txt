@@ -18,30 +18,31 @@ Only return ONE command:
 
 ## 🧠 POLICY RULES (priority ordered)
 
-🚨 **ZERO PRIORITY — STUCK IN CORNER ESCAPE (CHECK `mov_history` FIRST)**:
-- Look at `mov_history`. If the last **3 or more commands are ALL rotations** (no `A1` among them), you are **stuck in a corner**.
-- When stuck, **do NOT keep rotating with B2/C2**. You must escape:
-  - Use `B3` or `C3` (90° rotation) to point in a completely new direction.
-  - Pick the direction that is AWAY from the walls you have been seeing (if unsure, pick `B3`).
-- After the big rotation, you MUST use `A1` on the next step to physically leave the corner, even if the space ahead is not perfectly clear. A wall far away (more than ~30cm) is safe enough.
-
-1️⃣ **FIRST PRIORITY — WALL / COLLISION AVOIDANCE**:
-- If a **wall or solid obstacle is extremely close** (filling >80% of the frame), do NOT use `A1`.
-- Rotate away: `B2` or `C2`.
-- Closed doors, cabinets, and closets count as walls — rotate to look away.
-- **IMPORTANT**: A wall that is **far away** (you can see floor in front of you) is NOT a collision risk. You CAN use `A1` in that case.
+🚨 **ZERO PRIORITY (IGNORE CLOSED OBJECTS)**:
+If the object directly in front is CLOSED (closed door, cabinet, closet), it is a WALL.
+Rotate (`B2` or `C2`) to look away.
 
 ⚠️ **FALSE DOOR WARNING (CHIMNEY/FIREPLACE)**:
 If a gap or void is located directly adjacent to a fireplace or chimney, it is **NOT** a passable doorway — it is an architectural recess. Keep searching.
 
-2️⃣ **SECOND PRIORITY (OPEN DOOR DETECTED)**:
+1️⃣ **FIRST PRIORITY (VISUAL PREDICTION)**:
 If you see an **open door**:
 - If it looks like the target room OR you are unsure, switch to `Oriented Towards Door` (`E`).
 - NEVER approach diagonally with `A1`.
 
-3️⃣ **THIRD PRIORITY — EXPLORE PATTERN**:
-- After a rotation: if the space ahead is reasonably clear, use `A1` to move forward.
-- After `A1`: if no door is visible, rotate to scan. Alternate direction based on `mov_history` (if recent rotations were right, go left, and vice versa).
+2️⃣ **SECOND PRIORITY (ANTI-LOOP MOVEMENT - STRICT)**:
+- **CRITICAL**: You must NOT get stuck in infinite rotation loops.
+- If your `previous_movement` was a rotation command (`B1`, `B2`, `B3`, `C1`, `C2`, `C3`) AND no open door is visible, you **MUST** return `A1` to move forward and change your physical location.
+- DO NOT rotate twice in a row unless you are physically blocked by a wall directly in front of you (less than 50cm away, filling most of the frame).
+
+3️⃣ **THIRD PRIORITY (STANDARD SEARCH)**:
+- If your `previous_movement` was a forward movement (`A1`, `A2`) and no door is visible, rotate (`B2` or `C2`) to scan the new area.
+- This creates an explore pattern: Rotate → Move Forward → Rotate → Move Forward.
+
+🆘 **EMERGENCY ESCAPE (CHECK `mov_history`)**:
+- If the last **4 or more entries in `mov_history` are ALL rotations** (no `A1` at all), you are completely stuck.
+- **IMMEDIATELY** use `B3` or `C3` (90° turn) to break the deadlock and point in a completely new direction.
+- On the very next step after this escape rotation, use `A1` unconditionally to leave the stuck position.
 
 ---
 
