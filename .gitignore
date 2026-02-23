@@ -9,3 +9,4 @@ experiments/
 
 __pycache__/
 gpt_class.cpython-311.pyc
+*.mp4

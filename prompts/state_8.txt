@@ -3,54 +3,34 @@
 ---
 
 ## 🎯 GOAL  
-Proceed through the centered open door confidently and transition into the next room.
+Proceed through the centered OPEN door confidently.
 
 ---
 
 ## 🧠 POLICY RULES
 
-- Use `A1` (move forward) **only** if the door is:
-  - Clearly open,
-  - Fully visible and dominant in the center of the image,
-  - Not partially obscured or clipped on the edges.
+🚨 **CRITICAL ABORT (DO NOT HIT CABINETS)**:
+- If the object in front of you has knobs, handles, or is explicitly a **CLOSED DOOR, CABINET, or CLOSET**:
+- **YOU MUST ABORT**. Switch state to `Search open Door`.
+- Return movement `E` or `B2` to abort. 
+- **IT IS STRICTLY FORBIDDEN TO USE `A1` IF THE DOOR IS CLOSED.**
 
-- If the door appears **partially visible**, **uncentered**, **closed** or ambiguous:
-  - Switch back to `Oriented Towards Door` to refine alignment.
-  - Do **not** move forward unless the door is confidently centered and clear.
+- **Forward Movement**:
+- Use `A1` **only** if the door is clearly an **open void**, fully visible, and dominant in the center.
+
+- **Refine Alignment**:
+- If the open door becomes uncentered, switch to `Oriented Towards Door`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-
-Only return:
-- `A1`: move forward 10 cm
-
-Do not use any other command in this state.
+- `A1`: move forward 10 cm (ONLY IF OPEN VOID)
+- `E`, `B1`, `B2`, `C1`, `C2`: Use to abort if closed.
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
-
-- `Go Through Door`: if:
-  - The door remains centered, open and clearly visible
-  - You are not yet through the doorway
-
-- `Oriented Towards Door`: if:
-  - The door becomes partially visible, off-center, or unclear
-  - You no longer see the full doorway frame
-
-- `Position in the center of room`: once the robot crosses the threshold and the view changes (door no longer centered and opened).
-
----
-
-- **ABORT CONDITION**:
-  - If the door appears **CLOSED**, **BLOCKED**, or is a **CABINET**:
-  - **IMMEDIATELY** switch state to `Search open Door`.
-  - Return movement `E` (or a small rotation `B1`/`C1`).
-  - **Do NOT move `A1` against a closed surface.**
-
-## ⚠️ NOTES
-
-- Do not continue blindly forward if visibility is unclear.
-- Prioritize **confidence in alignment** over blind center-tag trust.
-- It’s better to return and realign than to bump into a frame or wall.
+- `Go Through Door`: Door is open, centered, and safe to cross.
+- `Oriented Towards Door`: Door is open but off-center.
+- `Position in the center of room`: Threshold crossed.
+- `Search open Door`: The door is CLOSED or is a cabinet (ABORT).
