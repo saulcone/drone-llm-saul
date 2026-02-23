@@ -28,8 +28,14 @@ class DoorDetector:
         # Convertir imagen para Gemini
         im_pil = Image.fromarray(cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB))
         
-        # Prompt específico para detección de objetos (Bounding Box)
-        prompt = "Detect the open door used for passage. Return the bounding box in [ymin, xmin, ymax, xmax] format. If no open door is clearly visible, return empty JSON."
+        # PROMPT MEJORADO: Especificamos explícitamente qué IGNORAR.
+        prompt = (
+            "Detect the OPEN door used for passage. "
+            "Ignore closed doors, cabinets, closets, wardrobes, and windows. "
+            "Only detect a door if it is clearly OPEN and leads to another room. "
+            "Return the bounding box in [ymin, xmin, ymax, xmax] format. "
+            "If no open door is clearly visible, return empty JSON."
+        )
 
         try:
             response = self.client.models.generate_content(
@@ -57,13 +63,9 @@ class DoorDetector:
             if not res or "box_2d" not in res or not res["box_2d"]:
                 return None, "No door detected by Gemini"
 
-            # Extraer coordenadas (Gemini devuelve escala 1000x1000 por defecto o pixeles según config, 
-            # Flash suele normalizar a 1000. Vamos a asumir coordenadas normalizadas y escalar)
-            # NOTA: En la API nueva, a veces devuelve coordenadas directas si se pide. 
-            # Verificamos si son < 1000 (normalizadas) o grandes.
+            # Extraer coordenadas y escalar si es necesario
             ymin, xmin, ymax, xmax = res["box_2d"]
             
-            # Ajuste de escala si Gemini devuelve en base 1000
             if xmax <= 1000 and ymax <= 1000:
                 scale_x = width / 1000
                 xmin = int(xmin * scale_x)
@@ -73,16 +75,16 @@ class DoorDetector:
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
 
-            # --- Lógica de Seguridad (Igual que antes) ---
+            # --- Lógica de Seguridad ---
             
-            # 1. Alineación Lateral (Prioridad)
+            # 1. Alineación Lateral
             if abs(offset) > self.center_threshold:
                 if offset < 0:
                     return "D1", f"Gemini Safety: Door offset {offset}px LEFT"
                 else:
                     return "D2", f"Gemini Safety: Door offset {offset}px RIGHT"
 
-            # 2. Entrada Franca (Si está centrada y cerca)
+            # 2. Entrada Franca
             if door_width > (width * self.width_threshold_enter):
                 return "A1", "Gemini Safety: Door centered and close. Force Entry."
 

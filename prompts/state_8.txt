@@ -3,34 +3,34 @@
 ---
 
 ## 🎯 GOAL  
-Proceed through the centered OPEN door confidently.
+Proceed through the centered OPEN door confidently without hugging the doorframes.
 
 ---
 
 ## 🧠 POLICY RULES
 
-🚨 **CRITICAL ABORT (DO NOT HIT CABINETS)**:
-- If the object in front of you has knobs, handles, or is explicitly a **CLOSED DOOR, CABINET, or CLOSET**:
+🚨 **CRITICAL ABORT (BLINDNESS & CABINETS)**:
+- If your view is suddenly completely blocked by a surface (e.g., you are glued to a wall or doorframe and lost all visual context), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
 - **YOU MUST ABORT**. Switch state to `Search open Door`.
-- Return movement `E` or `B2` to abort. 
-- **IT IS STRICTLY FORBIDDEN TO USE `A1` IF THE DOOR IS CLOSED.**
+- Return movement `E`, `B2`, or `C2` to abort and regain field of view. 
+- **IT IS STRICTLY FORBIDDEN TO USE `A1` IF YOUR VISION IS BLOCKED.**
 
 - **Forward Movement**:
-- Use `A1` **only** if the door is clearly an **open void**, fully visible, and dominant in the center.
+- Use `A1` **only** if the door is clearly an **open void**, fully visible, and you can see the room ahead.
 
 - **Refine Alignment**:
-- If the open door becomes uncentered, switch to `Oriented Towards Door`.
+- If the open door becomes uncentered or you drift too close to one of the side frames, switch to `Oriented Towards Door` to recenter.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-- `A1`: move forward 10 cm (ONLY IF OPEN VOID)
-- `E`, `B1`, `B2`, `C1`, `C2`: Use to abort if closed.
+- `A1`: move forward 10 cm (ONLY IF PATH IS CLEAR AND OPEN)
+- `E`, `B1`, `B2`, `C1`, `C2`: Use to abort or regain vision if blocked.
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 - `Go Through Door`: Door is open, centered, and safe to cross.
-- `Oriented Towards Door`: Door is open but off-center.
-- `Position in the center of room`: Threshold crossed.
-- `Search open Door`: The door is CLOSED or is a cabinet (ABORT).
+- `Oriented Towards Door`: Door is open but you drifted off-center.
+- `Position in the center of room`: Threshold crossed successfully.
+- `Search open Door`: The path is BLOCKED, closed, or you are completely glued to a frame (ABORT).
