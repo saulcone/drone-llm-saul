@@ -10,3 +10,6 @@ experiments/
 __pycache__/
 gpt_class.cpython-311.pyc
 *.mp4
+experiment
+
+experiment_default_experiment_spawn_-1*
