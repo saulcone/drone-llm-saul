@@ -14,16 +14,16 @@ Align the robot directly in front of an OPEN door.
 - **IMMEDIATELY** switch state to `Search open Door` and return `B2` or `C2` to look away. 
 - **NEVER use `A1` against a closed surface.**
 
-1️⃣ **ROTATION PRIORITY (Center the Target First)**:
-- If the OPEN door is "left": **You MUST return `B1`**. Do NOT move forward (`A1`).
-- If the OPEN door is "right": **You MUST return `C1`**. Do NOT move forward (`A1`).
+1️⃣ **ALIGNMENT LOCK (STRICT)**:
+- If `"door_position"` evaluates to `"left"`, your `"movement"` MUST be `"B1"`.
+- If `"door_position"` evaluates to `"right"`, your `"movement"` MUST be `"C1"`.
+- 🛑 **RULE**: You are strictly FORBIDDEN from outputting `"A1"` if the door is off-center. Do not attempt to approach diagonally.
 
 2️⃣ **LATERAL CORRECTION**:
-- Use `D1`/`D2` ONLY if the door is "center" but you are physically offset (parallel shift), and you are close.
+- Use `D1`/`D2` ONLY if `"door_position"` is `"center"` but you are physically offset (parallel shift).
 
 3️⃣ **FORWARD APPROACH**:
-- Only use `A1` if `door_position` is "center" AND the door is clearly an OPEN VOID.
-- 🛑 **NUCLEAR RULE**: If you use the words "closed", "cabinet", "closet", or "knobs" anywhere in your `description`, your `movement` CANNOT be `A1`. You MUST abort using `B2` or `C2` and switch to `Search open Door`.
+- Only use `"movement": "A1"` if `"door_position"` is EXACTLY `"center"` AND the door is an OPEN VOID.
 
 ---
 
@@ -49,8 +49,6 @@ Only return **ONE** movement command from the list below:
 ---
 
 ## 🔄 OUTPUT STATE RULES
-
-Choose the next FSM state based on door position and visual characteristics:
 
 - `Go Through Door`: Open door is centered and close.
 - `Oriented Towards Door`: Open door is visible but needs alignment.
