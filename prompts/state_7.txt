@@ -18,19 +18,40 @@ Align the robot directly in front of an OPEN door.
 - If the OPEN door is "left": **You MUST return `B1`**. Do NOT move forward (`A1`).
 - If the OPEN door is "right": **You MUST return `C1`**. Do NOT move forward (`A1`).
 
-2️⃣ **FORWARD APPROACH**:
-- Only use `A1` if the OPEN door is **"center"** and clearly passable.
+2️⃣ **LATERAL CORRECTION**:
+- Use `D1`/`D2` ONLY if the door is "center" but you are physically offset (parallel shift), and you are close.
+
+3️⃣ **FORWARD APPROACH**:
+- Only use `A1` if `door_position` is "center" AND the door is clearly an OPEN VOID.
+- 🛑 **NUCLEAR RULE**: If you use the words "closed", "cabinet", "closet", or "knobs" anywhere in your `description`, your `movement` CANNOT be `A1`. You MUST abort using `B2` or `C2` and switch to `Search open Door`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-- `A1`: 10 cm forward
-- `B1`: 15° left | `C1`: 15° right
-- `D1`: 10 cm left | `D2`: 10 cm right
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45° (Use ONLY for aborting)
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45° (Use ONLY for aborting)
+
+### D. Lateral movement:
+- `D1`: move 10 cm left  
+- `D2`: move 10 cm right
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on door position and visual characteristics:
+
 - `Go Through Door`: Open door is centered and close.
-- `Oriented Towards Door`: Open door needs alignment.
-- `Search open Door`: Door is CLOSED, is a cabinet, or is lost.
+- `Oriented Towards Door`: Open door is visible but needs alignment.
+- `Search open Door`: Door is CLOSED, is a cabinet, or is lost from view.

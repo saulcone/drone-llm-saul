@@ -1,16 +1,15 @@
 ## 📤 Output Format
 
-You must respond with a **single valid JSON object** following the exact structure below:
+You must respond with a **single valid JSON object** following the exact structure below. It is CRITICAL that you generate the `description` field FIRST so you can reason before acting:
 
 ```json
 {
+  "description": "Step 1: Detail what you see (e.g. is it a closed cabinet or an open void?). Step 2: Reason about which policy rule applies.",
+  "door_position": "left | center | right | not_visible",
   "room": "estimated_room_name_or_unknown",
-  "movement": "valid_single_movement_command",
   "state": "next_FSM_state",
-  "description": "concise description of the visible environment",
-  "door_position": "left | center | right | not_visible"
+  "movement": "valid_single_movement_command"
 }
-```
 
 ### ✅ Field Definitions
 

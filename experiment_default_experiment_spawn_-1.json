@@ -29,94 +29,38 @@
     "description": "The robot is in a room with a blue wooden ceiling and floor, a large window with white curtains, and a dark purple sofa. A closed blue door is visible on the left. This appears to be a living room, not a bathroom.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 5.03609037399292
+    "elapsed_time": 5.369840145111084
   },
   "Step_2": {
     "step": "2",
     "position": "[0.  1.5 0. ]",
     "yaw": "315.00003",
     "collision_state": "1.0",
-    "command": "B1",
+    "command": "B2",
     "state": "Search open Door",
     "room": "living room & kitchen",
     "pred_room": "living room & kitchen",
-    "description": "The robot is in a kitchen area with a stove, range hood, and refrigerator visible. A closed blue double door is on the right. No open door is visible.",
-    "door_position": "not_visible",
+    "description": "The robot is in a kitchen area, with a refrigerator, stove, and range hood visible. A closed blue double door is on the right side of the view. No open door is visible.",
+    "door_position": "right",
     "goal_state": false,
-    "elapsed_time": 3.5757555961608887
+    "elapsed_time": 9.853841066360474
   },
   "Step_3": {
     "step": "3",
     "position": "[0.  1.5 0. ]",
-    "yaw": "300.00006",
+    "yaw": "270.0001",
     "collision_state": "1.0",
-    "command": "B1",
+    "command": "B2",
     "state": "Search open Door",
     "room": "living room & kitchen",
     "pred_room": "living room & kitchen",
-    "description": "The robot is in a kitchen/dining area with a table, chairs, kitchen counter, range hood, and refrigerator visible. No doors are currently in view. Continuing to rotate left to search for a door.",
+    "description": "The robot is in a kitchen area, facing a sink, dishwasher, and dining table. No doors are visible.",
     "door_position": "not_visible",
     "goal_state": false,
-    "elapsed_time": 2.837001085281372
+    "elapsed_time": 3.4111995697021484
   },
   "Step_4": {
     "step": "4",
-    "position": "[0.  1.5 0. ]",
-    "yaw": "285.00006",
-    "collision_state": "1.0",
-    "command": "B1",
-    "state": "Search open Door",
-    "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "The robot is in a kitchen area with a dining table, chairs, a counter with patterned tiles, a stove, and a refrigerator. No open door is visible.",
-    "door_position": "not_visible",
-    "goal_state": false,
-    "elapsed_time": 3.057020902633667
-  },
-  "Step_5": {
-    "step": "5",
-    "position": "[0.  1.5 0. ]",
-    "yaw": "270.00006",
-    "collision_state": "1.0",
-    "command": "B1",
-    "state": "Search open Door",
-    "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "The robot is in a kitchen area with a sink, dishwasher, and dining table visible. No doors are currently in view. Continuing to rotate left to search for an open door.",
-    "door_position": "not_visible",
-    "goal_state": false,
-    "elapsed_time": 2.7455339431762695
-  },
-  "Step_6": {
-    "step": "6",
-    "position": "[0.  1.5 0. ]",
-    "yaw": "255.00009",
-    "collision_state": "1.0",
-    "command": "B1",
-    "state": "Search open Door",
-    "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "The robot is in a room resembling a kitchen/living room, with a counter, sink, dishwasher, and a table with chairs. A closed white door is visible on the left. No open door is visible.",
-    "door_position": "not_visible",
-    "goal_state": false,
-    "elapsed_time": 5.681790351867676
-  },
-  "Step_7": {
-    "step": "7",
-    "position": "[0.  1.5 0. ]",
-    "yaw": "240.0001",
-    "collision_state": "1.0",
-    "command": "B1",
-    "state": "Search open Door",
-    "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "The robot is in a kitchen area with a counter, sink, and dishwasher. A closed white double door is visible on the left. No open doors are visible.",
-    "door_position": "not_visible",
-    "goal_state": false,
-    "elapsed_time": 3.989025354385376
-  },
-  "Step_8": {
-    "step": "8",
     "position": "[0.  1.5 0. ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -124,13 +68,13 @@
     "state": "Search open Door",
     "room": "living room & kitchen",
     "pred_room": "living room & kitchen",
-    "description": "An open doorway is visible on the left, leading to a room with a checkered floor. On the right, there is a kitchen counter with a backsplash. A closed cabinet is in the center.",
+    "description": "An open doorway is visible on the left, leading to a room with a checkered floor. A kitchen counter is on the right. Moving forward to get a clearer view of the room beyond the door.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 3.6654152870178223
+    "elapsed_time": 5.125448703765869
   },
-  "Step_9": {
-    "step": "9",
+  "Step_5": {
+    "step": "5",
     "position": "[-0.35355416  1.5        -0.3535527 ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -138,41 +82,41 @@
     "state": "Search open Door",
     "room": "living room & kitchen",
     "pred_room": "living room & kitchen",
-    "description": "An open doorway is visible on the left, revealing a checkered floor beyond. The current room has a counter with patterned tiles, suggesting a kitchen area. Moving forward to get a clearer view of the room beyond the door.",
+    "description": "An open doorway is visible on the left leading to a room with a checkered floor. On the right, there is a counter with patterned tiles, suggesting a kitchen area. Moving forward to get a clearer view of the room beyond the door.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 4.395019054412842
+    "elapsed_time": 4.960428237915039
   },
-  "Step_10": {
-    "step": "10",
+  "Step_6": {
+    "step": "6",
     "position": "[-0.7071082  1.5       -0.7071054]",
-    "yaw": "225.00012",
-    "collision_state": "1.0",
-    "command": "A1",
-    "state": "Search open Door",
-    "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "The robot is in a room with a blue wooden floor and a kitchen counter on the right. An open doorway is visible on the left, leading to an area with a black and white checkered floor. The room beyond the door cannot be confidently identified as the bathroom, so moving forward to get a better view.",
-    "door_position": "left",
-    "goal_state": false,
-    "elapsed_time": 7.698369741439819
-  },
-  "Step_11": {
-    "step": "11",
-    "position": "[-1.0606622  1.5       -1.0606582]",
     "yaw": "225.00012",
     "collision_state": "1.0",
     "command": "E",
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
-    "pred_room": "living room & kitchen",
-    "description": "An open doorway on the left reveals a checkered floor, indicating a path to the living room & kitchen, which is connected to the bathroom. A closed cabinet is in the center, and a counter is on the right.",
+    "pred_room": "unknown",
+    "description": "An open doorway is visible on the left, leading to a room with a black and white checkered floor. A closed white cabinet is in the center, and a counter with a patterned backsplash is on the right. The room beyond the door is identified as 'living room & kitchen', which is connected to the goal room 'bathroom'.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 9.414294004440308
+    "elapsed_time": 8.836170673370361
   },
-  "Step_12": {
-    "step": "12",
+  "Step_7": {
+    "step": "7",
+    "position": "[-0.7071082  1.5       -0.7071054]",
+    "yaw": "225.00012",
+    "collision_state": "1.0",
+    "command": "A1",
+    "state": "Oriented Towards Door",
+    "room": "living room & kitchen",
+    "pred_room": "living room & kitchen",
+    "description": "The robot is facing a wall with a closed white cabinet. An open doorway is visible on the left, leading to a room with a checkered floor. A counter is on the right. The door is visible on the left and is not yet close or centered, so the robot moves forward to approach it.",
+    "door_position": "left",
+    "goal_state": false,
+    "elapsed_time": 10.544999122619629
+  },
+  "Step_8": {
+    "step": "8",
     "position": "[-1.0606622  1.5       -1.0606582]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -180,13 +124,13 @@
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "The robot is facing a wall with a closed white double door in the center-right. An open doorway is visible on the left, leading to a room with a black and white checkered floor. The current room has a blue floor and ceiling. The robot is moving forward to approach the open doorway.",
+    "description": "The robot is facing a grey wall with a closed white double-door cabinet in the center. An open doorway leading to a room with a black and white checkered floor is visible on the left. The current room has a blue wooden floor. The open door is off-center and not yet close.",
     "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 14.883508443832397
+    "elapsed_time": 11.028418779373169
   },
-  "Step_13": {
-    "step": "13",
+  "Step_9": {
+    "step": "9",
     "position": "[-1.4142166  1.5       -1.4142115]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -197,10 +141,10 @@
     "description": "The robot is facing a closed, light-colored double door or closet that is centered and fills most of the view, with the top slightly cropped. The floor is dark. The robot is aligned and close to the door, preparing to transition to the next state.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 26.700666427612305
+    "elapsed_time": 27.71710729598999
   },
-  "Step_14": {
-    "step": "14",
+  "Step_10": {
+    "step": "10",
     "position": "[-1.7677711  1.5       -1.7677648]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -211,10 +155,10 @@
     "description": "A closed white double door with two handles is centered in the view. The door is not open, preventing passage.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 15.830163478851318
+    "elapsed_time": 15.773735284805298
   },
-  "Step_15": {
-    "step": "15",
+  "Step_11": {
+    "step": "11",
     "position": "[-2.1213253  1.5       -2.121318 ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -222,13 +166,13 @@
     "state": "Go Through Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "A large, white, closed two-panel door with two circular handles, filling most of the robot's view, centered.",
+    "description": "The robot is facing a white two-panel door with two round handles, which is centered and appears close, filling most of the camera's view. The top and bottom edges of the door are slightly cropped.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 14.826173782348633
+    "elapsed_time": 6.318518161773682
   },
-  "Step_16": {
-    "step": "16",
+  "Step_12": {
+    "step": "12",
     "position": "[-2.4748785  1.5       -2.4748714]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -239,52 +183,52 @@
     "description": "The robot is facing a closed white double door with two round handles, centered in the view. A grey wall is visible on the left.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 27.82839798927307
+    "elapsed_time": 19.034782886505127
   },
-  "Step_17": {
-    "step": "17",
+  "Step_13": {
+    "step": "13",
     "position": "[-2.8284318  1.5       -2.8284247]",
-    "yaw": "225.00012",
-    "collision_state": "1.0",
-    "command": "A1",
-    "state": "Go Through Door",
-    "room": "living room & kitchen",
-    "pred_room": "unknown",
-    "description": "The robot sees two closed white doors with round handles, centered in the view. A grey wall is visible on the left. The robot is moving forward as the doors are centered and appear close, but not yet cropped top/bottom, indicating further approach is needed before attempting to pass through.",
-    "door_position": "center",
-    "goal_state": true,
-    "elapsed_time": 35.564767837524414
-  },
-  "Step_18": {
-    "step": "18",
-    "position": "[-3.1819851  1.5       -3.181978 ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
     "command": "A1",
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
-    "pred_room": "unknown",
-    "description": "The robot is facing a closed white door with two round knobs. The door is centered in the view.",
+    "pred_room": "living room & kitchen",
+    "description": "The robot is facing a closed white double door with two handles, which is centered in the view. A grey wall is visible on the left. Following the policy rules for 'Oriented Towards Door', the robot will move forward as the door is centered and not yet close, despite it being closed.",
     "door_position": "center",
     "goal_state": true,
-    "elapsed_time": 2.425020694732666
+    "elapsed_time": 36.17947196960449
   },
-  "Step_19": {
-    "step": "19",
-    "position": "[-3.5355384  1.5       -3.5355313]",
+  "Step_14": {
+    "step": "14",
+    "position": "[-3.1819851  1.5       -3.181978 ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
     "command": "D2",
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "A close-up view of a white closed door with a doorknob slightly to the right of the center. The door appears parallel to the robot's view. The robot needs to move laterally to center the door.",
+    "description": "The robot is facing a closed white door with two round handles, which is very close and fills most of the frame. A grey wall is visible on the left, indicating the door is slightly to the right, requiring a lateral adjustment.",
     "door_position": "right",
-    "goal_state": false,
-    "elapsed_time": 26.89635729789734
+    "goal_state": true,
+    "elapsed_time": 14.76922082901001
   },
-  "Step_20": {
-    "step": "20",
+  "Step_15": {
+    "step": "15",
+    "position": "[-3.5355384  1.5       -2.8284247]",
+    "yaw": "225.00012",
+    "collision_state": "1.0",
+    "command": "A1",
+    "state": "Oriented Towards Door",
+    "room": "living room & kitchen",
+    "pred_room": "unknown",
+    "description": "The robot is facing a closed, light-colored double door with two circular knobs, centered in the frame. The door is visible but not yet close enough to transition to the next state.",
+    "door_position": "center",
+    "goal_state": false,
+    "elapsed_time": 10.379398584365845
+  },
+  "Step_16": {
+    "step": "16",
     "position": "[-3.8890917  1.5       -3.181978 ]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -292,13 +236,13 @@
     "state": "Go Through Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "The robot is facing a closed white door with two circular knobs, which is centered in the view and appears very close, filling most of the frame.",
+    "description": "The robot is facing a closed white door with two doorknobs, which fills the entire camera view. The robot is very close to the door.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 24.40863275527954
+    "elapsed_time": 21.714678525924683
   },
-  "Step_21": {
-    "step": "21",
+  "Step_17": {
+    "step": "17",
     "position": "[-4.2426467  1.5       -3.5355313]",
     "yaw": "225.00012",
     "collision_state": "1.0",
@@ -306,28 +250,28 @@
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "The robot is facing a closed door with a handle on the right, centered in the view. The door is not open.",
+    "description": "The robot is facing a closed door with a doorknob on the right side, centered in the view. The door is not open, preventing passage.",
     "door_position": "center",
     "goal_state": false,
-    "elapsed_time": 27.891398191452026
+    "elapsed_time": 24.118401765823364
   },
-  "Step_22": {
-    "step": "22",
+  "Step_18": {
+    "step": "18",
     "position": "[-4.472805   1.5060408 -3.782491 ]",
     "yaw": "225.77463",
     "collision_state": "0.0",
-    "command": "A1",
+    "command": "B1",
     "state": "Oriented Towards Door",
     "room": "living room & kitchen",
     "pred_room": "unknown",
-    "description": "The robot sees a plain, light-colored wall with a distinct vertical line on the right side, likely indicating a door frame or the edge of an open door. The door is visible but not yet centered or close, so the robot continues to move forward to get closer.",
-    "door_position": "right",
+    "description": "The robot is very close to a light-colored surface with a dark vertical line slightly to the left, indicating a door opening to the left.",
+    "door_position": "left",
     "goal_state": false,
-    "elapsed_time": 9.603094100952148
+    "elapsed_time": 8.929940462112427
   },
   "End_Info": {
-    "total_steps": 22,
-    "total_time": 278.9534966945648,
+    "total_steps": 18,
+    "total_time": 244.0656020641327,
     "result": "collision_detected"
   }
 }
