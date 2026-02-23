@@ -15,26 +15,20 @@ class DoorDetector:
         self.model_name = model_name
         
         # Umbrales
-        self.center_threshold = 50  # Píxeles de desviación permitidos
-        self.width_threshold_enter = 0.35 # Si ocupa el 35% del ancho, está cerca
+        self.center_threshold = 50  
+        self.width_threshold_enter = 0.35 
 
     def get_correction(self, image_cv2):
-        """
-        Pide a Gemini las coordenadas de la puerta abierta y calcula la corrección.
-        """
         height, width, _ = image_cv2.shape
         img_center_x = width // 2
 
-        # Convertir imagen para Gemini
         im_pil = Image.fromarray(cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB))
         
-        # PROMPT MEJORADO: Especificamos explícitamente qué IGNORAR.
+        # PROMPT BLINDADO: Obligamos a pensar primero si es transitable.
         prompt = (
-            "Detect the OPEN door used for passage. "
-            "Ignore closed doors, cabinets, closets, wardrobes, and windows. "
-            "Only detect a door if it is clearly OPEN and leads to another room. "
-            "Return the bounding box in [ymin, xmin, ymax, xmax] format. "
-            "If no open door is clearly visible, return empty JSON."
+            "Analyze the image. Is there an OPEN, passable doorway leading to another room? "
+            "If it is a closed door, a cabinet, a closet, or just a wall, set 'is_open_door_present' to false. "
+            "Only if a clearly open gap/void is visible, set 'is_open_door_present' to true and provide its 'box_2d' [ymin, xmin, ymax, xmax]."
         )
 
         try:
@@ -46,9 +40,10 @@ class DoorDetector:
                     response_schema={
                         "type": "object",
                         "properties": {
+                            "is_open_door_present": {"type": "boolean"},
                             "box_2d": {
                                 "type": "array",
-                                "items": {"type": "integer"} # [ymin, xmin, ymax, xmax]
+                                "items": {"type": "integer"}
                             },
                             "label": {"type": "string"}
                         }
@@ -59,11 +54,10 @@ class DoorDetector:
             
             res = json.loads(response.text)
             
-            # Verificar si detectó algo
-            if not res or "box_2d" not in res or not res["box_2d"]:
-                return None, "No door detected by Gemini"
+            # FILTRO DE SEGURIDAD: Si dice que no hay puerta, abortamos la detección
+            if not res.get("is_open_door_present", False) or not res.get("box_2d"):
+                return None, "No open door detected by Gemini (Ignored)"
 
-            # Extraer coordenadas y escalar si es necesario
             ymin, xmin, ymax, xmax = res["box_2d"]
             
             if xmax <= 1000 and ymax <= 1000:
@@ -74,8 +68,6 @@ class DoorDetector:
             door_center_x = (xmin + xmax) // 2
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
-
-            # --- Lógica de Seguridad ---
             
             # 1. Alineación Lateral
             if abs(offset) > self.center_threshold:
