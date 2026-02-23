@@ -18,7 +18,11 @@ class DoorDetector:
         self.center_threshold = 50  
         self.width_threshold_enter = 0.35 
 
-    def get_correction(self, image_cv2):
+    def get_correction(self, image_cv2, current_state=""):
+        # Solo actuar en estados de alineación/cruce — NO durante la búsqueda libre
+        if current_state not in ["Oriented Towards Door", "Go Through Door"]:
+            return None, "Safety Guard restricted to alignment states."
+
         height, width, _ = image_cv2.shape
         img_center_x = width // 2
 
@@ -68,26 +72,23 @@ class DoorDetector:
             door_center_x = (xmin + xmax) // 2
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
-            
-            # --- Lógica de Seguridad Mejorada ---
 
-            # Si el offset es masivo (ej. > 150px), NO usar D1/D2.
-            # Es más seguro que el VLM rote (B1/C1).
-            if abs(offset) > 150:
-                return None, f"Offset too large ({offset}px). Let VLM rotate instead of sliding."
+            # En "Oriented Towards Door": corregir con rotaciones (B1/C1), nunca con D1/D2.
+            # En "Go Through Door": solo confirmar avance si está centrada.
+            if current_state == "Oriented Towards Door":
+                if abs(offset) > self.center_threshold:
+                    if offset < 0:
+                        return "B1", f"Gemini Safety: Door offset {offset}px LEFT → rotate left"
+                    else:
+                        return "C1", f"Gemini Safety: Door offset {offset}px RIGHT → rotate right"
+                # Centrada: forzar avance
+                return "A1", "Gemini Safety: Door centered. Force entry."
 
-            # 1. Alineación Lateral (Solo para ajustes finos)
-            if abs(offset) > self.center_threshold:
-                if offset < 0:
-                    return "D1", f"Gemini Safety: Small offset {offset}px LEFT"
-                else:
-                    return "D2", f"Gemini Safety: Small offset {offset}px RIGHT"
-
-            # 2. Entrada Franca
-            if door_width > (width * self.width_threshold_enter):
-                return "A1", "Gemini Safety: Door centered and close. Force Entry."
-
-            return None, "Door aligned but far. Gemini VLM decides."
+            if current_state == "Go Through Door":
+                # Solo forzar avance si la puerta sigue visible y centrada
+                if abs(offset) <= self.center_threshold and door_width > (width * self.width_threshold_enter):
+                    return "A1", "Gemini Safety: Door centered and wide. Continue crossing."
+                return None, "Go Through Door: VLM decides alignment."
 
         except Exception as e:
             print(f"Error in DoorDetector: {e}")

@@ -3,43 +3,48 @@
 ---
 
 ## 🎯 GOAL
-Rotate to face the open door **perpendicularly** (door centered in frame), then move straight through it. Alignment is mandatory before entering — but "centered enough" means within the middle third of the frame.
+Rotate until the open door is **centered in the frame** (perpendicular approach), then advance straight through it. Do NOT enter at an angle.
 
 ---
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-🔁 **ZERO PRIORITY — ANTI-OSCILLATION**:
-- Before anything else, check `mov_history`.
-- If the last **3+ commands alternate `B1` and `C1`** without any `A1`, you are oscillating on a nearly-aligned door.
-- **Stop. Return `A1` immediately.** The door is close enough to centered — go through it.
+🚨 **PRIORITY 0: ABORT CLOSED OBJECTS**:
+- If the visible object is a **CLOSED door, cabinet, or closet**, it is NOT the target.
+- Switch to `Search open Door` and rotate away (`B2` or `C2`).
 
-✅ **FIRST PRIORITY — ALIGNED: GO FORWARD**:
-- If the door opening is **within the middle third of the frame** (roughly centered, not at the edges), the drone is facing the door perpendicularly.
-- Return `A1` to move forward. Do NOT keep rotating for a perfect pixel-perfect center.
+🔁 **PRIORITY 1: ANTI-OSCILLATION**:
+- Check `mov_history`. If the last **3+ commands alternate `B1` and `C1`** with no `A1` between them, you are oscillating.
+- The door is close enough to centered. **Return `A1` immediately.**
 
-↔️ **SECOND PRIORITY — NOT ALIGNED: ROTATE TO CENTER**:
-- If the door opening is clearly **in the left third of the frame** → rotate left: `B1`
-- If the door opening is clearly **in the right third of the frame** → rotate right: `C1`
-- Use only **one rotation step at a time**, then re-evaluate. This is how the drone gets perpendicular to the door.
+↔️ **PRIORITY 2: ALIGNMENT (MANDATORY BEFORE ADVANCING)**:
+- Divide the frame into three equal vertical thirds: left / center / right.
+- **If door opening is in the LEFT third** → rotate left: `B1`
+- **If door opening is in the RIGHT third** → rotate right: `C1`
+- **If door opening is in the CENTER third** → the drone is perpendicular. Go to Priority 3.
 - Use `B2`/`C2` (45°) only if the door is at the very edge or almost out of frame.
+- **PROHIBITED: Never use `A1` if the door is in the left or right third. You will hit the doorframe.**
 
-🚪 **THIRD PRIORITY — DOOR LOST**:
+✅ **PRIORITY 3: CENTERED — ADVANCE**:
+- Door is in the center third AND is an open void → return `A1`.
+- This is the ONLY condition under which `A1` is allowed.
+
+🚪 **PRIORITY 4: DOOR LOST**:
 - If the open door is no longer visible in the frame, switch back to `Search open Door`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-- `A1`: move forward 10 cm ← use when door is in the middle third of the frame
-- `B1`: rotate 15° left ← use when door is in the left third
-- `C1`: rotate 15° right ← use when door is in the right third
-- `B2` / `C2`: rotate 45° ← only when door is nearly out of frame
+- `A1`: move forward 10 cm ← **ONLY when door is in the center third**
+- `B1`: rotate 15° left ← when door is in the left third
+- `C1`: rotate 15° right ← when door is in the right third
+- `B2` / `C2`: rotate 45° ← abort only (door at edge or lost)
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: Door is centered and `A1` will cross it.
-- `Oriented Towards Door`: Door is visible but still in left/right third — still aligning.
-- `Search open Door`: Door lost from view entirely.
+- `Go Through Door`: Door is in the center third and `A1` will cross it perpendicularly.
+- `Oriented Towards Door`: Door visible but in left/right third — still rotating to align.
+- `Search open Door`: Door is closed, is a cabinet, or is lost from view.

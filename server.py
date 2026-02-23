@@ -72,14 +72,13 @@ def cmd_vel():
     # BLOQUE DE SEGURIDAD (SAFETY GUARD)
     # ---------------------------------------------------------
     
-    # El Safety Guard solo activa en Search open Door.
-    # - "Oriented Towards Door": el VLM alinea con D1/D2 laterales; Guard interferiria.
-    # - "Go Through Door": el dron ya está cruzando en linea recta; Guard interferiria con D1/D2 laterales que lo desvian del marco.
-    critical_states = ["Search open Door"]
+    # El door_detector se auto-restringe internamente por estado (solo actúa en
+    # "Oriented Towards Door" y "Go Through Door"). Llamarlo siempre es seguro.
+    critical_states = ["Oriented Towards Door", "Go Through Door", "Search open Door"]
     
     if state in critical_states:
         # Preguntamos al Safety Guard (Gemini Detector) si necesitamos corregir
-        safety_cmd, safety_reason = safety_guard.get_correction(img)
+        safety_cmd, safety_reason = safety_guard.get_correction(img, current_state=state)
         
         if safety_cmd:
             print(f"🛡️ SAFETY INTERVENTION: {safety_reason} -> Force {safety_cmd}")

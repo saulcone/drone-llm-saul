@@ -1,28 +1,31 @@
 ## 📤 Output Format
 
-You must respond with a **single valid JSON object** following the exact structure below. It is CRITICAL that you generate the `description` field FIRST so you can reason before acting:
+You must respond with a **single valid JSON object**. It is CRITICAL that you generate the `description` field FIRST to reason before acting:
 
 ```json
 {
-  "description": "Step 1: Detail what you see (e.g. is it a closed cabinet or an open void?). Step 2: Reason about which policy rule applies.",
+  "description": "Step 1: Detail visual evidence (e.g., 'I see a closed white cabinet with knobs' or 'I see an open dark void leading to another room'). Step 2: Apply Priority Rules strictly and state which rule applies.",
   "door_position": "left | center | right | not_visible",
   "room": "estimated_room_name_or_unknown",
   "state": "next_FSM_state",
   "movement": "valid_single_movement_command"
 }
+```
 
-### ✅ Field Definitions
+✅ Field Definitions
 
-- `"room"`: Name of the current room (from the topological map), or `"unknown"` if not confidently identified.
-- `"movement"`: A single valid movement command (`A1`, `B2`, etc.) allowed by the current FSM state.
-- `"state"`: The predicted FSM state after this movement (e.g., `"Search Object"`, `"Reach Object"`).
-- `"description"`: A brief and neutral description of what the robot sees and the reasoning on the instructions.
-- `"door_position"`: Where the door appears in the frame. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`.
+- `"description"`: Detailed reasoning. You MUST use keywords like `'closed'`, `'cabinet'`, `'open void'`, `'wall'` when applicable. The movement chosen must follow from this reasoning.
 
-### ⚠️ Important
+- `"door_position"`: Position of the candidate door opening. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`.
 
-- Do **not** add extra text or explanations outside the JSON block.
-- Do **not** return multiple movement commands.
+- `"room"`: Current room from topological map, or `"unknown"`.
+
+- `"state"`: Next FSM state.
+
+- `"movement"`: Single command (A1, B1, etc.) chosen AFTER reasoning.
+
+⚠️ Important
+
+- Do not add extra text or explanations outside the JSON block.
 - Always follow the allowed command list and transition logic defined in the state prompt.
-
-Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.
+- Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.
