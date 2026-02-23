@@ -72,8 +72,11 @@ def cmd_vel():
     # BLOQUE DE SEGURIDAD (SAFETY GUARD)
     # ---------------------------------------------------------
     
-    # Estados críticos donde el choque con el marco es probable
-    critical_states = ["Oriented Towards Door", "Go Through Door", "Search open Door"]
+    # Estados críticos donde el choque con el marco es probable.
+    # NOTA: "Oriented Towards Door" se excluye a propósito: el Safety Guard
+    # forzando D1/D2 laterales mientras el VLM intenta alinearse con rotaciones
+    # provoca oscilaciones. En ese estado el VLM decide solo.
+    critical_states = ["Go Through Door", "Search open Door"]
     
     if state in critical_states:
         # Preguntamos al Safety Guard (Gemini Detector) si necesitamos corregir

@@ -19,15 +19,27 @@ Align the robot directly in front of an OPEN door without getting too close and 
 - If you need to align, use small rotations (`B1`, `C1`) and then move forward (`A1`) ONLY if the path is 100% clear.
 - If an obstacle is too close, return `B2` or `C2` to back away/rotate.
 
-1️⃣ **ALIGNMENT LOCK**:
-- (Mantenemos lo anterior: si la puerta está a un lado, rotar B1/C1).
+⚠️ **ZERO PRIORITY — ANTI-OSCILLATION (CHECK THIS FIRST)**:
+- Look at your `previous_movement` and `mov_history`.
+- If the last **3 or more** commands contain alternating rotations (`B1` and `C1` mixed, or the same rotation repeated), you are **stuck in a loop**.
+- When this happens, **IMMEDIATELY return `A1`** to move forward and commit to crossing the door. The alignment is good enough — stop oscillating.
+- This rule overrides all alignment rules below.
 
-2️⃣ **LATERAL MOVEMENT (D1/D2) - USE WITH CAUTION**:
+1️⃣ **ALIGNMENT LOCK**:
+- If the door is clearly to one side AND you have NOT been oscillating, rotate towards it:
+  - Door on the left → `B1`
+  - Door on the right → `C1`
+- Use `B2`/`C2` only if the door is very far to the side (more than half the frame width).
+
+2️⃣ **FORWARD COMMIT — When aligned enough**:
+- If the door occupies a large portion of the frame and is roughly centered (within ~30° of center), return `A1` to start crossing. Do NOT keep rotating for a perfect alignment.
+
+3️⃣ **LATERAL MOVEMENT (D1/D2) - USE WITH CAUTION**:
 - ONLY use `D1` or `D2` if the scene is wide open.
 - If you see the edge of a fireplace or wall near you, **DO NOT MOVE LATERALLY**. You will collide.
 
-3️⃣ **FIELD OF VIEW PRESERVATION**:
-- (Mantenemos la regla de no pegarse demasiado para no perder visión).
+4️⃣ **FIELD OF VIEW PRESERVATION**:
+- Do not get too close to the door frame or you will lose visual context.
 
 ---
 
