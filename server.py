@@ -12,7 +12,7 @@ import logging
 import os
 
 # Importamos el detector de puertas (Safety Guard)
-from reasoning.DoorDetector import DoorDetector 
+from reasoning.door_detector import DoorDetector
 
 logging.basicConfig(
     format="%(message)s", 
