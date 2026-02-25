@@ -25,15 +25,22 @@ class ReasoningModel:
     def create_model(model: str, **kwargs) -> VLMBaseModel:
         if "gpt" in model:
             from reasoning.gpt_class import GPTDescriptor
-            return GPTDescriptor(model, temperature=kwargs["temperature"],
-                                 max_tokens=kwargs["max_tokens"],
-                                 top_p=kwargs["top_p"], img_type="image/jpeg")
+            return GPTDescriptor(model, temperature=kwargs.get("temperature", 0),
+                                 max_tokens=kwargs.get("max_tokens", 300),
+                                 top_p=kwargs.get("top_p", 0.2), img_type="image/jpeg")
         elif "o4" in model:
             from reasoning.o_models_class import OModelDescriptor
-            return OModelDescriptor(model, max_tokens=kwargs["max_tokens"],
-                                    reasoning_effort=kwargs["reasoning_effort"])
+            return OModelDescriptor(model, max_tokens=kwargs.get("max_tokens", 300),
+                                    reasoning_effort=kwargs.get("reasoning_effort", "medium"))
         elif "gemini" in model:
             from reasoning.gemini import GeminiDescriptor
-            return GeminiDescriptor(model, temperature=kwargs["temperature"])
+            return GeminiDescriptor(model, temperature=kwargs.get("temperature", 0))
+            
+        # --- AÑADE ESTAS LÍNEAS ---
+        elif "qwen" in model or "ollama" in model:
+            from reasoning.ollama_class import OllamaDescriptor
+            return OllamaDescriptor(model, temperature=kwargs.get("temperature", 0.0))
+        # --------------------------
+        
         else:
             raise ValueError(f"Model not implemented: {model}")

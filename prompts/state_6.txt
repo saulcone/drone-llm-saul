@@ -18,9 +18,11 @@ Only return ONE command:
 
 ## 🧠 POLICY RULES (Priority Ordered)
 
-🚨 **PRIORITY 0: ABSOLUTE SAFETY — CABINETS / WALLS**:
+🚨 **PRIORITY 0: ABSOLUTE SAFETY — CABINETS / WALLS / CORNERS**:
 - If the object directly in front is a **CLOSED DOOR, CABINET, CLOSET, or WALL**, you are **FORBIDDEN from using `A1`**.
-- Return a rotation (`B2` or `C2`) to look away.
+- If you are **facing a corner** (walls visible on BOTH left and right sides of the frame simultaneously, or a narrow space where walls close in from both sides), you are **FORBIDDEN from using `A1`**.
+- In corner situations, use a **large rotation** (`B3` or `C3`, 90°) to escape and point towards a more open area before attempting any forward movement.
+- Return a rotation (`B2`, `C2`, `B3`, or `C3`) to look away.
 - **Safety overrides ALL other rules including the anti-loop rule.**
 
 ⚠️ **FALSE DOOR WARNING (CHIMNEY/FIREPLACE)**:
