@@ -8,12 +8,22 @@ from reasoning.VLMModel import VLMBaseModel
 
 logger = logging.getLogger(__name__)
 
+# Añadimos la función para limpiar el markdown si el modelo responde con ```json
+def parse_json(json_output: str):
+    lines = json_output.splitlines()
+    for i, line in enumerate(lines):
+        if line.strip() == "```json":
+            json_output = "\n".join(lines[i+1:])
+            json_output = json_output.split("```")[0]
+            break
+    return json_output.strip()
+
 class OllamaDescriptor(VLMBaseModel):
     def __init__(self, model="qwen3-vl:8b", temperature=0.0):
-        # Configuramos el cliente para apuntar al túnel SSH en localhost
+        # Configuramos el cliente para apuntar a Ollama en el propio servidor
         self.client = OpenAI(
             base_url='http://localhost:11434/v1',
-            api_key='ollama' # Requerido por la librería de OpenAI, aunque Ollama no lo use
+            api_key='ollama'
         )
         self.model = model
         self.temperature = temperature
@@ -32,7 +42,6 @@ class OllamaDescriptor(VLMBaseModel):
 
         img_b64_str = self.encode_image_base64(image)
         
-        # Montamos los inputs igual que en GPT
         user_inputs = [
             {"type": "text", "text": user_query},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64_str}"}}
@@ -47,7 +56,6 @@ class OllamaDescriptor(VLMBaseModel):
         if previous_movement:
             user_inputs.insert(1, {"type": "text", "text": "Previous movement command: " + previous_movement})
             
-        # Cargamos los prompts desde tus .txt
         system_prompt = load_system_prompt(
             path_dir="prompts",
             system_prompt_path="drone_system_prompt.txt",
@@ -60,19 +68,24 @@ class OllamaDescriptor(VLMBaseModel):
             {"role": "user", "content": user_inputs}
         ]        
         
-        print("Current FSM state: " + state)
+        print("Enviando petición a Ollama (Qwen3-VL)...")
 
         try:
-            # Llamada a la API local de Ollama
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                response_format={"type": "json_object"}, # Forzamos salida JSON
                 temperature=self.temperature
+                # ELIMINADO intencionadamente: response_format={"type": "json_object"}
             )
             
-            response_json = response.choices[0].message.content.strip()
-            return json.loads(response_json)
+            # Extraemos el texto en crudo
+            response_text = response.choices[0].message.content.strip()
+            
+            print(f"Respuesta recibida. Limpiando JSON...")
+            
+            # Limpiamos el markdown por si acaso y cargamos el JSON
+            clean_json = parse_json(response_text)
+            return json.loads(clean_json)
 
         except Exception as e:
             logger.exception(f"Error generando trayectoria con Ollama: {str(e)}")
