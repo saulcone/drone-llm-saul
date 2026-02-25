@@ -24,22 +24,36 @@ logging.getLogger("httpcore").setLevel(logging.INFO)
 logging.getLogger("httpx").setLevel(logging.WARNING)
 logger = logging.getLogger(__name__)
 
-# Load config
+# ---------------------------------------------------------
+# 1. PARSEAMOS LOS ARGUMENTOS PRIMERO
+# ---------------------------------------------------------
+parser = argparse.ArgumentParser(description='Run the reasoning server.')
+parser.add_argument('--host', type=str, default='0.0.0.0', help='Host address to run the server on')
+parser.add_argument('--port', type=int, default=5001, help='Port to run the server on')
+parser.add_argument('--model', type=str, default=None, help='Model to use (e.g., qwen3-vl:8b)')
+
+# Usamos parse_known_args para evitar conflictos internos de Flask
+args, unknown = parser.parse_known_args()
+
+# ---------------------------------------------------------
+# 2. CARGAMOS LA CONFIGURACIÓN Y EL MODELO
+# ---------------------------------------------------------
 cfg = OmegaConf.load("config.yaml")
 cfg = OmegaConf.to_container(cfg, resolve=True)
 cfg = OmegaConf.create(cfg)
 
-print("Model: ", cfg.model)
+# Priorizamos el argumento de la consola sobre el config.yaml
+final_model = args.model if args.model else cfg.model
+print(f"Model: {final_model}")
+
 vlm_model = ReasoningModel.create_model(
-    cfg.model,
-    max_tokens = cfg.max_tokens,
-    temperature = cfg.temperature,
-    top_p = cfg.top_p,
-    reasoning_effort = cfg.reasoning_effort,
+    final_model,
+    max_tokens = cfg.get("max_tokens", 300),
+    temperature = cfg.get("temperature", 0.0),
+    top_p = cfg.get("top_p", 0.2),
+    reasoning_effort = cfg.get("reasoning_effort", "medium"),
 )
 
-# Inicializamos el Safety Guard (Detector de puertas con Gemini)
-# No pasamos argumentos, por lo que usará Gemini por defecto según la clase que creamos antes.
 print("Initializing Safety Guard (DoorDetector)...")
 safety_guard = DoorDetector()
 
@@ -63,7 +77,6 @@ def cmd_vel():
         return jsonify({'error': f'Invalid topology JSON: {str(e)}'}), 400
 
     # Convert image (Decoding)
-    # IMPORTANTE: Decodificamos la imagen AQUÍ para que el Safety Guard pueda usarla
     img_bytes = image_file.read()
     np_arr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
@@ -71,34 +84,26 @@ def cmd_vel():
     # ---------------------------------------------------------
     # BLOQUE DE SEGURIDAD (SAFETY GUARD)
     # ---------------------------------------------------------
-    
-    # El door_detector se auto-restringe internamente por estado (solo actúa en
-    # "Oriented Towards Door" y "Go Through Door"). Llamarlo siempre es seguro.
     critical_states = ["Oriented Towards Door", "Go Through Door", "Search open Door"]
     
     if state in critical_states:
-        # Preguntamos al Safety Guard (Gemini Detector) si necesitamos corregir
         safety_cmd, safety_reason = safety_guard.get_correction(img, current_state=state)
         
         if safety_cmd:
             print(f"🛡️ SAFETY INTERVENTION: {safety_reason} -> Force {safety_cmd}")
             
-            # Determinamos el estado siguiente lógico tras la intervención
             next_state = state
-            # Si estábamos orientados y nos manda avanzar (A1), es que ya estamos entrando
             if state == "Oriented Towards Door" and safety_cmd == "A1":
                 next_state = "Go Through Door"
             
-            # Construimos la respuesta manual (Override)
             override_response = {
-                "room": "unknown", # No intentamos adivinar la sala durante una corrección de emergencia
+                "room": "unknown", 
                 "movement": safety_cmd,
                 "state": next_state,
                 "description": f"[SAFETY OVERRIDE] {safety_reason}",
                 "door_position": "center" if safety_cmd == "A1" else "off_center"
             }
             
-            # Devolvemos la respuesta inmediatamente, SALTANDO el razonamiento normal
             safety_json = jsonpickle.encode(override_response)
             return Response(response=safety_json, status=200, mimetype="application/json")
             
@@ -106,7 +111,7 @@ def cmd_vel():
     # FIN BLOQUE DE SEGURIDAD
     # ---------------------------------------------------------
 
-    # Call Reasoning model (Solo se ejecuta si el Safety Guard NO intervino)
+    # Call Reasoning model 
     response = vlm_model.generate_trajectory(img, query, topology=topology, 
                             state=state, previous_movement=previous_movement,
                             mov_history=mov_history)
@@ -117,11 +122,5 @@ def cmd_vel():
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Run the reasoning server.')
-    parser.add_argument('--host', type=str, default='0.0.0.0',
-                        help='Host address to run the server on')
-    parser.add_argument('--port', type=int, default=5001,
-                        help='Port to run the server on')
-    args = parser.parse_args()
-    
+    # Los argumentos ya se han parseado arriba, simplemente usamos args.host y args.port
     app.run(debug=True, host=args.host, port=args.port, use_reloader=False)
