@@ -57,7 +57,8 @@ class DoorDetector:
                             "is_perpendicular": {"type": "boolean"},
                             "label": {"type": "string"}
                         }
-                    },rature=0.0
+                    },
+                    temperature=0.0
                 )
             )
             
