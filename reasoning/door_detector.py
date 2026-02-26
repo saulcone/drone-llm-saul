@@ -34,7 +34,10 @@ class DoorDetector:
             "If it is a closed door, a cabinet, a closet, or just a wall, set 'is_open_door_present' to false. "
             "If there are MULTIPLE open doors visible, you MUST pick ONLY ONE (the one closest to the center of the image). "
             "Set 'is_open_door_present' to true and provide its 'box_2d' [ymin, xmin, ymax, xmax] for that SINGLE doorway. "
-            "CRITICAL: NEVER draw a single bounding box that groups multiple doors together."
+            "CRITICAL: NEVER draw a single bounding box that groups multiple doors together. "
+            "CRITICAL ALIGNMENT CHECK: Evaluate the camera's perspective relative to the doorframe. "
+            "Is the drone facing the doorway completely squarely (perpendicular to the wall)? "
+            "Set 'is_perpendicular' to true ONLY if the drone is facing it straight-on, and false if viewed from an angle."
         )
 
         try:
@@ -51,10 +54,10 @@ class DoorDetector:
                                 "type": "array",
                                 "items": {"type": "integer"}
                             },
+                            "is_perpendicular": {"type": "boolean"},
                             "label": {"type": "string"}
                         }
-                    },
-                    temperature=0.0
+                    },rature=0.0
                 )
             )
             
@@ -80,10 +83,16 @@ class DoorDetector:
             # Si la puerta no está centrada, devolvemos None y dejamos al VLM principal decidir.
             # Solo intervenimos para confirmar avance cuando ya está centrada.
             if current_state == "Oriented Towards Door":
+                # First check: Is the drone looking at it from a diagonal angle?
+                if not res.get("is_perpendicular", False):
+                    return None, "Gemini Safety: Door detected but drone is NOT perpendicular. Alignment left to VLM."
+                
+                # Second check: Is the door actually in the center of the screen?
                 if abs(offset) > self.center_threshold:
                     return None, f"Gemini Safety: Door offset {offset}px, alignment left to VLM."
-                # Centrada: forzar avance
-                return "A1", "Gemini Safety: Door centered. Force entry."
+                
+                # Centered AND straight-on: safe to fly forward
+                return "A1", "Gemini Safety: Door centered AND perpendicular. Force entry."
 
             if current_state == "Go Through Door":
                 # Solo forzar avance si la puerta sigue visible y centrada

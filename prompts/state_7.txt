@@ -23,7 +23,7 @@ Align until the open door is **centered in the frame AND you are facing it perpe
 📐 **PRIORITY 2: PERPENDICULARITY CHECK (FIX DIAGONAL ANGLE)**:
 - You must face the doorway perfectly straight-on (head-on), not from a side angle.
 - **VISUAL CUE:** Look at the horizontal lines (the top of the doorframe, floor lines, or wall edges). If they are slanted/skewed, or if you can see the deep inside thickness of one of the doorframes, you are looking at a diagonal angle.
-- **ACTION:** If you are diagonal, you MUST use a small rotation (`B1` to rotate left, `C1` to rotate right) to "square up" and face the wall flatly so the horizontal lines appear straight and parallel to the image frame. 
+- ACTION: If you are diagonal, you MUST use a small rotation to "square up". VISUAL RULE: If you clearly see the inner depth/thickness of the LEFT doorframe, you are looking from the right side → rotate LEFT (B1). If you clearly see the inner depth of the RIGHT doorframe, you are looking from the left side → rotate RIGHT (C1).
 - Do NOT use `D1` or `D2` if your angle is skewed.
 
 ↔️ **PRIORITY 3: CENTERING (MANDATORY BEFORE ADVANCING)**:
