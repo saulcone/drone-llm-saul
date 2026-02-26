@@ -26,7 +26,13 @@ Align until the open door is **centered in the frame AND you are facing it perpe
 - **If the target door opening is in the RIGHT third** → slide right: `D2`
 - **CRITICAL:** Do NOT attempt to fix a diagonal angle until the door is in the CENTER third. You must center it first so you don't lose sight of it when rotating.
 
-📐 **PRIORITY 3: PERPENDICULARITY CHECK (ONLY WHEN CENTERED)**:
+📐 PRIORITY 3: PERPENDICULARITY CHECK (CRITICAL):
+
+    If the horizontal lines of the ceiling or floor are slanted, you are at a diagonal.
+
+    ACTION: You MUST use B1 or C1 to face the wall head-on (90° to the wall) BEFORE using any D1 or D2 command.
+
+    STRICT RULE: If you see the "thickness" or inside edge of the doorframe, you are not perpendicular. Rotate until the doorframe looks like a flat line.
 - Once the target door is in the CENTER third, check if you are facing it perfectly straight-on (head-on).
 - **VISUAL CUE:** Look at the horizontal lines (the top of the doorframe, floor lines, or wall edges). If they are slanted/skewed, or if you can see the deep inside thickness of one of the doorframes, you are looking at a diagonal angle.
 - **ACTION:** If you are diagonal, use a small rotation (`B1` to rotate left, `C1` to rotate right) to "square up" and face the wall flatly. 
