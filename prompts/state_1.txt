@@ -20,6 +20,8 @@ Only return:
 
 ## 🔄 OUTPUT STATE Rules
 
-- `Recognize Room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
+- `Recognize Room`: If you just entered a room, transition here to verify which room it is before searching.
 
-- `Search Object`: When you are in the correct room and need to find the target object.
+- `Search Object`: ONLY if you have verified and are absolutely sure you are in the correct target room.
+
+- `Search open Door`: If you immediately realize you entered the wrong room.
