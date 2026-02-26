@@ -19,11 +19,10 @@ Only return ONE command:
 
 ## 🧠 POLICY RULES (Priority Ordered)
 
-🚨 **PRIORITY 0: ABSOLUTE SAFETY — CABINETS / WALLS**:
-- If you are facing a wall or a corner, return a large rotation (B3 or C3) to quickly turn 90 degrees and face the open room. Use B2/C2 only for minor obstacle avoidance.
-- Return a rotation (`B2` or `C2`) to look away.
-- **Safety overrides ALL other rules including the anti-loop rule.**
-
+🚨 PRIORITY 0: ABSOLUTE SAFETY — CABINETS / WALLS / CORNERS:
+- If the object directly in front is a CLOSED DOOR, CABINET, CLOSET, or WALL, you are FORBIDDEN from using `A1`.
+- In corner situations, use a large rotation (`B3` or `C3`, 90°) to escape and point towards a more open area.
+- CRITICAL: Always rotate in the SAME direction as your `previous_movement` (e.g., if previous was C, use C; if B, use B) to avoid infinite oscillation loops. NEVER reverse your rotation immediately.
 ⚠️ WRONG ROOM ESCAPE: If you just realized you are in the wrong room, your immediate priority is to find the door you just came through. Execute a large rotation (B3 or C3, 90 degrees) to quickly turn around and locate the exit. Do not waste time with small 15-degree rotations.
 
 1️⃣ **FIRST PRIORITY (OPEN DOOR DETECTED)**:

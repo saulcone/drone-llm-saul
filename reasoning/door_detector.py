@@ -28,11 +28,13 @@ class DoorDetector:
 
         im_pil = Image.fromarray(cv2.cvtColor(image_cv2, cv2.COLOR_BGR2RGB))
         
-        # PROMPT BLINDADO: Obligamos a pensar primero si es transitable.
+        # PROMPT BLINDADO: Obligamos a pensar primero si es transitable y a no agrupar puertas.
         prompt = (
             "Analyze the image. Is there an OPEN, passable doorway leading to another room? "
             "If it is a closed door, a cabinet, a closet, or just a wall, set 'is_open_door_present' to false. "
-            "Only if a clearly open gap/void is visible, set 'is_open_door_present' to true and provide its 'box_2d' [ymin, xmin, ymax, xmax]."
+            "If there are MULTIPLE open doors visible, you MUST pick ONLY ONE (the one closest to the center of the image). "
+            "Set 'is_open_door_present' to true and provide its 'box_2d' [ymin, xmin, ymax, xmax] for that SINGLE doorway. "
+            "CRITICAL: NEVER draw a single bounding box that groups multiple doors together."
         )
 
         try:
