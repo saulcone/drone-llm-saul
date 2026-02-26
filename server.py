@@ -41,7 +41,12 @@ vlm_model = ReasoningModel.create_model(
 # Inicializamos el Safety Guard (Detector de puertas con Gemini)
 # No pasamos argumentos, por lo que usará Gemini por defecto según la clase que creamos antes.
 print("Initializing Safety Guard (DoorDetector)...")
-safety_guard = DoorDetector()
+try:
+    safety_guard = DoorDetector()
+    print("Safety Guard initialized successfully.")
+except Exception as e:
+    safety_guard = None
+    print(f"WARNING: Safety Guard (DoorDetector) failed to initialize: {e}. Safety Guard will be DISABLED.")
 
 app = Flask(__name__)
 
@@ -76,7 +81,7 @@ def cmd_vel():
     # "Oriented Towards Door" y "Go Through Door"). Llamarlo siempre es seguro.
     critical_states = ["Oriented Towards Door", "Go Through Door", "Search open Door"]
     
-    if state in critical_states:
+    if state in critical_states and safety_guard is not None:
         # Preguntamos al Safety Guard (Gemini Detector) si necesitamos corregir
         safety_cmd, safety_reason = safety_guard.get_correction(img, current_state=state)
         

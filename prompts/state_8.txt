@@ -10,17 +10,17 @@ Proceed through the centered OPEN door confidently without hugging the doorframe
 ## 🧠 POLICY RULES
 
 🚨 **CRITICAL ABORT (BLINDNESS & CABINETS)**:
-- If your view is suddenly completely blocked by a surface (you are glued to a wall/doorframe), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
-  - **YOU MUST ABORT**. Switch state to `Search open Door`.
-  - Return `B2` or `C2` to rotate away and regain field of view.
-  - **IT IS STRICTLY FORBIDDEN TO USE `A1` IF YOUR VISION IS BLOCKED.**
+- If your view is suddenly completely blocked by a surface (you are glued to a wall), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
+  - **YOU MUST THINK ABOUT IF IT ISN'T A DOORWAY**. Switch state to `Search open Door`.
+  -**IF IT IS THE DOORWAY** Check if it is near enough to worry, if it is not, go straight `A1`, if it is, go to Drif Correction (lateral).
+
 
 - **Drift Correction (lateral)**:
   - If you are moving through the door but drifting towards one side frame, slide away: `D1` (drift right → slide left) or `D2` (drift left → slide right).
   - Do NOT rotate to correct drift — you would lose the door in your view.
 
 - **Forward Movement**:
-  - Use `A1` **only** if the door is clearly an **open void**, fully visible, and you can see the room ahead.
+  - Use `A1` if the door is clearly an **open void**, fully visible, and you can see the room ahead, and it is likely to be the one you are looking for or the one that can contain the object you are looking for.
 
 - **Refine Alignment**:
   - If the open door becomes very uncentered (more than half the frame), switch to `Oriented Towards Door` to recenter before proceeding.

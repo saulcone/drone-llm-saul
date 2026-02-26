@@ -12,10 +12,9 @@
 ## 🕹️ MOVEMENT COMMANDS
 
 Only return:
-- `A3`: forward 50 cm
+- After checking out not to crash with the obstacle in front (it is far enough), choose to do one of the commands pointed in the next line.
+- `A1`: forward 10 cm, `A2`: forward 30 cm or `A3`: forward 50 cm
 
-
-Do not use any other command in this state.
 
 ---
 
