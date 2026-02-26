@@ -17,6 +17,10 @@ Align until the open door is **centered in the frame** (perpendicular approach),
 - Check `mov_history`. If the last **3+ commands alternate `D1` and `D2`** with no `A1` between them, you are oscillating.
 - The door is close enough to centered. **Return `A1` immediately.**
 
+🔍 **PRIORITY 1.5: MULTIPLE DOORS RESOLUTION**:
+- If there are MULTIPLE open doors visible, you MUST choose the one that leads to your target destination based on your user query (e.g., if searching for a sink/bathroom, pick the door showing a checkered floor).
+- Evaluate the visual clues through the gaps. Select the correct door and apply the Alignment rules (Priority 2) ONLY to that specific door. Ignore the wrong door completely.
+
 ↔️ **PRIORITY 2: ALIGNMENT (MANDATORY BEFORE ADVANCING)**:
 - Divide the frame into three equal vertical thirds: left / center / right.
 - **If door opening is in the LEFT third** → slide left: `D1`

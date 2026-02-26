@@ -21,16 +21,21 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 - ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
 - Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
-↔️ **PRIORITY 2: DRIFT CORRECTION**:
-- If the open void is visibly off-center, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
+🔁 **PRIORITY 2: ANTI-OSCILLATION (FORCE ADVANCE)**:
+- Look at your `mov_history`. If you have recently alternated between `D1` and `D2` (e.g., sliding left, then right, then left), you are trapped in an overcorrection loop.
+- This means you are already perfectly centered in the middle of the frame.
+- **CRITICAL**: Stop sliding. Return `A1` immediately to move forward and break the loop.
 
-✅ **PRIORITY 3: SAFE FORWARD MOVEMENT**:
-- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A1` to cross.
+↔️ **PRIORITY 3: DRIFT CORRECTION**:
+- If the open void is visibly off-center and you are NOT oscillating, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
+
+✅ **PRIORITY 4: SAFE FORWARD MOVEMENT**:
+- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A2` to cross carefully and calculate again if you may collision.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-- `A1`: move forward 10 cm (ONLY IF PERFECTLY CENTERED AND SAFE)
+- `A1`: move forward 10 cm (Use to break oscillation or if perfectly safe)
 - `D1`: slide 10 cm left (to avoid right frame or correct rightward drift)
 - `D2`: slide 10 cm right (to avoid left frame or correct leftward drift)
 - `B2`, `C2`: rotate 45° (ONLY for Priority 1 Abort)
