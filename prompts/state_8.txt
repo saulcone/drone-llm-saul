@@ -3,45 +3,42 @@
 ---
 
 ## 🎯 GOAL  
-Proceed through the centered OPEN door confidently without hugging the doorframes.
+Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** Anticipate collisions and slide laterally before they happen.
 
 ---
 
-## 🧠 POLICY RULES
+## 🧠 POLICY RULES (Strict Priority)
 
- "PRIORITY 1: DRIFT CORRECTION. If the door is significantly off-center or not in front (0 degrees) drifting towards a frame, use D1 or D2. However, if the door is only 'slightly' off-center but the path ahead is clearly open and safe to cross without hitting the frame, prioritize Forward Movement (A1) to avoid infinite lateral oscillation."
+🚨 **PRIORITY 0: PROACTIVE COLLISION AVOIDANCE (NEVER HIT THE FRAME)**:
+- A collision is a FATAL ERROR. You must anticipate it.
+- If a wall or doorframe is getting dangerously close, or taking up a large portion of the left or right side of your view, **DO NOT move forward (`A1`)**.
+- You must immediately slide laterally AWAY from the threatening frame to recenter the open void:
+  - If the **LEFT** frame/wall is getting too close or looks dangerously large → slide RIGHT: `D2`.
+  - If the **RIGHT** frame/wall is getting too close or looks dangerously large → slide LEFT: `D1`.
+- Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B2`/`C2`) to avoid a frame.**
 
- "PRIORITY 2: ANTI-OSCILLATION (LATERAL). Check movement history. If the last movements alternate between D1 and D2 (e.g., D1 -> D2 -> D1), you are oscillating. The door is centered enough. You MUST ignore minor drifts and use A1 immediately to cross."
-🚨 
+🚨 **PRIORITY 1: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
+- ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
+- Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
-**CRITICAL ABORT (BLINDNESS & CABINETS)**:
-- If your view is suddenly completely blocked by a surface (you are glued to a wall), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
-  - **YOU MUST THINK ABOUT IF IT ISN'T A DOORWAY**. Switch state to `Search open Door`.
-  -**IF IT IS THE DOORWAY** Check if it is near enough to worry, if it is not, go straight `A1`, if it is, go to Drif Correction (lateral).
+↔️ **PRIORITY 2: DRIFT CORRECTION**:
+- If the open void is visibly off-center, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
 
-
-- **Drift Correction (lateral)**:
-  - If you are moving through the door but drifting towards one side frame, slide away: `D1` (drift right → slide left) or `D2` (drift left → slide right).
-  - Do NOT rotate to correct drift — you would lose the door in your view.
-
-- **Forward Movement**:
-  - Use `A1` if the door is clearly an **open void**, fully visible, and you can see the room ahead, and it is likely to be the one you are looking for or the one that can contain the object you are looking for.
-
-- **Refine Alignment**:
-  - If the open door becomes very uncentered (more than half the frame), switch to `Oriented Towards Door` to recenter before proceeding.
+✅ **PRIORITY 3: SAFE FORWARD MOVEMENT**:
+- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A1` to cross.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-- `A1`: move forward 10 cm (ONLY IF PATH IS CLEAR AND OPEN)
-- `D1`: slide 10 cm left (to correct rightward drift while keeping camera on door)
-- `D2`: slide 10 cm right (to correct leftward drift while keeping camera on door)
-- `B2`, `C2`: rotate 45° — use ONLY to abort when path is blocked
+- `A1`: move forward 10 cm (ONLY IF PERFECTLY CENTERED AND SAFE)
+- `D1`: slide 10 cm left (to avoid right frame or correct rightward drift)
+- `D2`: slide 10 cm right (to avoid left frame or correct leftward drift)
+- `B2`, `C2`: rotate 45° (ONLY for Priority 1 Abort)
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
-- `Go Through Door`: Door is open, centered, and safe to cross.
-- `Oriented Towards Door`: Door is open but you drifted off-center.
-- `Position in the center of room`: Threshold crossed successfully.
-- `Search open Door`: The path is BLOCKED, closed, or you are completely glued to a frame (ABORT).
+- `Go Through Door`: Still crossing the door, correcting drift, or evading a frame.
+- `Oriented Towards Door`: Door is open but you lost alignment completely.
+- `Position in the center of room`: Threshold crossed successfully (you are inside the new room).
+- `Search open Door`: Path is blocked by a CLOSED object (ABORT).
