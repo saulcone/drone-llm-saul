@@ -15,7 +15,7 @@ class DoorDetector:
         self.model_name = model_name
         
         # Umbrales
-        self.center_threshold = 50  
+        self.center_threshold = 20  
         self.width_threshold_enter = 0.35 
 
     def get_correction(self, image_cv2, current_state=""):
