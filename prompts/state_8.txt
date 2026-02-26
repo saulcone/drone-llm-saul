@@ -9,6 +9,8 @@ Proceed through the centered OPEN door confidently without hugging the doorframe
 
 ## 🧠 POLICY RULES
 
+ "PRIORITY 1: DRIFT CORRECTION. If the door is even slightly off-center (e.g., 'slightly to the left' or 'slightly to the right'), you MUST use D1 or D2 to re-center it perfectly BEFORE using A1 again. Never ignore minor drifts."
+
 🚨 **CRITICAL ABORT (BLINDNESS & CABINETS)**:
 - If your view is suddenly completely blocked by a surface (you are glued to a wall), OR if you face a **CLOSED DOOR, CABINET, or CLOSET**:
   - **YOU MUST THINK ABOUT IF IT ISN'T A DOORWAY**. Switch state to `Search open Door`.
