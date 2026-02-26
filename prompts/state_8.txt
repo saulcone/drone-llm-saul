@@ -30,7 +30,7 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 - If the open void is visibly off-center and you are NOT oscillating, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
 
 ✅ **PRIORITY 4: SAFE FORWARD MOVEMENT**:
-- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A2` to cross carefully and calculate again if you may collision.
+- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A1` (10 cm) to cross carefully and calculate again if you may collision.
 
 ---
 
