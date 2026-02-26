@@ -42,7 +42,7 @@ Choose the next FSM state based on what the robot sees:
 
 - `Search Object`: if the target object is not yet visible or not centered in the frame.
 - `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
-
+- `Search open Door`: If you realize you are in the WRONG room (e.g., you are in the bedroom but the goal is in the bathroom). You must abort the search immediately to find an exit.
 ---
 
 ## ⚠️ NOTES
