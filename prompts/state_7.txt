@@ -3,7 +3,7 @@
 ---
 
 ## 🎯 GOAL
-Align until the open door is **centered in the frame** (perpendicular approach), then advance straight through it. Do NOT enter at an angle.
+Align until the open door is **centered in the frame AND you are facing it perpendicularly (head-on)**. Do NOT enter at a diagonal angle.
 
 ---
 
@@ -13,42 +13,48 @@ Align until the open door is **centered in the frame** (perpendicular approach),
 - If the visible object is a **CLOSED door, cabinet, or closet**, it is NOT the target.
 - Switch to `Search open Door` and rotate away (`B2` or `C2`).
 
-🔁 **PRIORITY 1: ANTI-OSCILLATION**:
-- Check `mov_history`. If the last **3+ commands alternate `D1` and `D2`** with no `A1` between them, you are oscillating.
-- The door is close enough to centered. **Return `A1` immediately.**
+🔍 **PRIORITY 1: MULTIPLE DOORS RESOLUTION**:
+- If there are MULTIPLE open doors visible, you MUST choose the one that leads to your target destination based on your user query.
+- Ignore the wrong door completely.
 
-🔍 **PRIORITY 1.5: MULTIPLE DOORS RESOLUTION**:
-- If there are MULTIPLE open doors visible, you MUST choose the one that leads to your target destination based on your user query (e.g., if searching for a sink/bathroom, pick the door showing a checkered floor).
-- Evaluate the visual clues through the gaps. Select the correct door and apply the Alignment rules (Priority 2) ONLY to that specific door. Ignore the wrong door completely.
+🔁 **PRIORITY 1.5: ANTI-OSCILLATION**:
+- Check `mov_history`. If the last **3+ commands alternate `D1` and `D2`**, you are oscillating and already centered. **Return `A1` immediately.**
 
-↔️ **PRIORITY 2: ALIGNMENT (MANDATORY BEFORE ADVANCING)**:
-- Divide the frame into three equal vertical thirds: left / center / right.
+📐 **PRIORITY 2: PERPENDICULARITY CHECK (FIX DIAGONAL ANGLE)**:
+- You must face the doorway perfectly straight-on (head-on), not from a side angle.
+- **VISUAL CUE:** Look at the horizontal lines (the top of the doorframe, floor lines, or wall edges). If they are slanted/skewed, or if you can see the deep inside thickness of one of the doorframes, you are looking at a diagonal angle.
+- **ACTION:** If you are diagonal, you MUST use a small rotation (`B1` to rotate left, `C1` to rotate right) to "square up" and face the wall flatly so the horizontal lines appear straight and parallel to the image frame. 
+- Do NOT use `D1` or `D2` if your angle is skewed.
+
+↔️ **PRIORITY 3: CENTERING (MANDATORY BEFORE ADVANCING)**:
+- Once you are facing the door head-on (not diagonal), divide the frame into three equal vertical thirds: left / center / right.
 - **If door opening is in the LEFT third** → slide left: `D1`
 - **If door opening is in the RIGHT third** → slide right: `D2`
-- **If door opening is in the CENTER third** → the drone is aligned. Go to Priority 3.
-- Use `B2`/`C2` (45°) only if the door is at the very edge or almost out of frame to abort.
-- **PROHIBITED: Never use `B1` or `C1` to align with the door. You must maintain your current angle and slide laterally.**
+- **If door opening is in the CENTER third** → you are perfectly aligned. Go to Priority 4.
+- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle.
 
-✅ **PRIORITY 3: CENTERED — ADVANCE**:
-- Door is in the center third AND is an open void → return `A1`.
+✅ **PRIORITY 4: CENTERED & PERPENDICULAR — ADVANCE**:
+- Door is in the center third, you are facing it head-on, AND it is an open void → return `A1`.
 - This is the ONLY condition under which `A1` is allowed.
 
-🚪 **PRIORITY 4: DOOR LOST**:
-- If the open door is no longer visible in the frame, switch back to `Search open Door`.
+🚪 **PRIORITY 5: DOOR LOST**:
+- If the open door is no longer visible, switch back to `Search open Door`.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-- `A1`: move forward 10 cm ← **ONLY when door is in the center third**
-- `D1`: slide 10 cm left ← when door is in the left third
-- `D2`: slide 10 cm right ← when door is in the right third
+- `A1`: move forward 10 cm ← **ONLY when centered AND perpendicular**
+- `B1`: rotate 15° left ← **ONLY to fix a diagonal angle**
+- `C1`: rotate 15° right ← **ONLY to fix a diagonal angle**
+- `D1`: slide 5 cm left ← **ONLY to center the door when facing it head-on**
+- `D2`: slide 5 cm right ← **ONLY to center the door when facing it head-on**
 - `B2` / `C2`: rotate 45° ← abort only (door at edge or lost)
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: Door is in the center third and `A1` will cross it perpendicularly.
-- `Oriented Towards Door`: Door visible but in left/right third — still sliding to align.
+- `Go Through Door`: Door is centered, you are perpendicular, and `A1` will cross it perfectly straight.
+- `Oriented Towards Door`: Door visible but needs centering or angle adjustment.
 - `Search open Door`: Door is closed, is a cabinet, or is lost from view.

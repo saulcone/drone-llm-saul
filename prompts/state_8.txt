@@ -11,33 +11,33 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 
 🚨 **PRIORITY 0: PROACTIVE COLLISION AVOIDANCE (NEVER HIT THE FRAME)**:
 - A collision is a FATAL ERROR. You must anticipate it.
-- If a wall or doorframe is getting dangerously close, or taking up a large portion of the left or right side of your view, **DO NOT move forward (`A1`)**.
-- You must immediately slide laterally AWAY from the threatening frame to recenter the open void:
-  - If the **LEFT** frame/wall is getting too close or looks dangerously large → slide RIGHT: `D2`.
-  - If the **RIGHT** frame/wall is getting too close or looks dangerously large → slide LEFT: `D1`.
-- Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B2`/`C2`) to avoid a frame.**
+- If ONE wall or doorframe is getting dangerously close, taking up a much larger portion of the view than the other side, **DO NOT move forward (`A1`)**.
+- You must slide laterally AWAY from the threatening frame:
+  - If the **LEFT** frame is dangerously close → slide RIGHT: `D2`.
+  - If the **RIGHT** frame is dangerously close → slide LEFT: `D1`.
+- **NARROW DOOR EXCEPTION:** If BOTH the left and right frames are visible, close, and look roughly symmetrical (the void is in the middle), YOU ARE PERFECTLY CENTERED. Do NOT slide. Ignore Priority 0 and proceed to cross (`A1`).
+- Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B2`/`C2`).**
 
 🚨 **PRIORITY 1: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
 - ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
 - Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
 🔁 **PRIORITY 2: ANTI-OSCILLATION (FORCE ADVANCE)**:
-- Look at your `mov_history`. If you have recently alternated between `D1` and `D2` (e.g., sliding left, then right, then left), you are trapped in an overcorrection loop.
-- This means you are already perfectly centered in the middle of the frame.
-- **CRITICAL**: Stop sliding. Return `A1` immediately to move forward and break the loop.
+- Look closely at your `mov_history`. If your recent history contains a mix of BOTH `D1` and `D2` (for example, you used D2, D2, and then D1, D1), you are trapped in an overcorrection loop.
+- This means you are already centered enough. **CRITICAL**: Stop sliding laterally. Return `A1` immediately to break the loop and move forward.
 
 ↔️ **PRIORITY 3: DRIFT CORRECTION**:
 - If the open void is visibly off-center and you are NOT oscillating, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
 
 ✅ **PRIORITY 4: SAFE FORWARD MOVEMENT**:
-- ONLY if the path is a clearly centered open void, and both doorframes are at a safe distance in your peripheral vision, use `A1` (10 cm) to cross carefully and calculate again if you may collision.
+- ONLY if the path is a clearly centered open void, use `A1` to cross.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
-- `A1`: move forward 10 cm (Use to break oscillation or if perfectly safe)
-- `D1`: slide 10 cm left (to avoid right frame or correct rightward drift)
-- `D2`: slide 10 cm right (to avoid left frame or correct leftward drift)
+- `A1`: move forward 10 cm (Use to break oscillation, or if centered and safe)
+- `D1`: slide 5 cm left (to avoid right frame or correct rightward drift)
+- `D2`: slide 5 cm right (to avoid left frame or correct leftward drift)
 - `B2`, `C2`: rotate 45° (ONLY for Priority 1 Abort)
 
 ---
