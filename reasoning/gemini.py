@@ -72,6 +72,9 @@ class GeminiDescriptor:
             
         if previous_movement:
             user_text_parts.append("Previous movement command: " + previous_movement)
+
+        if mov_history:
+            user_text_parts.append("Movement history (last commands): " + str(mov_history))
         
         # Combine all text parts into a single string
         user_text = "\n\n".join(user_text_parts)
