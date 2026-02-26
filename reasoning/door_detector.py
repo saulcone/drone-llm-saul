@@ -73,14 +73,13 @@ class DoorDetector:
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
 
-            # En "Oriented Towards Door": corregir con rotaciones (B1/C1), nunca con D1/D2.
-            # En "Go Through Door": solo confirmar avance si está centrada.
+            # En "Oriented Towards Door": el Safety Guard NO corrige la alineación.
+            # Forzar rotaciones (B1/C1) desde aquí rompería la perpendicularidad del dron.
+            # Si la puerta no está centrada, devolvemos None y dejamos al VLM principal decidir.
+            # Solo intervenimos para confirmar avance cuando ya está centrada.
             if current_state == "Oriented Towards Door":
                 if abs(offset) > self.center_threshold:
-                    if offset < 0:
-                        return "B1", f"Gemini Safety: Door offset {offset}px LEFT → rotate left"
-                    else:
-                        return "C1", f"Gemini Safety: Door offset {offset}px RIGHT → rotate right"
+                    return None, f"Gemini Safety: Door offset {offset}px, alignment left to VLM."
                 # Centrada: forzar avance
                 return "A1", "Gemini Safety: Door centered. Force entry."
 
