@@ -3,7 +3,7 @@
 ---
 
 ## 🎯 GOAL
-Rotate until the open door is **centered in the frame** (perpendicular approach), then advance straight through it. Do NOT enter at an angle.
+Align until the open door is **centered in the frame** (perpendicular approach), then advance straight through it. Do NOT enter at an angle.
 
 ---
 
@@ -14,16 +14,16 @@ Rotate until the open door is **centered in the frame** (perpendicular approach)
 - Switch to `Search open Door` and rotate away (`B2` or `C2`).
 
 🔁 **PRIORITY 1: ANTI-OSCILLATION**:
-- Check `mov_history`. If the last **3+ commands alternate `B1` and `C1`** with no `A1` between them, you are oscillating.
+- Check `mov_history`. If the last **3+ commands alternate `D1` and `D2`** with no `A1` between them, you are oscillating.
 - The door is close enough to centered. **Return `A1` immediately.**
 
 ↔️ **PRIORITY 2: ALIGNMENT (MANDATORY BEFORE ADVANCING)**:
 - Divide the frame into three equal vertical thirds: left / center / right.
-- **If door opening is in the LEFT third** → rotate left: `B1`
-- **If door opening is in the RIGHT third** → rotate right: `C1`
-- **If door opening is in the CENTER third** → the drone is perpendicular. Go to Priority 3.
-- Use `B2`/`C2` (45°) only if the door is at the very edge or almost out of frame.
-- **PROHIBITED: Never use `A1` if the door is in the left or right third. You will hit the doorframe.**
+- **If door opening is in the LEFT third** → slide left: `D1`
+- **If door opening is in the RIGHT third** → slide right: `D2`
+- **If door opening is in the CENTER third** → the drone is aligned. Go to Priority 3.
+- Use `B2`/`C2` (45°) only if the door is at the very edge or almost out of frame to abort.
+- **PROHIBITED: Never use `B1` or `C1` to align with the door. You must maintain your current angle and slide laterally.**
 
 ✅ **PRIORITY 3: CENTERED — ADVANCE**:
 - Door is in the center third AND is an open void → return `A1`.
@@ -37,8 +37,8 @@ Rotate until the open door is **centered in the frame** (perpendicular approach)
 ## 🕹️ MOVEMENT COMMANDS
 
 - `A1`: move forward 10 cm ← **ONLY when door is in the center third**
-- `B1`: rotate 15° left ← when door is in the left third
-- `C1`: rotate 15° right ← when door is in the right third
+- `D1`: slide 10 cm left ← when door is in the left third
+- `D2`: slide 10 cm right ← when door is in the right third
 - `B2` / `C2`: rotate 45° ← abort only (door at edge or lost)
 
 ---
@@ -46,5 +46,5 @@ Rotate until the open door is **centered in the frame** (perpendicular approach)
 ## 🔄 OUTPUT STATE RULES
 
 - `Go Through Door`: Door is in the center third and `A1` will cross it perpendicularly.
-- `Oriented Towards Door`: Door visible but in left/right third — still rotating to align.
+- `Oriented Towards Door`: Door visible but in left/right third — still sliding to align.
 - `Search open Door`: Door is closed, is a cabinet, or is lost from view.
