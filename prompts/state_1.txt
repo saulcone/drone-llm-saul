@@ -21,3 +21,5 @@ Only return:
 ## 🔄 OUTPUT STATE Rules
 
 - `Recognize Room`: When the user query is go to an specific room (without searching any object) and you identify you are in that room.
+
+- `Search Object`: When you are in the correct room and need to find the target object.
