@@ -9,25 +9,28 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-🚨 **PRIORITY 0: PROACTIVE COLLISION AVOIDANCE (NEVER HIT THE FRAME)**:
-- A collision is a FATAL ERROR. You must anticipate it.
-- If ONE wall or doorframe is getting dangerously close, taking up a much larger portion of the view than the other side, **DO NOT move forward (`A1`)**.
-- You must slide laterally AWAY from the threatening frame:
-  - If the **LEFT** frame is dangerously close → slide RIGHT: `D2`.
-  - If the **RIGHT** frame is dangerously close → slide LEFT: `D1`.
-- **NARROW DOOR EXCEPTION:** If BOTH the left and right frames are visible, close, and look roughly symmetrical (the void is in the middle), YOU ARE PERFECTLY CENTERED. Do NOT slide. Ignore Priority 0 and proceed to cross (`A1`).
+� **PRIORITY 0: ANTI-OSCILLATION (FORCE ADVANCE — CHECK FIRST)**:
+- Before anything else, inspect `mov_history`. If it contains **any alternation of `D1` and `D2`** (even a single D1 followed by D2, or D2 followed by D1), you are in an overcorrection loop.
+- **CRITICAL**: Return `A1` immediately, regardless of how the frames look. Lateral corrections are making things worse.
+- **DO NOT apply Priority 1 collision avoidance if oscillation is detected.**
+
+🚨 **PRIORITY 1: PROACTIVE COLLISION AVOIDANCE (ONLY FOR EXTREME CASES)**:
+- A collision is a FATAL ERROR, but **only react when truly extreme**.
+- **"Dangerously close" means**: A doorframe or wall is so close that it **fills or nearly fills one entire side of the image** (roughly >50% of the horizontal width), AND the open void is pushed to the far opposite side. This is a genuine imminent collision.
+- A frame that is merely "visible", "prominent", or takes up 20–40% of the view is **NORMAL** for a narrow door. Do NOT trigger Priority 1 for this.
+- **NARROW DOOR / BOTH FRAMES VISIBLE**: If you can see BOTH a left and a right doorframe with an open void between them — even if both feel close — YOU ARE CENTERED. **Do NOT slide.** Proceed with `A1`.
+- **EQUALLY DISTANT FRAMES**: If both doorframes are arguably equidistant from the center of the image (the open void sits roughly in the middle), the robot is already centered. **Do NOT slide.** Return `A1` immediately.
+- If and only if ONE frame meets the extreme >50% threshold and the other is barely or not visible:
+  - If the **LEFT** frame is extremely close → slide RIGHT: `D2`.
+  - If the **RIGHT** frame is extremely close → slide LEFT: `D1`.
 - Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B2`/`C2`).**
 
-🚨 **PRIORITY 1: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
+🚨 **PRIORITY 2: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
 - ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
 - Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
-🔁 **PRIORITY 2: ANTI-OSCILLATION (FORCE ADVANCE)**:
-- Look closely at your `mov_history`. If your recent history contains a mix of BOTH `D1` and `D2` (for example, you used D2, D2, and then D1, D1), you are trapped in an overcorrection loop.
-- This means you are already centered enough. **CRITICAL**: Stop sliding laterally. Return `A1` immediately to break the loop and move forward.
-
 ↔️ **PRIORITY 3: DRIFT CORRECTION**:
-- If the open void is visibly off-center and you are NOT oscillating, use `D1` (slide left) or `D2` (slide right) to perfectly center it before continuing forward.
+- If the open void is visibly off-center (clearly shifted left or right) and you are NOT oscillating and NOT in danger, use ONE `D1` or `D2` to correct. Do not chain multiple corrections without re-evaluating.
 
 ✅ **PRIORITY 4: SAFE FORWARD MOVEMENT**:
 - ONLY if the path is a clearly centered open void, use `A1` to cross.

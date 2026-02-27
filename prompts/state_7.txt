@@ -14,32 +14,40 @@ Align until the open door is **centered in the frame AND you are facing it perpe
 - Switch to `Search open Door` and rotate away (`B2` or `C2`).
 
 🔍 **PRIORITY 1: MULTIPLE DOORS RESOLUTION**:
-- If there are MULTIPLE open doors visible, you MUST choose the one that leads to your target destination based on your user query.
-- Ignore the wrong door completely.
+- If there are MULTIPLE open doors visible, you MUST select the correct one using the **topological map**.
+- Look at the room connections in the map: identify which adjacent room matches your objective.
+- Examine what's **visible through each door** (flooring, wall color, objects) to match it to the target room in the map.
+- Once selected, treat only that door as the target and ignore all others completely.
 
 🔁 **PRIORITY 1.5: ANTI-OSCILLATION**:
-- Check `mov_history`. If your recent history alternates opposing commands (like B1/C1 or D1/D2 repeatedly), you are oscillating. **Return `A1` immediately.**
+- Check `mov_history`. If your recent history alternates opposing lateral commands (`D1`/`D2` repeatedly), you are oscillating in position.
+- **Only return `A1` to break the loop if you appear roughly perpendicular to the door** (horizontal lines are flat, no strong frame depth visible). If you are still diagonal, use a single `B1` or `C1` instead to break the oscillation safely.
 
 📐 **PRIORITY 2: PERPENDICULARITY CHECK (CRITICAL FIRST STEP)**:
 - You must face the doorway perfectly straight-on (head-on), not from a diagonal side angle.
 - **VISUAL CUE:** Look at the horizontal lines (ceiling/floor) and the doorframes. If the lines are slanted, or if you clearly see the deep "thickness" (inner depth) of a doorframe, you are at a diagonal angle.
-- **ACTION:** You MUST use a small rotation to "square up" BEFORE sliding.
-    - If you clearly see the inner depth of the LEFT doorframe, you are looking from the right side → rotate LEFT (`B1`).
-    - If you clearly see the inner depth of the RIGHT doorframe, you are looking from the left side → rotate RIGHT (`C1`).
+- **Rotation loop escape**: If `mov_history` shows **3 or more consecutive B1/C1 rotations** and you still cannot confirm perpendicularity, STOP rotating. Assume you are close enough to perpendicular and proceed to Priority 3 centering.
+- **ACTION:** Use a small rotation to "square up" BEFORE sliding.
+    - If you clearly see the inner depth of the LEFT doorframe → rotate LEFT (`B1`).
+    - If you clearly see the inner depth of the RIGHT doorframe → rotate RIGHT (`C1`).
+- **After any B1/C1 rotation**: you MUST re-evaluate BOTH perpendicularity AND centering from scratch before deciding on the next command.
 - **STRICT PROHIBITION:** Do NOT use `D1` or `D2` if your angle is skewed. Sliding laterally while diagonal will cause you to crash into the wall.
 
 ↔️ **PRIORITY 3: CENTERING (ONLY WHEN HEAD-ON)**:
 - **If door opening is in the LEFT of the vision** → slide left: `D1`
 - **If door opening is in the RIGHT of the vision** → slide right: `D2`
 - **If door opening is in the CENTER of the vision** → you are perfectly aligned. Go to Priority 4.
-- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle and get completely perpendicular.
+- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle.
 
 ✅ **PRIORITY 4: CENTERED & PERPENDICULAR — ADVANCE**:
 - Door is in the center of the vision, you are facing it head-on, AND it is an open void → return `A1`.
+- **Distance check before transitioning state**:
+  - If the door appears **small or distant** (the doorframe edges are thin or partially outside the frame), keep state as `Oriented Towards Door` — you are still approaching, not yet crossing.
+  - Only switch to `Go Through Door` when you are **close enough that both doorframe sides are clearly visible** and you are about to enter the opening.
 - This is the ONLY condition under which `A1` is allowed.
 
 🚪 **PRIORITY 5: DOOR LOST**:
-- If the open door is no longer visible, switch back to `Search open Door`, only if u didn't went through it, if it was like that, you need to explore before.
+- If the open door is no longer visible, switch back to `Search open Door`, only if you didn't go through it. If you already crossed it, transition to `Position in the center of room` to reorient in the new room.
 
 ---
 

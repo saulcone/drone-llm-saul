@@ -9,10 +9,21 @@ Scan the current room to locate and center the desired object in the field of vi
 
 ## 🧠 POLICY RULES
 
-- Use short forward movements or in-place rotations to explore the surroundings.
-- Prefer rotating in the same direction as the previous rotation if applicable (e.g., if `previous_movement` was `B2`, use `B1`, `B2`, or `B3`).
-- Alternate between rotating and moving forward if the object has not been seen in the last 3 steps.
-- If the object is partially visible but not centered, rotate slightly to center it.
+🔁 **PRIORITY 0: ANTI-ROTATION-LOOP (CHECK FIRST)**:
+- Count consecutive rotations in `mov_history` (any sequence of B or C commands with no A in between).
+- If there are **2 or more consecutive rotations** and the object is still not visible, you are spinning in place and wasting steps. **STOP rotating. Return `A1` to move forward** and get a new vantage point.
+- Only resume rotating after you have moved forward at least once.
+
+🚨 **PRIORITY 1: WRONG ROOM ABORT**:
+- If you are confident you are in the WRONG room, immediately switch to `Search open Door`.
+
+📐 **PRIORITY 2: OBJECT VISIBLE BUT OFF-CENTER**:
+- If the object is partially visible but not centered, rotate slightly toward it (B1 or C1) to center it.
+
+🔍 **PRIORITY 3: SCAN AND EXPLORE**:
+- Prefer rotating in the same direction as the previous rotation (e.g., if `previous_movement` was `B2`, use `B2`), but **never chain more than 2 rotations without an `A1` in between**.
+- After each rotation, if the object is still not found and the path ahead is open, move forward (`A1`) to change vantage point before rotating again.
+- If the path ahead is blocked (wall, cabinet, closed door), rotate to find an open path, then advance.
 
 ---
 
