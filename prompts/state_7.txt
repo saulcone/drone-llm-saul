@@ -18,25 +18,22 @@ Align until the open door is **centered in the frame AND you are facing it perpe
 - Ignore the wrong door completely.
 
 🔁 **PRIORITY 1.5: ANTI-OSCILLATION**:
-- Check `mov_history`. If the last **3+ commands alternate `D1` and `D2`**, you are oscillating and already centered. **Return `A1` immediately.**
+- Check `mov_history`. If your recent history alternates opposing commands (like B1/C1 or D1/D2 repeatedly), you are oscillating. **Return `A1` immediately.**
 
-↔️ **PRIORITY 2: CENTERING (MANDATORY FIRST STEP)**:
-- Divide the frame into three equal vertical thirds: left / center / right.
-- **If the target door opening is in the LEFT third** → slide left: `D1`
-- **If the target door opening is in the RIGHT third** → slide right: `D2`
-- **CRITICAL:** Do NOT attempt to fix a diagonal angle until the door is in the CENTER third. You must center it first so you don't lose sight of it when rotating.
+📐 **PRIORITY 2: PERPENDICULARITY CHECK (CRITICAL FIRST STEP)**:
+- You must face the doorway perfectly straight-on (head-on), not from a diagonal side angle.
+- **VISUAL CUE:** Look at the horizontal lines (ceiling/floor) and the doorframes. If the lines are slanted, or if you clearly see the deep "thickness" (inner depth) of a doorframe, you are at a diagonal angle.
+- **ACTION:** You MUST use a small rotation to "square up" BEFORE sliding.
+    - If you clearly see the inner depth of the LEFT doorframe, you are looking from the right side → rotate LEFT (`B1`).
+    - If you clearly see the inner depth of the RIGHT doorframe, you are looking from the left side → rotate RIGHT (`C1`).
+- **STRICT PROHIBITION:** Do NOT use `D1` or `D2` if your angle is skewed. Sliding laterally while diagonal will cause you to crash into the wall.
 
-📐 PRIORITY 3: PERPENDICULARITY CHECK (CRITICAL):
-
-    If the horizontal lines of the ceiling or floor are slanted, you are at a diagonal.
-
-    ACTION: You MUST use B1 or C1 to face the wall head-on (90° to the wall) BEFORE using any D1 or D2 command.
-
-    STRICT RULE: If you see the "thickness" or inside edge of the doorframe, you are not perpendicular. Rotate until the doorframe looks like a flat line.
-- Once the target door is in the CENTER third, check if you are facing it perfectly straight-on (head-on).
-- **VISUAL CUE:** Look at the horizontal lines (the top of the doorframe, floor lines, or wall edges). If they are slanted/skewed, or if you can see the deep inside thickness of one of the doorframes, you are looking at a diagonal angle.
-- **ACTION:** If you are diagonal, use a small rotation (`B1` to rotate left, `C1` to rotate right) to "square up" and face the wall flatly. 
-- **PROHIBITED:** Never use `B1` or `C1` to move the door left or right across the screen. Rotations are ONLY for fixing the diagonal angle once the door is already centered.
+↔️ **PRIORITY 3: CENTERING (ONLY WHEN HEAD-ON)**:
+- Once you are facing the door straight-on (perpendicular), divide the frame into three equal vertical thirds: left / center / right.
+- **If door opening is in the LEFT third** → slide left: `D1`
+- **If door opening is in the RIGHT third** → slide right: `D2`
+- **If door opening is in the CENTER third** → you are perfectly aligned. Go to Priority 4.
+- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle.
 
 ✅ **PRIORITY 4: CENTERED & PERPENDICULAR — ADVANCE**:
 - Door is in the center third, you are facing it head-on, AND it is an open void → return `A1`.
