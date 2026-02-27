@@ -29,18 +29,17 @@ Align until the open door is **centered in the frame AND you are facing it perpe
 - **STRICT PROHIBITION:** Do NOT use `D1` or `D2` if your angle is skewed. Sliding laterally while diagonal will cause you to crash into the wall.
 
 ↔️ **PRIORITY 3: CENTERING (ONLY WHEN HEAD-ON)**:
-- Once you are facing the door straight-on (perpendicular), divide the frame into three equal vertical thirds: left / center / right.
-- **If door opening is in the LEFT third** → slide left: `D1`
-- **If door opening is in the RIGHT third** → slide right: `D2`
-- **If door opening is in the CENTER third** → you are perfectly aligned. Go to Priority 4.
-- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle.
+- **If door opening is in the LEFT of the vision** → slide left: `D1`
+- **If door opening is in the RIGHT of the vision** → slide right: `D2`
+- **If door opening is in the CENTER of the vision** → you are perfectly aligned. Go to Priority 4.
+- **PROHIBITED:** Never use `B1` or `C1` to center the door. Rotations are ONLY for fixing the diagonal angle and get completely perpendicular.
 
 ✅ **PRIORITY 4: CENTERED & PERPENDICULAR — ADVANCE**:
-- Door is in the center third, you are facing it head-on, AND it is an open void → return `A1`.
+- Door is in the center of the vision, you are facing it head-on, AND it is an open void → return `A1`.
 - This is the ONLY condition under which `A1` is allowed.
 
 🚪 **PRIORITY 5: DOOR LOST**:
-- If the open door is no longer visible, switch back to `Search open Door`.
+- If the open door is no longer visible, switch back to `Search open Door`, only if u didn't went through it, if it was like that, you need to explore before.
 
 ---
 
