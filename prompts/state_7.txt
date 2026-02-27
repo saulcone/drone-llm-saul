@@ -29,7 +29,10 @@ Get close to the target open door and align with it so you can cross it cleanly.
 - **How to tell you are far**: The door opening appears **small** in the frame, and/or the doorframe edges are **thin**, and/or you can see a lot of room/wall around the door.
 - **When far away, lateral slides (D1/D2) of 5 cm are nearly useless** — the door barely moves in the image. Do NOT waste steps on repeated D1/D2 at distance.
 - **ACTION**: As long as the door is visible anywhere in the frame (left, center, or right) and the path ahead is not blocked, return `A1` to **advance toward it**. Getting closer is the priority.
-- If the door is on the far edge of the frame and you are about to lose sight of it, do ONE lateral slide to keep it in frame, then resume `A1`.
+- **Edge-of-frame exception**: If the door is about to disappear off the edge of the frame, do ONE lateral slide to keep it visible, then resume `A1`:
+  - Door disappearing off the **LEFT** edge → slide LEFT `D1` (this moves you left, shifting the view so the door stays in frame).
+  - Door disappearing off the **RIGHT** edge → slide RIGHT `D2`.
+  - **REMEMBER**: Slide in the SAME direction as the door's position. Door on left = `D1`. Door on right = `D2`. This is because sliding moves your body, not the camera direction.
 - **Stay in this phase** until the doorframe sides become **clearly visible and large** (filling a significant portion of the image height and the door opening is wide in the frame).
 
 ↔️ **PRIORITY 3: LATERAL CENTERING (ONLY WHEN CLOSE)**:

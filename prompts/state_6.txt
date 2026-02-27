@@ -36,9 +36,6 @@ Only return ONE command:
 - If there are **3 or more consecutive rotations** and no door is visible, you are spinning in place. **STOP rotating. Return `A1` to move forward** and get a new vantage point, even if the path looks tight.
 - Only resume rotating after you have moved forward at least once.
 
-🔄 **PRIORITY 2.5: BI-DIRECTIONAL SPIN DETECTION**:
-- Check `mov_history` for any mix of leftward (B) AND rightward (C) rotations with no `A` between them.
-- If both directions appear (e.g., C2 then B2, or B3 then C2), you are oscillating in rotation. **Force `A1` immediately** to escape. Do not rotate again until after the forward step.
 
 3️⃣ **PRIORITY 3 (OPEN DOOR DETECTED)**:
 - If you see an open door or open void leading to another room, transition to `Oriented Towards Door` (`E`) **ONLY IF IT COULD PLAUSIBLY LEAD TO THE OBJECTIVE**.

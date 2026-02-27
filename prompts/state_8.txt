@@ -9,12 +9,18 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-� **PRIORITY 0: ANTI-OSCILLATION (FORCE ADVANCE — CHECK FIRST)**:
-- Before anything else, inspect `mov_history`. If it contains **any alternation of `D1` and `D2`** (even a single D1 followed by D2, or D2 followed by D1), you are in an overcorrection loop.
-- **CRITICAL**: Return `A1` immediately, regardless of how the frames look. Lateral corrections are making things worse.
-- **DO NOT apply Priority 1 collision avoidance if oscillation is detected.**
+🚫 **PRIORITY 0: VISIBILITY SAFETY CHECK (ALWAYS FIRST)**:
+- If the image is **blurry, completely uniform, or you cannot identify any doorframe or open void at all**, you have lost visual reference.
+- **DO NOT advance forward blindly.** Return to `Oriented Towards Door` state immediately — you need to re-find and re-align with the door.
+- This rule overrides everything below, including anti-oscillation.
 
-🚨 **PRIORITY 1: PROACTIVE COLLISION AVOIDANCE (ONLY FOR EXTREME CASES)**:
+🔁 **PRIORITY 1: ANTI-OSCILLATION (FORCE ADVANCE)**:
+- Inspect only the **last 4 commands** in `mov_history` (ignore older history — it may be from a previous state).
+- If those last 4 commands contain **both `D1` and `D2`** (in any order), you are in an overcorrection loop.
+- **CRITICAL**: Return `A1` immediately, regardless of how the frames look. Lateral corrections are making things worse.
+- **DO NOT apply Priority 2 collision avoidance if oscillation is detected.**
+
+🚨 **PRIORITY 2: PROACTIVE COLLISION AVOIDANCE (ONLY FOR EXTREME CASES)**:
 - A collision is a FATAL ERROR, but **only react when truly extreme**.
 - **"Dangerously close" means**: A doorframe or wall is so close that it **fills or nearly fills one entire side of the image** (roughly >50% of the horizontal width), AND the open void is pushed to the far opposite side. This is a genuine imminent collision.
 - A frame that is merely "visible", "prominent", or takes up 20–40% of the view is **NORMAL** for a narrow door. Do NOT trigger Priority 1 for this.
@@ -25,14 +31,14 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
   - If the **RIGHT** frame is extremely close → slide LEFT: `D1`.
 - Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B2`/`C2`).**
 
-🚨 **PRIORITY 2: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
+🚨 **PRIORITY 3: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
 - ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
 - Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
-↔️ **PRIORITY 3: DRIFT CORRECTION**:
+↔️ **PRIORITY 4: DRIFT CORRECTION**:
 - If the open void is visibly off-center (clearly shifted left or right) and you are NOT oscillating and NOT in danger, use ONE `D1` or `D2` to correct. Do not chain multiple corrections without re-evaluating.
 
-✅ **PRIORITY 4: SAFE FORWARD MOVEMENT**:
+✅ **PRIORITY 5: SAFE FORWARD MOVEMENT**:
 - ONLY if the path is a clearly centered open void, use `A1` to cross.
 
 ---
