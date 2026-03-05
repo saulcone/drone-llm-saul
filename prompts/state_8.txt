@@ -10,8 +10,9 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 ## 🧠 POLICY RULES (Strict Priority)
 
 🚫 **PRIORITY 0: VISIBILITY SAFETY CHECK (ALWAYS FIRST)**:
-- If the image is **blurry, completely uniform, or you cannot identify any doorframe or open void at all**, you have lost visual reference.
-- **DO NOT advance forward blindly.** Return to `Oriented Towards Door` state immediately — you need to re-find and re-align with the door.
+- If the image is **blurry, completely uniform, or you cannot identify any doorframe or open void at all**, you have lost visual reference (camera clipping into a wall or doorframe).
+- **`A1` is STRICTLY FORBIDDEN in this situation. DO NOT advance forward blindly.**
+- **ACTION**: You MUST rotate away immediately (`B2` or `C2`) to free the camera from the wall, and switch the state to `Search open Door`.
 - This rule overrides everything below, including anti-oscillation.
 
 🔁 **PRIORITY 1: ANTI-OSCILLATION (FORCE ADVANCE)**:

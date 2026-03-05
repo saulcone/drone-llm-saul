@@ -66,6 +66,9 @@ class DoorDetector:
             
             # FILTRO DE SEGURIDAD: Si dice que no hay puerta, abortamos la detección
             if not res.get("is_open_door_present", False) or not res.get("box_2d"):
+                if current_state == "Go Through Door":
+                    # Si estoy cruzando y dejo de ver la puerta, ¡abortar para no chocar!
+                    return "B2", "Gemini Safety: BLIND SPOT/WALL IMMINENT. Emergency abort."
                 return None, "No open door detected by Gemini (Ignored)"
 
             ymin, xmin, ymax, xmax = res["box_2d"]
