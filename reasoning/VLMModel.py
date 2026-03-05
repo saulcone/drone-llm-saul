@@ -38,6 +38,8 @@ class ReasoningModel:
         
         elif "qwen" in model.lower() and "cloud" in model.lower():
             from reasoning.gpt_class import GPTDescriptor
+
+            real_model_name = model.replace("-cloud", "")
             # Usamos la clase GPT porque se conecta por API web
             return GPTDescriptor(model, temperature=kwargs.get("temperature", 0.0),
                                  max_tokens=kwargs.get("max_tokens", 300),
