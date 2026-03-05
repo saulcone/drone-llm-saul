@@ -35,5 +35,10 @@ class ReasoningModel:
         elif "gemini" in model:
             from reasoning.gemini import GeminiDescriptor
             return GeminiDescriptor(model, temperature=kwargs["temperature"])
+        
+        elif "qwen" in model.lower() or "ollama" in model.lower():
+            from reasoning.ollama_class import OllamaDescriptor
+            return OllamaDescriptor(model, temperature=kwargs.get("temperature", 0.0))
+        
         else:
             raise ValueError(f"Model not implemented: {model}")
