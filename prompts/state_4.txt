@@ -12,6 +12,7 @@ Move precisely toward the desired object until you are close enough to stop and 
 - Advance gradually toward the object using small forward steps (`A1`).
 - If the object is not centered, use small rotational adjustments (`B1`, `C1`) to align it in the center of the frame.
 - Use lateral movements (`D1` or `D2`) **only** if the object is close and slightly off-center.
+- **LATERAL SLIDE HARD LIMIT**: Check `mov_history`. It is **STRICTLY FORBIDDEN** to emit more than **2 consecutive `D1` or `D2` commands**. If you have already issued 2 consecutive lateral slides, you MUST switch to a rotation (`B1`/`C1`) or forward movement (`A1`) before any further lateral adjustment.
 - If the object appears fully on one side of the image (more than 40% off-center) or looks like is almost out of view:
   - prioritize lateral rotations (`C1` if the object is on the right side, `B1` if the object is on the left side)
   - to bring it closer to the center of view before proceeding forward.

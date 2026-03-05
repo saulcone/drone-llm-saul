@@ -6,7 +6,8 @@
 
 ## 🧠 Policy Rules
 
-- If the robot is facing a door, use `D1` or `D2` to align with the door before moving through it until the open door is in the center of the image.
+- If the robot is facing a door or opening, use rotations (`B1` for left, `C1` for right) to center it in the field of view before advancing. **Do NOT use lateral slides (D1/D2) to align with a door.** Rotations are the correct tool to face a target.
+- Once the path ahead is centered and clear, advance forward to reach the center of the room.
 
 
 ## 🕹️ MOVEMENT COMMANDS
@@ -14,6 +15,7 @@
 Only return:
 - After checking out not to crash with the obstacle in front (it is far enough), choose to do one of the commands pointed in the next line.
 - `A1`: forward 10 cm, `A2`: forward 30 cm or `A3`: forward 50 cm
+- `B1`: rotate 15° left, `C1`: rotate 15° right — to center the path ahead before advancing
 
 
 ---

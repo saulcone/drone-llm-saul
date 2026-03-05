@@ -4,7 +4,7 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 1: Detail visual evidence (e.g., 'I see a closed white cabinet with knobs' or 'I see an open dark void leading to another room'). Step 2: Apply Priority Rules strictly and state which rule applies.",
+  "description": "Step 1: Describe the geometric perspective of the doorframes. Can you physically see the inner depth/thickness face of the LEFT doorframe? Can you see the inner depth/thickness face of the RIGHT doorframe? (Note: The 'inner depth' is the perpendicular surface of the doorframe that faces the inside of the doorway — the recessed face you see when looking at the frame from an angle. It is NOT the flat wall surface next to the door.) If neither inner face is visible (both frames appear as flat vertical edges), you are perfectly parallel to the door plane (0°). Step 2: Detail other visual evidence (e.g., 'I see a closed white cabinet with knobs' or 'I see an open dark void leading to another room'). Step 3: Apply Priority Rules strictly and state which rule applies and why.",
   "door_position": "left | center | right | not_visible",
   "room": "estimated_room_name_or_unknown",
   "state": "next_FSM_state",
