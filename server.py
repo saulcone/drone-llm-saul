@@ -61,6 +61,7 @@ def cmd_vel():
     state = request.form['state']    
     previous_movement = request.form.get('prev_movement', None)
     mov_history = request.form.get('mov_history', None)
+    agent_memory = request.form.get('agent_memory', '')
 
     try:
         topology = json.loads(topology_json)
@@ -114,7 +115,8 @@ def cmd_vel():
     # Call Reasoning model (Solo se ejecuta si el Safety Guard NO intervino)
     response = vlm_model.generate_trajectory(img, query, topology=topology, 
                             state=state, previous_movement=previous_movement,
-                            mov_history=mov_history)
+                            mov_history=mov_history,
+                            agent_memory=agent_memory)
     
     gpt_response = jsonpickle.encode(response)
 

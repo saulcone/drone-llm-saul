@@ -12,9 +12,9 @@ Get close to the target open door, align your body **perfectly parallel** to the
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-🚨 **PRIORITY 0: ABORT CLOSED OBJECTS**:
-- If the visible object is a **CLOSED door, cabinet, or closet**, it is NOT the target.
-- Switch to `Search open Door` and rotate away (`B2` or `C2`).
+🚨 **PRIORITY 0: ABORT CLOSED OBJECTS (DEAD AHEAD ONLY)**:
+- If the object DEAD AHEAD (centered, blocking your path) is a CLOSED door, cabinet, or closet, it is NOT the target. Switch to `Search open Door` and rotate away (`B2` or `C2`).
+- CRITICAL: If you see a closed door/cabinet on the LEFT or RIGHT edges of your vision, but you are actively approaching an open void, IGNORE the closed object. Peripheral closed objects are normal. Do not abort.
 
 🔍 **PRIORITY 0.5: MULTIPLE DOORS RESOLUTION**:
 - If there are MULTIPLE open doors visible, you MUST select the correct one using the **topological map**.

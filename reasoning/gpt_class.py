@@ -30,6 +30,7 @@ class GPTDescriptor(VLMBaseModel):
     def generate_trajectory(self, image, user_query, topology=None, state=None,
                             previous_movement=None,
                             mov_history=None,
+                            agent_memory=None,
                             test=False):
         """Generate a trajectory using the GPT model."""
         if test:
@@ -64,6 +65,12 @@ class GPTDescriptor(VLMBaseModel):
             user_inputs.insert(1, {
                 "type": "text",
                 "text": "Previous movement command: " + previous_movement
+            })
+
+        if agent_memory:
+            user_inputs.insert(1, {
+                "type": "text",
+                "text": "Agent Memory (your notes from previous steps): " + agent_memory
             })
             
         system_prompt = load_system_prompt(

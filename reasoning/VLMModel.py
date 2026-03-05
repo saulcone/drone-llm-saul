@@ -11,7 +11,8 @@ class VLMBaseModel(ABC):
                             state: str,
                             previous_movement: str,
                             mov_history: str,
-                            test: bool) -> str:
+                            agent_memory: str = "",
+                            test: bool = False) -> str:
         pass
 
     def encode_image_base64(self, image):

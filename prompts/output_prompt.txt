@@ -8,7 +8,8 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
   "door_position": "left | center | right | not_visible",
   "room": "estimated_room_name_or_unknown",
   "state": "next_FSM_state",
-  "movement": "valid_single_movement_command"
+  "movement": "valid_single_movement_command",
+  "memory_update": "Write a short note to yourself summarizing key observations from this step that will be useful later. Include: landmarks you identified, doors you decided to ignore and why, rooms you recognized, obstacles to avoid. If nothing noteworthy happened, copy your previous memory unchanged. Max 200 characters."
 }
 ```
 
@@ -23,6 +24,8 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 - `"state"`: Next FSM state.
 
 - `"movement"`: Single command (A1, B1, etc.) chosen AFTER reasoning.
+
+- `"memory_update"`: A short note (max 200 chars) to your future self. Record landmarks, ignored doors, recognized rooms, obstacles, or any observation that will prevent you from repeating mistakes or re-exploring areas. If you receive an `Agent Memory` input, read it before deciding — it contains your notes from previous steps. If nothing new happened, copy the previous memory verbatim.
 
 ⚠️ Important
 

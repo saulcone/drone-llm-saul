@@ -51,7 +51,8 @@ class GeminiDescriptor:
         
 
     def generate_trajectory(self, image, user_query, topology=None, state=None,
-                            previous_movement=None, mov_history=None, test=False):
+                            previous_movement=None, mov_history=None,
+                            agent_memory=None, test=False):
         if test:
             return {
                 "room": "hallway",
@@ -75,6 +76,9 @@ class GeminiDescriptor:
 
         if mov_history:
             user_text_parts.append("Movement history (last commands): " + str(mov_history))
+
+        if agent_memory:
+            user_text_parts.append("Agent Memory (your notes from previous steps): " + agent_memory)
         
         # Combine all text parts into a single string
         user_text = "\n\n".join(user_text_parts)

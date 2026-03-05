@@ -143,13 +143,14 @@ def manual_control(key_ctrl):
 
     return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
-def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, addr = "http://172.18.33.110:5001"):
+def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
     url = addr + '/cmd_vel'
     _, img_encoded = cv2.imencode('.jpg', img)
     img_bytes = BytesIO(img_encoded.tobytes())
     files = {'image': ('image.jpg', img_bytes, 'image/jpeg')}
     data = {'query': query, 'topology': json.dumps(topology), 'state': state,
-            'prev_movement': prev_movement, 'mov_history': json.dumps(mov_history)}
+            'prev_movement': prev_movement, 'mov_history': json.dumps(mov_history),
+            'agent_memory': agent_memory}
 
     try:
         response = requests.post(url, files=files, data=data)
@@ -317,6 +318,7 @@ def run_simulation(args, topology, json_data=None):
     command = ""
     description = ""
     door_position = ""
+    agent_memory = ""  # Episodic memory: the drone's own notes from previous steps
     total_steps = 0
     total_time = 0.0
     elapsed_time = 0.0
@@ -392,7 +394,7 @@ def run_simulation(args, topology, json_data=None):
 
             # Get command velocity from the server
             start_time = time.time()
-            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, addr=args.addr)
+            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, agent_memory=agent_memory, addr=args.addr)
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
             command = response.get("movement")
@@ -400,6 +402,7 @@ def run_simulation(args, topology, json_data=None):
             pred_room = response.get("room", "")
             description = response.get("description", "")
             door_position = response.get("door_position", "")
+            agent_memory = response.get("memory_update", agent_memory)
 
             if args.fast:
                 move_drone_fast(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
@@ -421,6 +424,7 @@ def run_simulation(args, topology, json_data=None):
                 "pred_room": pred_room,
                 "description": description,
                 "door_position": door_position,
+                "agent_memory": agent_memory,
                 "goal_state": goal_state,
                 "elapsed_time": elapsed_time,
             }
