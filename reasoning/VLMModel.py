@@ -38,13 +38,9 @@ class ReasoningModel:
             return GeminiDescriptor(model, temperature=kwargs["temperature"])
         
         elif "qwen" in model.lower() and "cloud" in model.lower():
-            from reasoning.gpt_class import GPTDescriptor
-
-            real_model_name = model.replace("-cloud", "")
-            # Usamos la clase GPT porque se conecta por API web
-            return GPTDescriptor(real_model_name, temperature=kwargs.get("temperature", 0.0),
-                                 max_tokens=kwargs.get("max_tokens", 300),
-                                 top_p=kwargs.get("top_p", 0.2))
+            from reasoning.ollama_class import OllamaDescriptor
+            # Le pasamos el nombre tal cual viene en el config.yaml
+            return OllamaDescriptor(model, temperature=kwargs.get("temperature", 0.0))
         
         else:
             raise ValueError(f"Model not implemented: {model}")
