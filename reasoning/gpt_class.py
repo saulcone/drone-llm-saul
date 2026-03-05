@@ -17,7 +17,9 @@ logger = logging.getLogger(__name__)
 class GPTDescriptor(VLMBaseModel):
     def __init__(self, model="gpt-4.1", max_tokens=300, temperature=0,
                  top_p=0.2, img_type="image/jpeg"):
-        self.client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+        self.client = OpenAI(
+            base_url="https://openrouter.ai/api/v1",
+            api_key=os.getenv("API_QWEN"))
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens
