@@ -395,6 +395,10 @@ def run_simulation(args, topology, json_data=None):
             # Get command velocity from the server
             start_time = time.time()
             response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, agent_memory=agent_memory, addr=args.addr)
+            
+            print("Esperando 2 segundos para evitar saturar la API gratuita...")
+            time.sleep(2)
+            
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
             command = response.get("movement")
