@@ -9,6 +9,12 @@ Move precisely toward the desired object until you are close enough to stop and 
 
 ## 🧠 POLICY RULES
 
+🔒 **ROOM LOCK RULE (MANDATORY — CHECK FIRST)**:
+- You entered `Reach Object` because the target object was found. **Do NOT re-evaluate which room you are in.**
+- Trust the room identification from `agent_memory` / previous state. If memory says you are in the bathroom, **you ARE in the bathroom**.
+- Visually similar features (white cabinets, counters, sinks) exist in multiple rooms. Do not let them confuse you.
+- **It is STRICTLY FORBIDDEN to change the `room` field while in `Reach Object`.** Copy the room value from your memory.
+
 - Advance gradually toward the object using small forward steps (`A1`).
 - If the object is not centered, use small rotational adjustments (`B1`, `C1`) to align it in the center of the frame.
 - Use lateral movements (`D1` or `D2`) **only** if the object is close and slightly off-center.
