@@ -18,7 +18,9 @@ Scan the current room to locate and center the desired object in the field of vi
 - If you are confident you are in the WRONG room, immediately switch to `Search open Door`.
 
 📐 **PRIORITY 2: OBJECT VISIBLE BUT OFF-CENTER**:
-- If the object is partially visible but not centered, rotate slightly toward it (B1 or C1) to center it.
+- If the object is partially visible but **slightly** off-center, prefer a **lateral slide** to keep your current heading: `D1` (slide left) if the object is on the left, `D2` (slide right) if it is on the right.
+- Only use rotation (`B1`/`C1`) if the object is **far off-center** (near the edge of the frame), since a small slide would not be enough.
+- After centering, advance with `A1` to get closer rather than rotating further.
 
 🔍 **PRIORITY 3: SCAN AND EXPLORE**:
 - Prefer rotating in the same direction as the previous rotation (e.g., if `previous_movement` was `B2`, use `B2`), but **never chain more than 2 rotations without an `A1` in between**.
@@ -44,6 +46,10 @@ Only return **ONE** movement command from the list below:
 - `C1`: rotate 15°
 - `C2`: rotate 45°
 - `C3`: rotate 90°
+
+### D. Lateral slides:
+- `D1`: slide 5 cm left (preserves heading)
+- `D2`: slide 5 cm right (preserves heading)
 
 ---
 
