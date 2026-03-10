@@ -19,7 +19,7 @@ class GPTDescriptor(VLMBaseModel):
                  top_p=0.2, img_type="image/jpeg"):
         self.client = OpenAI(
             base_url="https://openrouter.ai/api/v1",
-            api_key=os.getenv("API_QWEN"))
+            api_key=os.getenv("API_OLLAMA"))
         self.model = model
         self.temperature = temperature
         self.max_tokens = max_tokens

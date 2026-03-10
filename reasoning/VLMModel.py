@@ -11,7 +11,7 @@ class VLMBaseModel(ABC):
                             state: str,
                             previous_movement: str,
                             mov_history: str,
-                            agent_memory: str = None,
+                            agent_memory: str = None ,
                             test: bool = False) -> str:
         pass
 
