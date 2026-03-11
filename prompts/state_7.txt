@@ -4,20 +4,36 @@
 
 ## 🎯 GOAL
 Get close to the target open door, align your body **perfectly parallel** to the door plane (0° angle), and position yourself to cross it cleanly. This is a **three-phase** process:
-1. **Phase A — Face the door** (long/medium range): Rotate toward the door until the open void is centered in your field of view.
+1. **Phase A — Face the door** (long/medium range): Rotate toward the door until the open void is **roughly** in the central third of your field of view.
 2. **Phase B — Approach frontally** (medium range): Advance straight using `A1`. Correct small deviations with micro-rotations (`B1`/`C1`), **never** with lateral slides.
 3. **Phase C — Square up** (close range): Achieve perfect perpendicularity (0°) by reading the inner faces of the doorframes and making fine adjustments.
 
 ---
 
+## ⚠️⚠️ CRITICAL CONCEPT: CENTERING ≠ PERPENDICULARITY ⚠️⚠️
+
+These are **TWO INDEPENDENT CONDITIONS**. You must evaluate them separately:
+
+| | Door centered in frame | Door NOT centered |
+|---|---|---|
+| **Perpendicular (0°)** | Ready to cross → `Go Through Door` | Only needs lateral slide (D1/D2) |
+| **Diagonal angle** | DANGEROUS — looks ready but will crash | Needs full repositioning |
+
+- **Centering** = the open void is in the horizontal middle of the image. Achieved by rotating (Phase A).
+- **Perpendicularity** = both doorframe edges look identical (flat vertical lines, no inner depth visible on either side). This can ONLY be confirmed at close range (Phase C).
+- **You CANNOT confirm perpendicularity from far away.** At medium/long distance, just get the door roughly centered and ADVANCE. The closer you are, the easier it is to judge the angle.
+- **NEVER keep rotating to perfect centering from far away.** One rotation to get the door into the central third of the frame is enough. Then ADVANCE.
+
+---
+
 ## 🧠 POLICY RULES (Strict Priority)
 
-� **PRIORITY -1: ANTI-OSCILLATION LOOP (CHECK FIRST)**:
-- Inspect `mov_history`. If the last 3–4 commands are **alternating rotations** (e.g., C1→C1→B1→C1, or B1→C1→B1→C1) with **no A1 in between**, you are oscillating and will never center the door by rotating alone.
-- **STOP rotating immediately. Return `A1` to advance toward the door.** Moving closer changes the perspective and makes centering much easier on the next step.
+🔄 **PRIORITY -1: ANTI-OSCILLATION LOOP (CHECK FIRST)**:
+- Inspect `mov_history`. If the last **2 commands are rotations** (e.g., B1→C1, B1→B1, C1→C1) with **no A1 in between**, you are oscillating or stuck at a bad distance.
+- **STOP rotating immediately. Return `A1` to advance toward the door.** Moving closer changes the perspective and makes centering and angle evaluation much easier.
 - Only resume micro-rotations after you have advanced at least once.
 
-�🚨 **PRIORITY 0: ABORT CLOSED OBJECTS (DEAD AHEAD ONLY)**:
+🚨 **PRIORITY 0: ABORT CLOSED OBJECTS (DEAD AHEAD ONLY)**:
 - If the object DEAD AHEAD (centered, blocking your path) is a CLOSED door, cabinet, or closet, it is NOT the target. Switch to `Search open Door` and rotate away (`B2` or `C2`).
 - CRITICAL: If you see a closed door/cabinet on the LEFT or RIGHT edges of your vision, but you are actively approaching an open void, IGNORE the closed object. Peripheral closed objects are normal. Do not abort.
 
@@ -27,37 +43,38 @@ Get close to the target open door, align your body **perfectly parallel** to the
 - Examine what's **visible through each door** (flooring, wall color, objects) to match it to the target room in the map.
 - Once selected, treat only that door as the target and ignore all others completely.
 
-🎯 **PRIORITY 1: FACE THE DOOR — CENTER BY ROTATING (FAR / MEDIUM DISTANCE)**:
-- **When**: The door opening is NOT centered in your field of view (it appears on the left or right side) AND you are at long or medium distance (the doorframe edges are thin, the opening looks small, lots of wall visible around the door).
-- **Action**: Rotate toward the door to bring the open void to the center of the frame:
+🎯 **PRIORITY 1: FACE THE DOOR — ROUGH CENTERING (FAR / MEDIUM DISTANCE)**:
+- **When**: The door opening is clearly off to one side (in the outer third of the frame, near the edge) AND you are at long or medium distance.
+- **Action**: Rotate toward the door to bring it into the **central third** of the frame:
   - Door on the **LEFT** → rotate LEFT (`B1` for 15° or `B2` for 45° if very far off).
   - Door on the **RIGHT** → rotate RIGHT (`C1` for 15° or `C2` for 45° if very far off).
-- **Keep rotating** until the open void is centered or near-centered in the image.
+- **STOP rotating as soon as the door enters the central third of the image.** Do NOT try to perfectly center it from far away — that causes oscillation.
+- **After ONE rotation, if the door is anywhere in the central half of the frame → switch to `A1` immediately.** Approaching will naturally improve centering.
 - **DO NOT use lateral slides (D1/D2) at distance.** Rotations are the correct tool to face a distant door.
 
-🚀 **PRIORITY 2: FRONTAL APPROACH (DOOR IS CENTERED, STILL FAR)**:
-- **When**: The door opening is centered (or near-centered) in the frame AND you are still at medium/long distance (doorframe edges thin, opening small).
-- **Action**: Advance forward using **exclusively `A1`**.
-- **Minor drift correction**: If the door drifts slightly left or right during the approach, correct with a **micro-rotation** (`B1` if it drifted left, `C1` if it drifted right). **NEVER use D1/D2 for drift correction during approach.**
+🚀 **PRIORITY 2: FRONTAL APPROACH — THE DEFAULT ACTION (DOOR ROUGHLY CENTERED)**:
+- **When**: The door opening is in the central half of the frame (it does NOT need to be perfectly centered) AND you are still at medium/long distance (doorframe edges thin, opening small).
+- **Action**: Advance forward using **exclusively `A1`**. **This should be your most common command in this state.**
+- **Minor drift correction**: If the door drifts clearly to one side during the approach, correct with **ONE micro-rotation** (`B1` if it drifted left, `C1` if it drifted right), then **immediately return to `A1`**. **NEVER chain two rotations in a row.** **NEVER use D1/D2 for drift correction during approach.**
 - **Stay in this phase** until the doorframe sides become **clearly visible and large** (filling a significant portion of the image height and the door opening is wide in the frame).
 
 📐 **PRIORITY 3: SQUARING UP — PERPENDICULARITY AT CLOSE RANGE (0° ALIGNMENT)**:
-- **When**: You are **close** to the door — the doorframe sides are clearly visible and **dominate** the image (they are tall and thick in the frame).
+- **When**: You are **close** to the door — the doorframe sides are clearly visible and **dominate** the image (they are tall and thick in the frame). **This is the ONLY phase where you can reliably judge perpendicularity.**
+- **HOW TO KNOW YOU ARE CLOSE ENOUGH FOR THIS PHASE**: The door opening occupies at least 30% of the image width, AND you can clearly distinguish the shape of both doorframe posts (not just thin lines).
 - **This is how you achieve 0° angle.** You must perform a geometric perspective analysis:
 
   🔎 **CRITICAL VISUAL RULE — INNER FACE ANALYSIS**:
   - Look carefully at **both doorframe edges** (left and right vertical posts of the door).
-  - Can you see the **inner depth/thickness** (the recessed face that goes into the wall) of the **LEFT** frame? → You are looking **diagonally from the RIGHT side**. The correction is a **two-step maneuver**: first slide LEFT (`D1`), then on the NEXT step rotate RIGHT (`C1`).
-  - Can you see the **inner depth/thickness** of the **RIGHT** frame? → You are looking **diagonally from the LEFT side**. The correction is a **two-step maneuver**: first slide RIGHT (`D2`), then on the NEXT step rotate LEFT (`B1`).
-  - Can you see the inner depth of **NEITHER** frame (both frames appear as flat vertical lines)? → **You are perfectly parallel (0°).** Proceed to Priority 5.
+  - Can you see the **inner depth/thickness** (the recessed face that goes into the wall) of the **LEFT** frame? → You are looking **diagonally from the RIGHT side**. Set `door_angle` = `diagonal_from_right`. The correction is a **two-step maneuver**: first slide LEFT (`D1`), then on the NEXT step rotate RIGHT (`C1`).
+  - Can you see the **inner depth/thickness** of the **RIGHT** frame? → You are looking **diagonally from the LEFT side**. Set `door_angle` = `diagonal_from_left`. The correction is a **two-step maneuver**: first slide RIGHT (`D2`), then on the NEXT step rotate LEFT (`B1`).
+  - Can you see the inner depth of **NEITHER** frame (both frames appear as flat vertical lines)? → **You are perfectly parallel (0°).** Set `door_angle` = `perpendicular`. Proceed to Priority 5.
+  - **If you are NOT close enough to clearly see the frame details** → Set `door_angle` = `unknown` and keep advancing with `A1` (Priority 2). Do NOT guess.
 
   ⚠️ **SEQUENTIAL MANEUVER RULE (MANDATORY)**:
   - You can only emit **ONE command per turn**. The two-step maneuver above spans two turns.
   - **If your last command (check `mov_history`) was `D1` issued for Priority 3** → your next command **MUST be `C1`** (the corrective rotation). Do NOT issue another `D1`.
   - **If your last command was `D2` issued for Priority 3** → your next command **MUST be `B1`** (the corrective rotation). Do NOT issue another `D2`.
   - Only after completing both steps (slide + rotation) should you re-evaluate the inner faces again.
-
-- **After completing the full two-step correction**: Re-evaluate from scratch. Check the inner faces again before making another move.
 
 ⛔ **PRIORITY 4: LATERAL SLIDE HARD LIMIT (ANTI-OVERCORRECTION)**:
 - Check `mov_history`. If the last **2 consecutive commands** are both `D1` or both `D2`, you **MUST STOP** issuing lateral slides.
@@ -66,8 +83,15 @@ Get close to the target open door, align your body **perfectly parallel** to the
 - This rule exists because the system dies from lateral overcorrection. Respect it absolutely.
 
 ✅ **PRIORITY 5: CENTERED, PERPENDICULAR & CLOSE — ADVANCE TO CROSS**:
-- Door is centered, you cannot see the inner depth of either doorframe (0° confirmed), it is an open void, and you are close → return `A1`.
-- **Transition to `Go Through Door`** when the doorframe sides fill a large portion of the view and you are about to enter.
+- **ALL THREE conditions must be TRUE simultaneously:**
+  1. Door is centered in the frame (open void in the middle). `door_position` = `center`.
+  2. Perpendicularity confirmed: you CANNOT see the inner depth of either doorframe (both are flat vertical lines). `door_angle` = `perpendicular`.
+  3. You are close: doorframe sides fill a significant portion of the view.
+- If all three are met → return `A1` and **transition to `Go Through Door`**.
+- **If any condition is NOT met, do NOT transition.** Stay in `Oriented Towards Door` and address the missing condition:
+  - Not centered → Priority 1 (rotate) or D1/D2 if close.
+  - Not perpendicular → Priority 3 (slide + rotate maneuver).
+  - Not close enough → Priority 2 (advance with A1).
 
 🚪 **PRIORITY 6: DOOR LOST**:
 - If the open door is no longer visible, switch back to `Search open Door`, only if you didn't go through it. If you already crossed it, transition to `Position in the center of room` to reorient in the new room.
@@ -88,6 +112,6 @@ Get close to the target open door, align your body **perfectly parallel** to the
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: Door is centered, you are perpendicular (0°), and `A1` will cross it perfectly straight.
-- `Oriented Towards Door`: Door visible but needs centering, approach, or angle adjustment.
+- `Go Through Door`: **ONLY when ALL THREE conditions are confirmed**: (1) door centered, (2) `door_angle` = `perpendicular` (both frames are flat lines, no inner depth visible), (3) close enough that frames dominate the view. If ANY condition is uncertain, stay in `Oriented Towards Door`.
+- `Oriented Towards Door`: Door visible but needs centering, approach, or angle adjustment. **This is the default — stay here until you are CERTAIN of all three crossing conditions.**
 - `Search open Door`: Door is closed, is a cabinet, or is lost from view.

@@ -91,9 +91,8 @@ def cmd_vel():
             
             # Determinamos el estado siguiente lógico tras la intervención
             next_state = state
-            # Si estábamos orientados y nos manda avanzar (A1), es que ya estamos entrando
-            if state == "Oriented Towards Door" and safety_cmd == "A1":
-                next_state = "Go Through Door"
+            # No forzamos transición a Go Through Door desde Oriented.
+            # Esa transición solo la decide el VLM tras confirmar perpendicularidad.
             
             # Construimos la respuesta manual (Override)
             override_response = {

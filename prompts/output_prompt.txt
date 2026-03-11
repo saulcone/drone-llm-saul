@@ -4,12 +4,13 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 1: Describe the geometric perspective of the doorframes. Can you physically see the inner depth/thickness face of the LEFT doorframe? Can you see the inner depth/thickness face of the RIGHT doorframe? (Note: The 'inner depth' is the perpendicular surface of the doorframe that faces the inside of the doorway — the recessed face you see when looking at the frame from an angle. It is NOT the flat wall surface next to the door.) If neither inner face is visible (both frames appear as flat vertical edges), you are perfectly parallel to the door plane (0°). Step 2: Detail other visual evidence (e.g., 'I see a closed white cabinet with knobs' or 'I see an open dark void leading to another room'). Step 3: Apply Priority Rules strictly and state which rule applies and why.",
+  "description": "Step 1: CENTERING — Is the open void in the central third of the image, or is it off to the left/right edge? Step 2: PERPENDICULARITY (ONLY if close to the door) — Can you see the inner depth/thickness face of the LEFT doorframe post? The RIGHT doorframe post? If NEITHER inner face is visible (both posts look like flat vertical lines), you are perpendicular. If you are far away and the frames are thin, set door_angle to 'unknown' — you CANNOT judge angle from far away. Step 3: Apply Priority Rules strictly and state which rule applies.",
   "door_position": "left | center | right | not_visible",
+  "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
   "room": "estimated_room_name_or_unknown",
   "state": "next_FSM_state",
   "movement": "valid_single_movement_command",
-  "memory_update": "Write a short note to yourself summarizing key observations from this step that will be useful later. Include: landmarks you identified, doors you decided to ignore and why, rooms you recognized, obstacles to avoid. If nothing noteworthy happened, copy your previous memory unchanged. Max 200 characters."
+  "memory_update": "..."
 }
 ```
 
@@ -17,7 +18,9 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 - `"description"`: Detailed reasoning. You MUST use keywords like `'closed'`, `'cabinet'`, `'open void'`, `'wall'` when applicable. The movement chosen must follow from this reasoning.
 
-- `"door_position"`: Position of the candidate door opening. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`.
+- `"door_position"`: Horizontal position of the candidate door opening in the image. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`. This answers: WHERE is the door in the frame?
+
+- `"door_angle"`: Perpendicularity assessment. Valid values: `"perpendicular"` (both doorframe posts are flat vertical lines, no inner depth visible), `"diagonal_from_left"` (you can see the inner face of the RIGHT post), `"diagonal_from_right"` (you can see the inner face of the LEFT post), `"unknown"` (too far to judge, or no door visible). This answers: HOW is the drone angled relative to the door? **Set to `"unknown"` unless you are close enough to clearly see the doorframe details.**
 
 - `"room"`: Current room from topological map, or `"unknown"`.
 

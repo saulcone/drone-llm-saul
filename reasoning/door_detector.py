@@ -82,21 +82,16 @@ class DoorDetector:
             door_width = xmax - xmin
             offset = door_center_x - img_center_x
 
-            # En "Oriented Towards Door": el Safety Guard NO corrige la alineación.
-            # Forzar rotaciones (B1/C1) desde aquí rompería la perpendicularidad del dron.
-            # Si la puerta no está centrada, devolvemos None y dejamos al VLM principal decidir.
-            # Solo intervenimos para confirmar avance cuando ya está centrada.
+            # En "Oriented Towards Door": el Safety Guard es SOLO INFORMATIVO.
+            # NUNCA forzar avance desde aquí. La decisión de avanzar y transicionar a
+            # "Go Through Door" debe ser del VLM principal tras confirmar perpendicularidad
+            # mediante el análisis de caras internas del marco (Phase C del prompt).
+            # Forzar A1 aquí causaba entradas diagonales: Gemini evaluaba is_perpendicular
+            # desde un solo frame, lo cual es muy impreciso a distancia media.
             if current_state == "Oriented Towards Door":
-                # First check: Is the drone looking at it from a diagonal angle?
-                if not res.get("is_perpendicular", False):
-                    return None, "Gemini Safety: Door detected but drone is NOT perpendicular. Alignment left to VLM."
-                
-                # Second check: Is the door actually in the center of the screen?
-                if abs(offset) > self.center_threshold:
-                    return None, f"Gemini Safety: Door offset {offset}px, alignment left to VLM."
-                
-                # Centered AND straight-on: safe to fly forward
-                return "A1", "Gemini Safety: Door centered AND perpendicular. Force entry."
+                perp = res.get("is_perpendicular", False)
+                centered = abs(offset) <= self.center_threshold
+                return None, f"Gemini Safety (info only): perpendicular={perp}, centered={centered}, offset={offset}px. VLM decides."
 
             if current_state == "Go Through Door":
                 # Solo forzar avance si la puerta sigue visible y centrada
