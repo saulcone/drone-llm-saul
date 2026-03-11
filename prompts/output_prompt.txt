@@ -4,7 +4,7 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 1: POSITION — Where is the door? (left, right, or center). Step 2: ROUGH CENTERING — If the door is left or right, I MUST apply Rule 1 and ROTATE (Left=B, Right=C). I will not evaluate angles until it is centered. Step 3: DIAGONAL CHECK — If the door IS roughly centered, I will check the frame edges. LEFT edge: [VISIBLE/NOT VISIBLE]? RIGHT edge: [VISIBLE/NOT VISIBLE]? If only one edge is visible, I am diagonal and must apply Rule 3 (Slide D1/D2). Step 4: Final command decision.",
+  "description": "Step 0: MULTIPLE DOORS — Are there multiple open voids? If yes, I MUST identify which one is the target room using visual clues (e.g., checkered floor = bathroom, bed = bedroom) and IGNORE the others. Step 1: POSITION — Where is the TARGET door? (left, right, or center). Step 2: ROUGH CENTERING — If the target door is left or right, I MUST apply Rule 1 and ROTATE (Left=B, Right=C). I will not evaluate angles until it is centered. Step 3: DIAGONAL CHECK — If the door IS roughly centered, I will check the frame edges. LEFT edge: [VISIBLE/NOT VISIBLE]? RIGHT edge: [VISIBLE/NOT VISIBLE]? If only one edge is visible, I am diagonal and must apply Rule 3 (Slide D1/D2). Step 4: Final command decision.",
   "door_position": "left | center | right | not_visible",
   "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
   "room": "estimated_room_name_or_unknown",
