@@ -4,7 +4,7 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 1: CENTERING — Is the open void in the central third of the image, or is it off to the left/right edge? Step 2: PERPENDICULARITY (ONLY if close to the door) — Can you see the inner depth/thickness face of the LEFT doorframe post? The RIGHT doorframe post? If NEITHER inner face is visible (both posts look like flat vertical lines), you are perpendicular. If you are far away and the frames are thin, set door_angle to 'unknown' — you CANNOT judge angle from far away. Step 3: Apply Priority Rules strictly and state which rule applies.",
+  "description": "Step 1: CENTERING — Is the open void in the left third, central third, or right third of the image? (If I need to rotate: door LEFT = B command, door RIGHT = C command. VERIFY before emitting.) Step 2: FRAME COUNT (MANDATORY) — I must answer explicitly: 'LEFT doorframe edge: [VISIBLE/NOT VISIBLE]. RIGHT doorframe edge: [VISIBLE/NOT VISIBLE].' If only ONE edge is visible and the other side is a wall, I am approaching diagonally and MUST set door_angle (diagonal_from_left if wall is on left, diagonal_from_right if wall is on right). If BOTH edges visible, door_angle = unknown (or check inner faces if close). Step 3: DIAGONAL CHECK — If door_angle is diagonal, I MUST NOT advance (A1). I must correct with lateral slide first (D2 if diagonal_from_left, D1 if diagonal_from_right). Step 4: State which Priority Rule applies and confirm the command is consistent.",
   "door_position": "left | center | right | not_visible",
   "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
   "room": "estimated_room_name_or_unknown",
@@ -20,7 +20,12 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 - `"door_position"`: Horizontal position of the candidate door opening in the image. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`. This answers: WHERE is the door in the frame?
 
-- `"door_angle"`: Perpendicularity assessment. Valid values: `"perpendicular"` (both doorframe posts are flat vertical lines, no inner depth visible), `"diagonal_from_left"` (you can see the inner face of the RIGHT post), `"diagonal_from_right"` (you can see the inner face of the LEFT post), `"unknown"` (too far to judge, or no door visible). This answers: HOW is the drone angled relative to the door? **Set to `"unknown"` unless you are close enough to clearly see the doorframe details.**
+- `"door_angle"`: Perpendicularity assessment. Valid values:
+  - `"perpendicular"`: Both doorframe posts are flat vertical lines, no inner depth visible. You are aligned at 0°.
+  - `"diagonal_from_left"`: You are offset to the LEFT of the door. Evidence: large wall on the left + only left frame edge visible, OR right frame inner depth visible at close range.
+  - `"diagonal_from_right"`: You are offset to the RIGHT of the door. Evidence: large wall on the right + only right frame edge visible, OR left frame inner depth visible at close range.
+  - `"unknown"`: Both frames visible but too far to judge inner depth detail, or no door visible.
+  **KEY: You do NOT need to be close to set this field.** If you can only see ONE doorframe edge and the other side is wall, that IS enough to determine the angle. Only use `"unknown"` when BOTH edges are visible but detail is insufficient.
 
 - `"room"`: Current room from topological map, or `"unknown"`.
 
