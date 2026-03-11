@@ -4,7 +4,7 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 1: CENTERING — Is the open void in the left third, central third, or right third of the image? (If I need to rotate: door LEFT = B command, door RIGHT = C command. VERIFY before emitting.) Step 2: FRAME COUNT (MANDATORY) — I must answer explicitly: 'LEFT doorframe edge: [VISIBLE/NOT VISIBLE]. RIGHT doorframe edge: [VISIBLE/NOT VISIBLE].' If only ONE edge is visible and the other side is a wall, I am approaching diagonally and MUST set door_angle (diagonal_from_left if wall is on left, diagonal_from_right if wall is on right). If BOTH edges visible, door_angle = unknown (or check inner faces if close). Step 3: DIAGONAL CHECK — If door_angle is diagonal, I MUST NOT advance (A1). I must correct with lateral slide first (D2 if diagonal_from_left, D1 if diagonal_from_right). Step 4: State which Priority Rule applies and confirm the command is consistent.",
+  "description": "Step 1: POSITION — Where is the door? (left, right, or center). Step 2: ROUGH CENTERING — If the door is left or right, I MUST apply Rule 1 and ROTATE (Left=B, Right=C). I will not evaluate angles until it is centered. Step 3: DIAGONAL CHECK — If the door IS roughly centered, I will check the frame edges. LEFT edge: [VISIBLE/NOT VISIBLE]? RIGHT edge: [VISIBLE/NOT VISIBLE]? If only one edge is visible, I am diagonal and must apply Rule 3 (Slide D1/D2). Step 4: Final command decision.",
   "door_position": "left | center | right | not_visible",
   "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
   "room": "estimated_room_name_or_unknown",
