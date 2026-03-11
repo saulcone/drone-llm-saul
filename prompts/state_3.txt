@@ -10,22 +10,22 @@ Scan the current room to locate and center the desired object in the field of vi
 ## 🧠 POLICY RULES
 
 🔁 **PRIORITY 0: ANTI-ROTATION-LOOP (CHECK FIRST)**:
-- Count consecutive rotations in `mov_history` (any sequence of B or C commands with no A in between).
-- If there are **2 or more consecutive rotations** and the object is still not visible, you are spinning in place and wasting steps. **STOP rotating. Return `A1` to move forward** and get a new vantage point.
-- Only resume rotating after you have moved forward at least once.
+- Count consecutive rotations in `mov_history`.
+- Try to rotate maximum in a 360 degrees turn by rotating the same direction always.
+- If rotated 360 degrees didn't help, move the most likely direction to advance to the goal.
 
 🚨 **PRIORITY 1: WRONG ROOM ABORT**:
 - If you are confident you are in the WRONG room, immediately switch to `Search open Door`.
 
-📐 **PRIORITY 2: OBJECT VISIBLE BUT OFF-CENTER**:
-- If the object is partially visible but **slightly** off-center, prefer a **lateral slide** to keep your current heading: `D1` (slide left) if the object is on the left, `D2` (slide right) if it is on the right.
-- Only use rotation (`B1`/`C1`) if the object is **far off-center** (near the edge of the frame), since a small slide would not be enough.
-- After centering, advance with `A1` to get closer rather than rotating further.
+📐 **PRIORITY 2: APPROACHING OBJECT**:
+- If the object is partially visible, it might help to approach by moving `A1` if possible, correct path if needed.
+- Only use rotation (`B1`/`C1`) if the object is **far off-center** (near the edge of the frame) or various slides if possible to center, if angle is correct.
+- After centering, advance with `A1` to get closer rather than rotating further if possible.
 
 🔍 **PRIORITY 3: SCAN AND EXPLORE**:
-- Prefer rotating in the same direction as the previous rotation (e.g., if `previous_movement` was `B2`, use `B2`), but **never chain more than 2 rotations without an `A1` in between**.
-- After each rotation, if the object is still not found and the path ahead is open, move forward (`A1`) to change vantage point before rotating again.
-- If the path ahead is blocked (wall, cabinet, closed door), rotate to find an open path, then advance.
+- Prefer rotating in the same direction as the previous rotation to look around all the place.
+- After each rotation, think whether it is worth to still rotate or change the movement to a forward move `A1`.
+- If the path ahead is blocked (wall, cabinet, closed door), rotate to find an open path, or slide in the opposite way `D1` or `D2` (obstacle right or left respectively).
 
 ---
 
@@ -48,8 +48,8 @@ Only return **ONE** movement command from the list below:
 - `C3`: rotate 90°
 
 ### D. Lateral slides:
-- `D1`: slide 5 cm left (preserves heading)
-- `D2`: slide 5 cm right (preserves heading)
+- `D1`: slide 5 cm left 
+- `D2`: slide 5 cm right 
 
 ---
 
@@ -60,9 +60,3 @@ Choose the next FSM state based on what the robot sees:
 - `Search Object`: if the target object is not yet visible or not centered in the frame.
 - `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
 - `Search open Door`: If you realize you are in the WRONG room (e.g., you are in the bedroom but the goal is in the bathroom). You must abort the search immediately to find an exit.
----
-
-## ⚠️ NOTES
-
-- Avoid unnecessary movement: do not move forward if the object might be occluded or outside the frame.
-

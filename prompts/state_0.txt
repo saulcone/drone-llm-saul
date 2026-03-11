@@ -51,4 +51,3 @@ Choose the next FSM state based on room recognition:
 ## ⚠️ NOTES
 
 - Avoid abrupt transitions — change states only when confident about recognition.
-- Never use lateral or stop commands in this state.

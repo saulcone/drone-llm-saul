@@ -7,54 +7,46 @@ Proceed through the OPEN door. **CRITICAL: NEVER collide with the doorframes.** 
 
 ---
 
-## 🧠 POLICY RULES (Strict Priority)
+## 🧠 POLICY RULES (Strict Evaluation Order)
 
-🚫 **PRIORITY 0: VISIBILITY SAFETY CHECK (ALWAYS FIRST)**:
-- If the image is **blurry, completely uniform, or you cannot identify any doorframe or open void at all**, you have lost visual reference (camera clipping into a wall or doorframe).
-- **`A1` is STRICTLY FORBIDDEN in this situation. DO NOT advance forward blindly.**
-- **ACTION**: You MUST rotate away immediately (`B2` or `C2`) to free the camera from the wall, and switch the state to `Search open Door`.
-- This rule overrides everything below, including anti-oscillation.
+🛑 **RULE 1: VISIBILITY SAFETY CHECK (ALWAYS FIRST)**:
+- **Condition**: If the image is blurry, completely uniform, or you cannot identify any doorframe or open void at all (camera clipping into a wall).
+- **Action**: `A1` is STRICTLY FORBIDDEN. You MUST rotate away immediately to free the camera and switch state to `Search open Door`.
 
-🔁 **PRIORITY 1: ANTI-OSCILLATION (FORCE ADVANCE)**:
-- Inspect only the **last 4 commands** in `mov_history` (ignore older history — it may be from a previous state).
-- If those last 4 commands contain **both `D1` and `D2`** (in any order), you are in an overcorrection loop.
-- **CRITICAL**: Return `A1` immediately, regardless of how the frames look. Lateral corrections are making things worse.
-- **DO NOT apply Priority 2 collision avoidance if oscillation is detected.**
+🔁 **RULE 2: ANTI-OSCILLATION (TRY TO ADVANCE)**:
+- **Condition**: Inspect the **last 4 commands** in `mov_history`. If they contain **both `D1` and `D2`** (in any order), you are in a fatal overcorrection loop.
+- **Action**: Return `A1` immediately to break the loop. Do NOT apply Rule 4 evasion.
 
-🚨 **PRIORITY 2: CRITICAL EVASION ONLY (EXTREME COLLISION THRESHOLD)**:
-- A collision is a FATAL ERROR, but you must **only react in genuinely extreme situations**.
-- **"Extreme" means**: A single doorframe or wall occupies **more than 60% of the horizontal width** of the image, AND the open void is pushed to the far opposite edge. This is a genuine imminent collision.
-- A frame that is "visible", "prominent", or takes up 20–50% of the view is **NORMAL** for a narrow doorway. **Do NOT trigger evasion for this.**
-- **NARROW DOOR / BOTH FRAMES VISIBLE**: If you can see BOTH a left and a right doorframe with an open void between them — even if both feel close — YOU ARE CENTERED. **Do NOT slide.** Proceed with `A1`.
-- **EQUALLY DISTANT FRAMES**: If both doorframes are arguably equidistant from the center of the image (the open void sits roughly in the middle), the robot is already centered. **Do NOT slide.** Return `A1` immediately.
-- If and only if ONE frame exceeds the **60% threshold**:
-  - If the **LEFT** frame is extremely close → slide RIGHT: `D2`.
-  - If the **RIGHT** frame is extremely close → slide LEFT: `D1`.
-- **After a single evasive slide, you MUST return to `A1` on the next step.** Do not chain lateral slides.
-- Keep the state as `Go Through Door`. **CRITICAL: Do NOT rotate (`B1`/`B2`/`C1`/`C2`) inside the doorway.**
+🚪 **RULE 3: CRITICAL ABORT (CLOSED OBJECTS)**:
+- **Condition**: If you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
+- **Action**: Switch state to `Search open Door` and rotate away (`B2` or `C2`).
 
-🚨 **PRIORITY 3: CRITICAL ABORT (ONLY CLOSED OBJECTS)**:
-- ONLY abort if you face a **CLOSED DOOR, CABINET, or CLOSET** dead ahead.
-- Switch state to `Search open Door` and rotate away (`B2` or `C2`).
+🚨 **RULE 4: CRITICAL EVASION (EXTREME COLLISION THRESHOLD)**:
+- **Condition**: Only react in genuinely extreme situations. A single doorframe occupying 20–50% of the view is NORMAL for narrow doorways.
+- **Extreme Threshold**: ONE doorframe occupies **>60% of the horizontal width** (or ~50% with obvious diagonal crash trajectory), AND the open void is pushed to the far opposite edge.
+- **Action**:
+  - **LEFT** frame is extreme -> slide RIGHT: `D2`.
+  - **RIGHT** frame is extreme -> slide LEFT: `D1`.
+- **Constraint**: After ONE evasive slide, your next step SHOULD be `A1`. Do not chain lateral slides. **CRITICAL: NEVER rotate (`B`/`C` commands) inside the doorway.**
 
-✅ **PRIORITY 4: SAFE FORWARD MOVEMENT (DEFAULT ACTION)**:
-- **This is the default.** As long as the open void is the central element in the image, return `A1`.
-- **DO NOT use D1/D2 for "drift correction" or "fine adjustment" while inside the doorway.** The VLM misjudges proportions at close range, and lateral micro-adjustments cause fatal oscillations within the doorframe.
-- **Rule: If you can see the open void ahead of you, advance with `A1`. Period.**
-- Trust that the alignment from `Oriented Towards Door` is correct. Small visual asymmetries in the doorframes at close range are perspective distortions, not real misalignment.
-- **GRAY ZONE SAFETY**: If a single doorframe occupies approximately **50% of the horizontal width** and the remaining open void appears narrow, pause and verify you are centered. If there is any doubt that advancing 10 cm could cause a collision (e.g., you are slightly angled toward that frame), treat this as an extreme case and apply Priority 2 evasion instead of advancing blindly.
+✅ **RULE 5: SAFE FORWARD MOVEMENT (DEFAULT ACTION)**:
+- **Condition**: The open void is visible ahead and neither frame triggers the extreme >60% threshold. (If BOTH frames are visible, you are centered).
+- **Action**: Return `A1`.
+- **Constraint**: DO NOT use `D1`/`D2` for "drift correction" or fine adjustments while inside the doorway. Trust your previous alignment. Small visual asymmetries are just perspective distortions. Advance blindly.
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
+
 - `A1`: move forward 10 cm — **DEFAULT command. Use this unless extreme evasion is needed.**
-- `D1`: slide 5 cm left — **ONLY for extreme evasion (>60% frame occupation). Never for drift correction.**
-- `D2`: slide 5 cm right — **ONLY for extreme evasion (>60% frame occupation). Never for drift correction.**
-- `B2`, `C2`: rotate 45° — **ONLY for Priority 3 Abort (closed object).**
+- `D1`: slide 5 cm left — **ONLY for extreme evasion (Rule 4). Never for drift correction.**
+- `D2`: slide 5 cm right — **ONLY for extreme evasion (Rule 4). Never for drift correction.**
+- `B2`, `C2`: rotate 45° — **ONLY for Rule 1 (Clipping) or Rule 3 (Abort).**
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
+
 - `Go Through Door`: Still crossing the door or evading an extreme collision.
 - `Oriented Towards Door`: Door is open but you lost alignment completely (visibility lost).
 - `Position in the center of room`: Threshold crossed successfully (you are inside the new room).

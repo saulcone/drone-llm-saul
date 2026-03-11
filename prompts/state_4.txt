@@ -9,29 +9,26 @@ Move precisely toward the desired object until you are close enough to stop and 
 
 ## 🧠 POLICY RULES
 
-🔒 **ROOM LOCK RULE (MANDATORY — CHECK FIRST)**:
-- You entered `Reach Object` because the target object was found. **Do NOT re-evaluate which room you are in.**
-- Trust the room identification from `agent_memory` / previous state. If memory says you are in the bathroom, **you ARE in the bathroom**.
-- Visually similar features (white cabinets, counters, sinks) exist in multiple rooms. Do not let them confuse you.
-- **It is STRICTLY FORBIDDEN to change the `room` field while in `Reach Object`.** Copy the room value from your memory.
+🏠 **ROOM CONSISTENCY**:
+- You entered `Reach Object` because the target object was found. Try to maintain the room identification from `agent_memory` or the previous state rather than re-evaluating it.
+- Visually similar features (white cabinets, counters, sinks) exist in multiple rooms. To avoid confusion, it is best to keep the `room` value consistent with your memory.
 
-- Advance gradually toward the object using small forward steps (`A1`).
+🎯 **APPROACH & ALIGNMENT**:
+- Advance gradually toward the object using small forward steps (`A1`) and evaluating the situation.
 - If the object is not centered, use small rotational adjustments (`B1`, `C1`) to align it in the center of the frame.
-- Use lateral movements (`D1` or `D2`) **only** if the object is close and slightly off-center.
-- **LATERAL SLIDE HARD LIMIT**: Check `mov_history`. It is **STRICTLY FORBIDDEN** to emit more than **2 consecutive `D1` or `D2` commands**. If you have already issued 2 consecutive lateral slides, you MUST switch to a rotation (`B1`/`C1`) or forward movement (`A1`) before any further lateral adjustment.
-- If the object appears fully on one side of the image (more than 40% off-center) or looks like is almost out of view:
-  - prioritize lateral rotations (`C1` if the object is on the right side, `B1` if the object is on the left side)
-  - to bring it closer to the center of view before proceeding forward.
+- Use lateral movements (`D1` or `D2`) when the object is close but slightly off-center. 
+- Try to show the object aligned and centered, use the most suitable move to approach.
+
+🛑 **STOPPING CRITERIA**:
 - Consider the object “close enough” if:
   - It fills at least 40% of the image width **or** its top and bottom edges are cropped in the view,
   - And it appears roughly centered (within ±20% from the horizontal center).
-- If the object is very tall or vertical (like a mirror) with top/bottom cropped, do not keep adjusting alignment but move forward until close.
-- If any of these conditions are not met, continue approaching or adjusting alignment.
-- If the object disappears from view for **2 or more consecutive steps**, you MUST:
-  - immediately transition to `Search Object`
-  - return movement = `E`
-  - and never keep rotating or moving forward in `Reach Object` if the object is missing.
-- Do not continue forward if only a flat wall or undistinguished surface is visible.
+- If the object is very tall or vertical (like a mirror) with top/bottom cropped, you can just move forward or back (taking care of crashing) until close without over-adjusting the alignment.
+- If these conditions are not met, continue approaching or adjusting alignment.
+
+⚠️ **LOST TRACKING**:
+- If the object disappears from view for 2 or more consecutive steps, you should transition to `Search Object` and return movement = `E` to re-evaluate your surroundings.
+- Avoid continuing forward if only a flat wall or undistinguished surface is visible.
 
 ---
 
@@ -53,7 +50,7 @@ Only return **ONE** movement command from the list below:
 - `D2`: move 10 cm right
 
 ### E. Transition:
-- `E`: issue exclusively when transitioning to `Search Object` after the object is missing for 2+ steps or when transitioning to `Describe Object`
+- `E`: issue when transitioning to `Search Object` after the object is missing for a few steps, or when transitioning to `Describe Object`.
 
 ---
 
@@ -62,15 +59,13 @@ Only return **ONE** movement command from the list below:
 Choose the next FSM state:
 
 - `Reach Object`: if the object is still visible but not yet reached or aligned.
-- `Describe Object`: if the object is approximately centered, large, and visually close based on the above conditions.
-- `Search Object`: if the object has disappeared from view for 2 or more consecutive steps, no recognizable object is in frame, or visual tracking is lost.
+- `Describe Object`: if the object is approximately centered, large, and visually close based on the conditions above.
+- `Search Object`: if the object has disappeared from view for multiple consecutive steps, no recognizable object is in frame, or visual tracking is lost.
 
 ---
 
-## ⚠️ NOTES
+## 📝 NOTES
 
-- Avoid overshooting: stop once the object appears large and approximately centered.
-- Do not rotate if the object is already aligned.
-- If the object disappears from view for 2+ steps, stop and transition back to `Search Object` with movement `E`.
-- If the output state is `Describe Object`, always move with `E`.
-- Prioritize lateral adjustments over forward movement if the object is strongly off to one side.
+- Try to avoid overshooting: stop once the object appears large and approximately centered.
+- Rotations are usually unnecessary if the object is already aligned.
+- If the output state is `Describe Object`, move with `E`.
