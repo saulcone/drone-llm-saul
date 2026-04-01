@@ -333,17 +333,23 @@ def run_simulation(args, topology, json_data=None):
     safety_override = None  # Guarda info cuando Safety Guard interviene
 
     move_map = {
-        "A1": (10, [0, 0.1, 0, 0]),
-        "A2": (25, [0, 0.1, 0, 0]),
-        "A3": (50, [0, 0.1, 0, 0]),
-        "B1": (15, [0, 0, -0.1, 0]),
-        "B2": (45, [0, 0, -0.1, 0]),
-        "B3": (90, [0, 0, -0.1, 0]),
-        "C1": (15, [0, 0, 0.1, 0]),
-        "C2": (45, [0, 0, 0.1, 0]),
-        "C3": (90, [0, 0, 0.1, 0]),
-        "D1": (5, [-0.1, 0, 0, 0]),
-        "D2": (5, [0.1, 0, 0, 0])
+        # Avance
+        "A1": (10, [0, 0.1, 0, 0]),    # 10cm forward
+        "A2": (25, [0, 0.1, 0, 0]),    # 25cm forward
+        "A3": (50, [0, 0.1, 0, 0]),    # 50cm forward
+        # Rotación izquierda (B = left)
+        "B0": (5, [0, 0, -0.1, 0]),    # 5° micro-rotation left (NUEVO - ajuste fino)
+        "B1": (15, [0, 0, -0.1, 0]),   # 15° rotation left
+        "B2": (45, [0, 0, -0.1, 0]),   # 45° rotation left
+        "B3": (90, [0, 0, -0.1, 0]),   # 90° rotation left
+        # Rotación derecha (C = right)
+        "C0": (5, [0, 0, 0.1, 0]),     # 5° micro-rotation right (NUEVO - ajuste fino)
+        "C1": (15, [0, 0, 0.1, 0]),    # 15° rotation right
+        "C2": (45, [0, 0, 0.1, 0]),    # 45° rotation right
+        "C3": (90, [0, 0, 0.1, 0]),    # 90° rotation right
+        # Slides laterales
+        "D1": (5, [-0.1, 0, 0, 0]),    # 5cm slide left
+        "D2": (5, [0.1, 0, 0, 0])      # 5cm slide right
     }
 
     # Video writer
@@ -418,19 +424,21 @@ def run_simulation(args, topology, json_data=None):
             agent_memory = response.get("memory_update", agent_memory)
 
             # === SAFETY GUARD: Interviene ANTES de ejecutar comandos de avance ===
+            # NOTA: Desactivado temporalmente - confunde marcos de puertas con paredes
+            # TODO: Mejorar la detección para distinguir marcos vs paredes reales
             original_command = command
             safety_override = None
             
-            if state in ["Oriented Towards Door", "Go Through Door"] and command.startswith("A"):
-                safe_command, safety_msg = wall_detector.get_safe_command(real_img, command, state)
-                if safe_command != command:
-                    safety_override = {
-                        "original": command,
-                        "corrected": safe_command,
-                        "reason": safety_msg
-                    }
-                    command = safe_command
-                    print(f"[SAFETY GUARD] {safety_msg}")
+            # if state in ["Oriented Towards Door", "Go Through Door"] and command.startswith("A"):
+            #     safe_command, safety_msg = wall_detector.get_safe_command(real_img, command, state)
+            #     if safe_command != command:
+            #         safety_override = {
+            #             "original": command,
+            #             "corrected": safe_command,
+            #             "reason": safety_msg
+            #         }
+            #         command = safe_command
+            #         print(f"[SAFETY GUARD] {safety_msg}")
             # === FIN SAFETY GUARD ===
 
             if args.fast:

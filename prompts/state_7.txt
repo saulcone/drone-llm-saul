@@ -3,60 +3,60 @@
 ---
 
 ## 🎯 GOAL
-Align perfectly parallel to the target open door (0° angle), approach safely until close, and cross it cleanly.
-- **Centering (Phase A)**: The door is in the horizontal middle of your view (rough centering is enough from afar).
-- **Approaching (Phase B)**: Move forward to close the distance.
-- **Perpendicularity & Crossing (Phase C)**: At close range, ensure both doorframe edges look identical (0° angle) before the final crossing step.
+APPROACH the door by keeping it roughly CENTERED. If door drifts left/right, rotate to re-center before advancing.
+
+**Transition to `Go Through Door`**: When door occupies >40% of frame width.
 
 ---
 
 ## 🧠 POLICY RULES (Strict Priority)
 
-🛑 **RULE 0: SAFETY, ABORTS & OSCILLATION (CHECK FIRST)**:
-- **Multiple Doors**: Use the topological map to pick the correct door. Ignore all others.
-- **Oscillation Detection**: If you are caught in a rotation loop (e.g., C1 -> B1 -> C1) trying to center the door:
-  - DO NOT rotate anymore.
-  - If the door is roughly in the central third, emit `A1` to get closer.
-  - If the door is clearly diagonal, use lateral slides (`D1` or `D2`) to break the loop and change the perspective.
+🔁 **RULE 0: ANTI-OSCILLATION (CHECK FIRST)**:
+- **Look at `mov_history`** (last 4-6 movements)
+- **If you see alternating B1↔C1 pattern** (e.g., C1,C1,B1,B1,C1,B1):
+  - You are OSCILLATING because 15° rotations are too big
+  - **Switch to MICRO-ROTATIONS: B0/C0 (5°) instead of B1/C1**
+  - This will let you fine-tune without overshooting
 
-🎯 **RULE 1: ROUGH CENTERING & APPROACH (FAR / MEDIUM DISTANCE)**:
-- **When**: The door is far away.
-- **Action**: Do not attempt perfect alignment from afar.
-  | `door_position` | Action | Command |
-  |---|---|---|
-  | `left` | Rotate LEFT | `B1` or `B2` |
-  | `right` | Rotate RIGHT | `C1` or `C2` |
-  | `center` | **STRICTLY DO NOT ROTATE** | `A1` (advance) |
+🎯 **RULE 1: CENTER THE DOOR**:
+| door_position | No oscillation | Oscillating (B1↔C1 in history) |
+|---------------|----------------|--------------------------------|
+| `left` | `B1` (15° left) | `B0` (5° micro-left) |
+| `right` | `C1` (15° right) | `C0` (5° micro-right) |
+| `center` | `A1` (advance) | `A1` (advance) |
 
-🚶 **RULE 2: DIAGONAL CORRECTION & ALIGNMENT (CLOSE RANGE)**:
-- **When**: You are getting close, but the view is NOT symmetrical (e.g., a wall dominates the left or right side).
-- **Action**: You are physically unaligned. **DO NOT rotate and DO NOT advance (A1).**
-  - If `diagonal_from_left` (left wall is large): You must slide RIGHT using `D2`.
-  - If `diagonal_from_right` (right wall is large): You must slide LEFT using `D1`.
-- **Goal**: Slide until the walls on both sides of the door look symmetrical.
+🚶 **RULE 2: ADVANCE WHEN CENTERED**:
+- When `door_position` = `center` → Advance with `A1`
 
-✅ **RULE 3: READY TO CROSS (PROXIMITY & PERPENDICULARITY)**:
-- You are **ONLY** ready to cross if BOTH conditions are met:
-  1. **Perpendicular (0 degrees)**: The view is completely symmetrical.
-  2. **Proximity**: The open void occupies >60% of the image width.
-- **Action**: Emit `A1` to cross.
+🔄 **RULE 3: TRANSITION TO CROSSING**:
+- **When**: Door occupies >40% of frame width (you are CLOSE)
+- **Action**: Change state to `Go Through Door`
 
 ---
 
 ## 🕹️ MOVEMENT COMMANDS
 
-- `A1`: move forward 10 cm (Default approach / cross command)
-- `B1`: rotate 15° left (Micro-correct drift / face left door)
-- `B2`: rotate 45° left (Face far left door)
-- `C1`: rotate 15° right (Micro-correct drift / face right door)
-- `C2`: rotate 45° right (Face far right door)
-- `D1`: slide 5 cm left (Diagonal correction. Breaks rotation loops)
-- `D2`: slide 5 cm right (Diagonal correction. Breaks rotation loops)
+| Situation | Command |
+|-----------|---------|
+| Door clearly LEFT (no oscillation) | `B1` (15°) |
+| Door clearly RIGHT (no oscillation) | `C1` (15°) |
+| Door slightly LEFT (or oscillating) | `B0` (5°) |
+| Door slightly RIGHT (or oscillating) | `C0` (5°) |
+| Door CENTERED | `A1` |
+
+---
+
+## ⚠️ OSCILLATION DETECTION
+
+**How to detect oscillation:**
+- Look at the last 4-6 commands in `mov_history`
+- Pattern like: `B1, C1, B1, C1` or `C1, C1, B1, B1, C1` = OSCILLATING
+- **Fix**: Use micro-rotations (B0/C0) instead of large rotations (B1/C1)
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Oriented Towards Door`: **DEFAULT STATE**. You must remain in this state while centering, approaching (even if emitting A1), or adjusting angles.
-- `Position in the center of room`: **STRICT LOCK**. You may ONLY transition to this state if in the CURRENT step the door is `perpendicular`, it occupies >60% of the view, and you are executing `A1` to cross the threshold.
-- `Search open Door`: Target is closed, lost, or aborted.
+- `Oriented Towards Door`: Door visible, keep approaching.
+- `Go Through Door`: Door occupies >40% of frame — ready for precision crossing.
+- `Search open Door`: Door lost from view.
