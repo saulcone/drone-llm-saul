@@ -2,48 +2,44 @@
 
 ---
 
-## GOAL
-Get close to the target open door, align your body **perfectly parallel** to the door plane (0 degree angle), and position yourself to cross it cleanly. This is a **three-phase** process:
-1. **Phase A -- Face the door** (long/medium range): Rotate toward the door until the open void is **roughly** in the central third of your field of view.
-2. **Phase B -- Once in the centre of the view, check if perfectly parallel, if not (diagonal) try to rotate to accomplish.
-3. **Phase C -- Once perpendicular to the door, start to centre the door again in the view by sliding to the needed direction (`D1` if door at left, `D2` if it is at the right).
-
-
-## State: **Oriented Towards Door**
+## 🎯 GOAL
+Align perfectly parallel to the target open door (0° angle), approach safely until close, and cross it cleanly.
+- **Centering (Phase A)**: The door is in the horizontal middle of your view (rough centering is enough from afar).
+- **Approaching (Phase B)**: Move forward to close the distance.
+- **Perpendicularity & Crossing (Phase C)**: At close range, ensure both doorframe edges look identical (0° angle) before the final crossing step.
 
 ---
-
-## 🎯 GOAL
-Align perfectly parallel to the target open door (0° angle) and cross it. 
-- **Centering**: The door is in the horizontal middle of your view. Achieved by rotating (Phase A).
-- **Perpendicularity (0°)**: Both doorframe edges look identical (flat vertical lines, no inner depth visible). Achieved by lateral sliding + micro-rotating (Phase C).
 
 ## 🧠 POLICY RULES (Strict Priority)
 
 🛑 **RULE 0: SAFETY, ABORTS & OSCILLATION (CHECK FIRST)**:
 - **Multiple Doors**: Use the topological map to pick the correct door. Ignore all others.
+- **Oscillation Detection**: If you are caught in a rotation loop (e.g., C1 -> B1 -> C1) trying to center the door:
+  - DO NOT rotate anymore.
+  - If the door is roughly in the central third, emit `A1` to get closer.
+  - If the door is clearly diagonal, use lateral slides (`D1` or `D2`) to break the loop and change the perspective.
 
-🎯 **RULE 1: ROUGH CENTERING (FAR / MEDIUM DISTANCE)**:
-- **When**: The door is clearly off to one side (outer third of frame).
-- **Action**: Rotate to bring it into the central third, then STOP rotating and advance (`A1`).
-  | `door_position` | Rotation | Command |
+🎯 **RULE 1: ROUGH CENTERING & APPROACH (FAR / MEDIUM DISTANCE)**:
+- **When**: The door is far away.
+- **Action**: Do not attempt perfect alignment from afar.
+  | `door_position` | Action | Command |
   |---|---|---|
   | `left` | Rotate LEFT | `B1` or `B2` |
   | `right` | Rotate RIGHT | `C1` or `C2` |
-  | `center` | Do NOT rotate| `A1` (advance) |
+  | `center` | **STRICTLY DO NOT ROTATE** | `A1` (advance) |
 
-🚶 **RULE 2: FRONTAL APPROACH**:
-- **When**: Door is roughly centered, but you are still far.
-- **Action**: Advance with `A1` **ONLY** if possible without crashing.
-- **Edge Check**: Before advancing, verify you can see BOTH doorframe edges. If you only see ONE edge  you are not perfectly perpendicular -> try to slide the opposite way the needed times and turn (opposite way of the slide) to check now perspective.
+🚶 **RULE 2: DIAGONAL CORRECTION & ALIGNMENT (CLOSE RANGE)**:
+- **When**: You are getting close, but the view is NOT symmetrical (e.g., a wall dominates the left or right side).
+- **Action**: You are physically unaligned. **DO NOT rotate and DO NOT advance (A1).**
+  - If `diagonal_from_left` (left wall is large): You must slide RIGHT using `D2`.
+  - If `diagonal_from_right` (right wall is large): You must slide LEFT using `D1`.
+- **Goal**: Slide until the walls on both sides of the door look symmetrical.
 
-✅ **RULE 3: READY TO CROSS**:
-- Check if angle is perfectly 0 degrees to the door's wall.
-- Check if doorframe is centered perfectly or almost perfectly with the view.
-- Check if moving forward is possible, then do it to cross.
-
-❓ **RULE 4: DOOR LOST**:
-- Once you crossed the door, switch to **Position in the center of room** OR **Search object**.
+✅ **RULE 3: READY TO CROSS (PROXIMITY & PERPENDICULARITY)**:
+- You are **ONLY** ready to cross if BOTH conditions are met:
+  1. **Perpendicular (0 degrees)**: The view is completely symmetrical.
+  2. **Proximity**: The open void occupies >60% of the image width.
+- **Action**: Emit `A1` to cross.
 
 ---
 
@@ -54,14 +50,13 @@ Align perfectly parallel to the target open door (0° angle) and cross it.
 - `B2`: rotate 45° left (Face far left door)
 - `C1`: rotate 15° right (Micro-correct drift / face right door)
 - `C2`: rotate 45° right (Face far right door)
-- `D1`: slide 5 cm left (Diagonal correction ONLY. Max 2 consecutive)
-- `D2`: slide 5 cm right (Diagonal correction ONLY. Max 2 consecutive)
+- `D1`: slide 5 cm left (Diagonal correction. Breaks rotation loops)
+- `D2`: slide 5 cm right (Diagonal correction. Breaks rotation loops)
 
 ---
 
 ## 🔄 OUTPUT STATE RULES
 
-- `Go Through Door`: **ONLY** when door is centered, perfectly perpendicular (0°), and close.
-- `Oriented Towards Door`: Default state. Door is visible but needs centering, approach, or angle adjustment.
+- `Oriented Towards Door`: **DEFAULT STATE**. You must remain in this state while centering, approaching (even if emitting A1), or adjusting angles.
+- `Position in the center of room`: **STRICT LOCK**. You may ONLY transition to this state if in the CURRENT step the door is `perpendicular`, it occupies >60% of the view, and you are executing `A1` to cross the threshold.
 - `Search open Door`: Target is closed, lost, or aborted.
-- `Position in the center of room`: You successfully crossed the threshold into the new room.

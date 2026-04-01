@@ -19,6 +19,9 @@ from mlagents_envs.side_channel.side_channel import (
     OutgoingMessage,
 )
 
+# Safety Guard: Detector de proximidad a paredes (sin VLM)
+from reasoning.wall_proximity_detector import WallProximityDetector
+
 # --- Teclado (pynput) ---
 class KeyController:
     def __init__(self):
@@ -324,6 +327,10 @@ def run_simulation(args, topology, json_data=None):
     elapsed_time = 0.0
     max_steps = args.max_steps  # Maximum steps to prevent infinite loop
     result = None
+    
+    # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
+    wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
+    safety_override = None  # Guarda info cuando Safety Guard interviene
 
     move_map = {
         "A1": (10, [0, 0.1, 0, 0]),
@@ -410,12 +417,30 @@ def run_simulation(args, topology, json_data=None):
             door_position = response.get("door_position", "")
             agent_memory = response.get("memory_update", agent_memory)
 
+            # === SAFETY GUARD: Interviene ANTES de ejecutar comandos de avance ===
+            original_command = command
+            safety_override = None
+            
+            if state in ["Oriented Towards Door", "Go Through Door"] and command.startswith("A"):
+                safe_command, safety_msg = wall_detector.get_safe_command(real_img, command, state)
+                if safe_command != command:
+                    safety_override = {
+                        "original": command,
+                        "corrected": safe_command,
+                        "reason": safety_msg
+                    }
+                    command = safe_command
+                    print(f"[SAFETY GUARD] {safety_msg}")
+            # === FIN SAFETY GUARD ===
+
             if args.fast:
                 move_drone_fast(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
             else:
                 move_drone(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
 
             prev_movement = command
+
+    
 
         if args.save_logs:
 
@@ -425,6 +450,8 @@ def run_simulation(args, topology, json_data=None):
                 "yaw": str(yaw),
                 "collision_state": str(collision_state),
                 "command": command,
+                "original_command": original_command if not manual else command,
+                "safety_override": safety_override if not manual else None,
                 "state": state,
                 "room": room,
                 "pred_room": pred_room,

@@ -4,7 +4,7 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
 
 ```json
 {
-  "description": "Step 0: MULTIPLE DOORS — Are there multiple open voids? If yes, identify the target room via visual clues (e.g., checkered floor) and IGNORE others. Step 1: ANTI-OSCILLATION CHECK (MANDATORY) — I must read 'mov_history'. What are the last 2 commands? If they are rotations (e.g., B1->C1, C1->B1, B1->B1) and I am still trying to center the door, I am oscillating. I MUST STOP rotating and emit A1 to break the loop. Step 2: POSITION — Where is the target door? (left, right, or center). Step 3: ROUGH CENTERING — If door is left/right AND I am not oscillating, apply Rule 1 and ROTATE (Left=B, Right=C). Step 4: DIAGONAL CHECK — Only if the door IS roughly centered, check frame edges. LEFT edge: [VISIBLE/NOT VISIBLE]? RIGHT edge: [VISIBLE/NOT VISIBLE]? If only one edge is visible, apply Rule 3 (Slide D1/D2). Step 5: Final command decision.",
+  "description": "Step 0: MULTIPLE DOORS — Are there multiple open voids? Identify target via clues (e.g., checkered floor) and IGNORE others. Step 1: ANTI-OSCILLATION — Read 'mov_history'. Last 2 commands rotations? (e.g., C1->B1). If oscillating, DO NOT rotate. If door is central, emit A1. If diagonal, use D1/D2. Step 2: POSITION — Where is the door? (left, right, center, not_visible). Step 3: ROUGH CENTERING — If left/right, apply Rule 1 and ROTATE. If 'center', strictly NO ROTATION, emit A1 to approach. Step 4: DIAGONAL CHECK — If roughly centered, check edges. LEFT edge visible? RIGHT edge visible? Step 5: CROSSING CHECK — Is door_angle 'perpendicular' AND do frames occupy >60% of image? If NO, state remains 'Oriented Towards Door'. If YES and command is A1, transition to 'Position in the center of room'. Step 6: Final command decision.",
   "door_position": "left | center | right | not_visible",
   "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
   "room": "estimated_room_name_or_unknown",
@@ -12,31 +12,31 @@ You must respond with a **single valid JSON object**. It is CRITICAL that you ge
   "movement": "valid_single_movement_command",
   "memory_update": "..."
 }
-```
 
 ✅ Field Definitions
 
-- `"description"`: Detailed reasoning. You MUST use keywords like `'closed'`, `'cabinet'`, `'open void'`, `'wall'` when applicable. The movement chosen must follow from this reasoning.
+    "description": "... Step 4: SYMMETRY & DIAGONAL CHECK — Is one wall dominating the view? If the left wall is huge, angle is 'diagonal_from_left'. If right wall is huge, 'diagonal_from_right'. If perfectly symmetrical, 'perpendicular'. Step 5: PHASE C CHECK — If you are close AND diagonal, you MUST NOT advance (A1) or rotate. You MUST use lateral slides (D1 to slide left, D2 to slide right) to physically center your body. Step 6: CROSSING CHECK..."
 
-- `"door_position"`: Horizontal position of the candidate door opening in the image. Valid values: `"left"`, `"center"`, `"right"`, `"not_visible"`. This answers: WHERE is the door in the frame?
+    "door_position": Horizontal position of the candidate door opening in the image. Valid values: "left", "center", "right", "not_visible". This answers: WHERE is the door in the frame?
 
-- `"door_angle"`: Perpendicularity assessment. Valid values:
-  - `"perpendicular"`: Both doorframe posts are flat vertical lines, no inner depth visible. You are aligned at 0°.
-  - `"diagonal_from_left"`: You are offset to the LEFT of the door. Evidence: large wall on the left + only left frame edge visible, OR right frame inner depth visible at close range.
-  - `"diagonal_from_right"`: You are offset to the RIGHT of the door. Evidence: large wall on the right + only right frame edge visible, OR left frame inner depth visible at close range.
-  - `"unknown"`: Both frames visible but too far to judge inner depth detail, or no door visible.
-  **KEY: You do NOT need to be close to set this field.** If you can only see ONE doorframe edge and the other side is wall, that IS enough to determine the angle. Only use `"unknown"` when BOTH edges are visible but detail is insufficient.
+- `"door_angle"`: Perpendicularity and physical alignment assessment. Valid values:
+    - `"perpendicular"`: SYMMETRICAL VIEW. The door is centered AND the walls/frames on the left and right take up an equal amount of visual space. You are physically aligned at 0 degrees or almost.
+    - `"diagonal_from_left"`: You are physically standing too far to the left. Evidence: A large wall dominates the LEFT side of the image, or you see the inner depth of the right frame.
+    - `"diagonal_from_right"`: You are physically standing too far to the right. Evidence: A large wall dominates the RIGHT side of the image, or you see the inner depth of the left frame.
+    - `"unknown"`: Both frames visible but too far to judge inner depth or symmetry.
 
-- `"room"`: Current room from topological map, or `"unknown"`.
+    "room": Current room from topological map, or "unknown".
 
-- `"state"`: Next FSM state.
+    "state": Next FSM state. CRITICAL: Do NOT output Position in the center of room unless door_angle is perpendicular and the door occupies >60% of the visual frame. Otherwise, stay in Oriented Towards Door.
 
-- `"movement"`: Single command (A1, B1, etc.) chosen AFTER reasoning.
+    "movement": Single command (A1, B1, etc.) chosen AFTER reasoning.
 
-- `"memory_update"`: A short note (max 200 chars) to your future self. Record landmarks, ignored doors, recognized rooms, obstacles, or any observation that will prevent you from repeating mistakes or re-exploring areas. If you receive an `Agent Memory` input, read it before deciding — it contains your notes from previous steps. If nothing new happened, copy the previous memory verbatim.
+    "memory_update": A short note (max 200 chars) to your future self. Record landmarks, ignored doors, recognized rooms, obstacles, or any observation that will prevent you from repeating mistakes or re-exploring areas. If you receive an Agent Memory input, read it before deciding. If nothing new happened, copy the previous memory verbatim.
 
 ⚠️ Important
 
-- Do not add extra text or explanations outside the JSON block.
-- Always follow the allowed command list and transition logic defined in the state prompt.
-- Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.
+    Do not add extra text or explanations outside the JSON block.
+
+    Always follow the allowed command list and transition logic defined in the state prompt.
+
+    Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.

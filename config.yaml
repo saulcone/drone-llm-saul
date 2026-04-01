@@ -10,3 +10,8 @@ top_p: 1
 reasoning_effort: "medium"
 test: False
 
+# Door Detector (Safety Guard) configuration
+# Options: "ollama" (local, sin límites) or "gemini" (API con límites)
+door_detector_backend: "ollama"
+door_detector_model: "llava:7b"  # Para ollama: llava:7b, moondream, etc.
+
