@@ -441,6 +441,12 @@ def run_simulation(args, topology, json_data=None):
             # set predicted room
             pred_room = room 
             
+            # Initialize SPF variables for manual mode
+            target_point = None
+            distance = None
+            confidence = None
+            oscillation_override = False
+            
             movement = manual_control(key_ctrl)
             pred = np.array([[*movement, 0]], dtype=np.float32)
             action.add_continuous(pred)
@@ -472,11 +478,21 @@ def run_simulation(args, topology, json_data=None):
                 print("Warning: Model returned None, skipping step.")
                 continue
 
-            command = response.get("movement", "E")
+            # SPF System: Extract waypoint data and computed movement
+            command = response.get("movement", "E")  # Already computed by waypoint_controller
+            target_point = response.get("target_point", [0.5, 0.5])
+            distance = response.get("distance", "DESCONOCIDO")
+            confidence = response.get("confidence", "MEDIA")
             pred_room = response.get("room", "")
             reasoning = response.get("reasoning", "")
             mission_progress = response.get("mission_progress", "")
             agent_memory = response.get("memory_update", agent_memory)
+            oscillation_override = response.get("_oscillation_override", False)
+            
+            # Log SPF decision
+            print(f"[SPF] Point: {target_point}, Dist: {distance}, Conf: {confidence} -> {command}")
+            if oscillation_override:
+                print(f"[SPF] Oscillation detected, using anti-oscillation strategy")
             
             # Update mission phase based on VLM response
             mission_manager.update_phase(response, room)
@@ -529,6 +545,12 @@ def run_simulation(args, topology, json_data=None):
                 "command": command,
                 "original_command": original_command if not manual else command,
                 "safety_override": safety_override if not manual else None,
+                # SPF waypoint data
+                "target_point": target_point if not manual else None,
+                "distance": distance if not manual else None,
+                "confidence": confidence if not manual else None,
+                "oscillation_override": oscillation_override if not manual else False,
+                # Mission data
                 "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
                 "room": room,
                 "pred_room": pred_room,

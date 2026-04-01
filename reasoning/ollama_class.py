@@ -6,6 +6,7 @@ import ollama
 
 from reasoning.load_prompts import load_system_prompt
 from reasoning.VLMModel import VLMBaseModel
+from reasoning.waypoint_controller import WaypointController
 
 logger = logging.getLogger(__name__)
 
@@ -13,13 +14,23 @@ class OllamaDescriptor(VLMBaseModel):
     def __init__(self, model="qwen3-vl:235b-cloud", temperature=0.0):
         self.model = model
         self.temperature = temperature
+        # Initialize waypoint controller for SPF system
+        self.waypoint_controller = WaypointController()
 
     def generate_trajectory(self, image, user_query, topology=None,
                             mission_phase=None, mission_description=None, target_description=None,
                             previous_movement=None, mov_history=None, agent_memory=None, test=False):
         
         if test:
-            return {"room": "hallway", "movement": "A2", "reasoning": "Test", "mission_progress": "Testing"}
+            return {
+                "room": "hallway", 
+                "movement": "A2", 
+                "reasoning": "Test",
+                "target_point": [0.5, 0.45],
+                "distance": "LEJOS",
+                "confidence": "ALTA",
+                "mission_progress": "Testing"
+            }
 
         # 1. Encode image to Base64
         img_b64_str = self.encode_image_base64(image)
@@ -67,8 +78,57 @@ class OllamaDescriptor(VLMBaseModel):
             elif response_text.startswith("```"): 
                 response_text = response_text[3:-3].strip()
 
-            return json.loads(response_text)
+            parsed_response = json.loads(response_text)
+            
+            # 7. SPF: Convert waypoint to movement command
+            parsed_response = self._process_waypoint_response(parsed_response)
+            
+            return parsed_response
             
         except Exception as e:
             logger.exception(f"Error calling Ollama model {self.model}: {str(e)}")
             return None
+    
+    def _process_waypoint_response(self, response):
+        """
+        Process VLM response with SPF (See, Point, Fly) system.
+        
+        Takes the target_point from VLM and converts it to a movement command
+        using the WaypointController.
+        
+        Args:
+            response: Dict with target_point, distance, confidence, etc.
+            
+        Returns:
+            Dict with added 'movement' field computed from waypoint
+        """
+        # Extract waypoint data
+        target_point = response.get("target_point", [0.5, 0.5])
+        distance = response.get("distance", "DESCONOCIDO")
+        confidence = response.get("confidence", "MEDIA")
+        
+        # Validate target_point format
+        if not isinstance(target_point, (list, tuple)) or len(target_point) != 2:
+            logger.warning(f"Invalid target_point format: {target_point}, using default center")
+            target_point = [0.5, 0.5]
+        
+        # Convert waypoint to movement command
+        movement = self.waypoint_controller.compute_command(
+            target_point=target_point,
+            distance=distance,
+            confidence=confidence
+        )
+        
+        # Check for oscillation and apply anti-oscillation if needed
+        if self.waypoint_controller.check_oscillation():
+            logger.info("[SPF] Oscillation detected, applying anti-oscillation strategy")
+            movement = self.waypoint_controller.get_anti_oscillation_command(target_point, distance)
+            response["_oscillation_override"] = True
+        
+        # Add computed movement to response
+        response["movement"] = movement
+        
+        # Log SPF decision
+        logger.info(f"[SPF] Point: {target_point}, Dist: {distance}, Conf: {confidence} -> {movement}")
+        
+        return response

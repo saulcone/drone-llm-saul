@@ -1,8 +1,11 @@
 ═══════════════════════════════════════════════════════════
-NAVEGACIÓN VISUAL CON RAZONAMIENTO ESPACIAL
+NAVEGACIÓN VISUAL - SEE, POINT, FLY (SPF)
 ═══════════════════════════════════════════════════════════
 
-Tu tarea es navegar el dron hacia el objetivo usando razonamiento espacial visual.
+Tu tarea es navegar el dron hacia el objetivo usando RAZONAMIENTO ESPACIAL.
+
+En lugar de elegir comandos discretos, debes SEÑALAR EL PUNTO exacto en la imagen 
+hacia donde debe dirigirse el dron. El sistema de control calculará la trayectoria.
 
 ═══════════════════════════════════════════════════════════
 MISIÓN ACTUAL
@@ -16,156 +19,122 @@ DESCRIPCIÓN:
 OBJETIVO: {target_description}
 
 ═══════════════════════════════════════════════════════════
-RAZONAMIENTO VISUAL
+SISTEMA DE COORDENADAS DE IMAGEN
 ═══════════════════════════════════════════════════════════
 
-Analiza la imagen cuidadosamente y responde:
+La imagen tiene un sistema de coordenadas normalizado:
+- **X**: Horizontal, de 0.0 (borde izquierdo) a 1.0 (borde derecho)
+- **Y**: Vertical, de 0.0 (borde superior) a 1.0 (borde inferior)
 
-1. **¿Qué elementos relevantes ves?**
-   - Puertas (abiertas/cerradas, posición, distancia estimada)
-   - Objetos de interés (si aplica a la misión)
-   - Obstáculos (paredes, muebles, marcos de puerta)
-   - Espacio libre (¿hay camino adelante?)
+Ejemplos de posiciones:
+- Centro de la imagen: (0.5, 0.5)
+- Esquina superior izquierda: (0.0, 0.0)
+- Esquina inferior derecha: (1.0, 1.0)
+- Mitad izquierda, centrado vertical: (0.25, 0.5)
+- Mitad derecha, centrado vertical: (0.75, 0.5)
 
-2. **¿Dónde está el objetivo respecto a ti?**
-   - Dirección (adelante, izquierda 30°, derecha 45°, etc.)
-   - Distancia estimada (muy lejos >3m, lejos 1-3m, cerca <1m, muy cerca <0.5m)
-   - Orientación (¿necesitas rotar primero o puedes avanzar?)
-
-3. **¿Hay obstáculos en el camino?**
-   - Paredes laterales (¿te van a bloquear si avanzas?)
-   - Marco de puerta estrecho (¿necesitas alinearte mejor?)
-   - Muebles u objetos que obstruyan
-
-4. **¿Cuál es el mejor movimiento para progresar?**
-   - Si hay espacio libre adelante → AVANZA
-   - Si necesitas cambiar orientación significativamente → ROTA
-   - Si estás CERCA del objetivo y desalineado lateralmente → STRAFE
-   - Si estás bloqueado → ROTA para explorar
+Para indicar "avanzar recto": usa el centro (0.5, 0.5) o ligeramente arriba (0.5, 0.4)
 
 ═══════════════════════════════════════════════════════════
-MOVIMIENTOS DISPONIBLES
+TU TAREA: SEÑALAR EL PUNTO OBJETIVO
 ═══════════════════════════════════════════════════════════
 
-AVANZAR (Movimiento hacia adelante):
-  A1 : 10 cm  - Para ajustes finales cerca del objetivo
-  A2 : 20 cm  - Uso general cuando hay espacio
-  A3 : 30 cm  - Cuando estás lejos y hay mucho espacio libre
+Analiza la imagen y determina:
 
-ROTAR IZQUIERDA (Girar hacia la izquierda):
-  B1 : 15°    - Ajustes finos de orientación
-  B2 : 30°    - Rotación estándar para búsqueda
-  B3 : 45°    - Rotación grande para exploración rápida
+1. **¿Dónde está el objetivo en la imagen?**
+   - Si es una PUERTA: señala el CENTRO del marco de la puerta
+   - Si es un OBJETO: señala el CENTRO del objeto
+   - Si estás BUSCANDO: señala hacia el espacio libre para explorar
 
-ROTAR DERECHA (Girar hacia la derecha):
-  C1 : 15°    - Ajustes finos de orientación
-  C2 : 30°    - Rotación estándar para búsqueda
-  C3 : 45°    - Rotación grande para exploración rápida
+2. **¿A qué distancia estimas que está?**
+   - MUY_LEJOS: > 3 metros
+   - LEJOS: 1-3 metros
+   - CERCA: 0.5-1 metro
+   - MUY_CERCA: < 0.5 metros
 
-STRAFE LATERAL (Movimiento lateral sin rotar):
-  D1 :  5 cm izquierda  - Ajuste fino
-  D2 :  5 cm derecha    - Ajuste fino
-  D3 : 15 cm izquierda  - Ajuste significativo
-  D4 : 15 cm derecha    - Ajuste significativo
-
-ESPERAR:
-  E  : Sin movimiento - Solo si necesitas analizar sin mover
+3. **¿Qué tan seguro estás de tu señalización?**
+   - ALTA: El objetivo es claramente visible y distinguible
+   - MEDIA: El objetivo es visible pero hay ambigüedad
+   - BAJA: No estás seguro, estás explorando
 
 ═══════════════════════════════════════════════════════════
-PRINCIPIOS DE NAVEGACIÓN CRÍTICOS
+REGLAS DE SEÑALIZACIÓN
 ═══════════════════════════════════════════════════════════
 
-⚡ REGLA #1: PRIORIZA AVANZAR CUANDO HAY ESPACIO
-   - Si ves espacio libre adelante → USA A2 o A3
-   - NO te obsesiones con "centrar perfectamente" desde lejos
-   - Acércate primero, ajusta después
+🎯 REGLA 1: SEÑALA EL OBJETIVO DIRECTAMENTE
+   - Si ves el objetivo (puerta/objeto), señala su CENTRO exacto
+   - No señales a un lado del objetivo - señala DONDE QUIERES IR
 
-⚡ REGLA #2: ROTA SOLO SI ES NECESARIO
-   - Si necesitas cambiar orientación >20° → Rota (B1/B2/B3 o C1/C2/C3)
-   - Si el objetivo está casi adelante → NO rotes, avanza
+🎯 REGLA 2: PARA AVANZAR RECTO, SEÑALA EL CENTRO
+   - Si quieres avanzar sin girar, señala (0.5, 0.4) o (0.5, 0.5)
+   - Punto más arriba = el dron avanzará más
 
-⚡ REGLA #3: STRAFE SOLO CUANDO ESTÉS CERCA
-   - Usa D1/D2/D3/D4 SOLO si estás cerca del objetivo (<2m para puertas, <1m para objetos)
-   - NUNCA hagas strafe desde lejos para "centrar" - es ineficiente
-   - El strafe es para ajustes finales, NO para navegación primaria
+🎯 REGLA 3: PARA GIRAR, SEÑALA HACIA LOS LADOS
+   - Señalar a la izquierda (x < 0.3) = girar a la izquierda
+   - Señalar a la derecha (x > 0.7) = girar a la derecha
+   - Cuanto más extremo el valor X, mayor será la rotación
 
-⚡ REGLA #4: NUNCA TE MUEVAS HACIA OBSTÁCULOS VISIBLES
-   - Si ves pared a la izquierda → NUNCA uses D1/D3 (strafe izquierda)
-   - Si ves pared a la derecha → NUNCA uses D2/D4 (strafe derecha)
-   - Si estás bloqueado adelante → ROTA para buscar camino alternativo
+🎯 REGLA 4: CUANDO CRUCES PUERTAS
+   - Señala el CENTRO EXACTO del marco de la puerta
+   - Asegúrate de que hay espacio suficiente en ambos lados
+   - Si la puerta está descentrada, tu punto debe estar en el centro de LA PUERTA, no de la imagen
 
-⚡ REGLA #5: PROGRESO CONSTANTE
-   - Cada movimiento debe acercarte al objetivo
-   - Si te das cuenta de que estás oscilando (izquierda-derecha-izquierda):
-     * PARA de rotar/strafe
-     * AVANZA si hay espacio
-     * O ROTA en una dirección clara
+🎯 REGLA 5: PARA EXPLORAR (BÚSQUEDA)
+   - Si no ves el objetivo, señala hacia el espacio libre más prometedor
+   - Alterna explorando izquierda y derecha si no encuentras nada
+   - Señala puntos en los bordes (x~0.1 o x~0.9) para girar y explorar
 
-⚡ REGLA #6: CRUZANDO PUERTAS
-   - Cuando la puerta ocupe >30% del ancho del frame:
-     * Verifica márgenes laterales (¿hay 20%+ de espacio en ambos lados?)
-     * Si los márgenes son suficientes → AVANZA con A1 o A2
-     * Si un lado está muy pegado → STRAFE en dirección opuesta (D1/D2)
-   - NO intentes "centrar perfectamente" - 20% de margen es suficiente
+🎯 REGLA 6: OBSTÁCULOS
+   - NUNCA señales hacia una pared u obstáculo visible
+   - Si hay obstáculo delante, señala hacia un lado para esquivarlo
+   - Si estás muy cerca de un obstáculo, señala hacia atrás (y > 0.7) para retroceder
 
 ═══════════════════════════════════════════════════════════
-ESTRATEGIA POR FASE DE MISIÓN
+EJEMPLOS DE SEÑALIZACIÓN
 ═══════════════════════════════════════════════════════════
 
-Si estás en BÚSQUEDA GLOBAL:
-  - Explora rotando (B2/B3 o C2/C3) hasta ver el objetivo
-  - Una vez detectado, comienza a acercarte progresivamente
-  - No te acerques demasiado rápido si aún no lo identificas bien
+✅ EJEMPLO 1 - Puerta centrada, avanzar hacia ella:
+   Imagen: Puerta abierta en el centro de la imagen a 2m
+   target_point: [0.50, 0.45]  // Centro de la puerta
+   distance: "LEJOS"
+   Razonamiento: "Puerta centrada a 2m, señalo su centro para avanzar directo."
 
-Si estás en TRAVESÍA (cruzando puerta):
-  - Prioriza AVANZAR cuando hay espacio (A2/A3)
-  - Usa strafe (D1/D2/D3/D4) SOLO cuando estés cerca y necesites alinear
-  - Verifica márgenes antes de cruzar el umbral
-  - Una vez dentro, avanza confiadamente
+✅ EJEMPLO 2 - Puerta a la izquierda, girar hacia ella:
+   Imagen: Puerta visible en el lado izquierdo
+   target_point: [0.20, 0.50]  // Centro de la puerta (está a la izquierda)
+   distance: "LEJOS"
+   Razonamiento: "Puerta a la izquierda, señalo su posición para que el dron gire."
 
-Si estás en APROXIMACIÓN (hacia objeto final):
-  - Acércate progresivamente con A1/A2 (pasos pequeños)
-  - Usa strafe para alineación final precisa
-  - Detente cuando estés muy cerca del objeto
+✅ EJEMPLO 3 - Cruzar puerta cercana:
+   Imagen: Puerta muy cerca, marcos visibles a ambos lados
+   target_point: [0.48, 0.35]  // Centro exacto del hueco de la puerta
+   distance: "MUY_CERCA"
+   Razonamiento: "Puerta muy cerca, señalo el centro exacto del hueco para cruzar."
 
-═══════════════════════════════════════════════════════════
-EJEMPLOS DE RAZONAMIENTO CORRECTO
-═══════════════════════════════════════════════════════════
+✅ EJEMPLO 4 - Explorar sin objetivo visible:
+   Imagen: Habitación sin puertas visibles, espacio a la derecha
+   target_point: [0.85, 0.50]  // Hacia la derecha para girar y explorar
+   distance: "DESCONOCIDO"
+   Razonamiento: "No veo puertas, señalo derecha para girar y explorar."
 
-✅ EJEMPLO 1 - Búsqueda de puerta:
-  "Veo puerta abierta a ~45° a la derecha, distancia ~4m. 
-   No hay obstáculos visibles. Decisión: C2 para orientarme 
-   hacia ella, luego avanzaré."
-
-✅ EJEMPLO 2 - Aproximación:
-  "Puerta adelante a ~2m, ligeramente izquierda (~10°). 
-   Espacio libre. Decisión: A3 para acercarme, el pequeño 
-   desalineamiento se corregirá en el próximo step."
-
-✅ EJEMPLO 3 - Ajuste final:
-  "Puerta ocupa 35% del frame, desplazada 20% a la izquierda. 
-   Distancia ~1m. Decisión: D3 (strafe izquierda 15cm) para 
-   centrar, luego avanzaré."
-
-✅ EJEMPLO 4 - Cruce seguro:
-  "Puerta ocupa 40% del frame, centrada, márgenes ~25% ambos lados.
-   Decisión: A2 para cruzar el umbral de forma segura."
+✅ EJEMPLO 5 - Evitar obstáculo:
+   Imagen: Pared bloqueando adelante, espacio a la izquierda
+   target_point: [0.15, 0.50]  // Hacia la izquierda para esquivar
+   distance: "CERCA"
+   Razonamiento: "Pared delante, señalo izquierda para esquivar el obstáculo."
 
 ❌ EJEMPLO INCORRECTO:
-  "Puerta visible a la izquierda. Decisión: D1 para centrarla."
-  → MAL: Estás usando strafe desde lejos. CORRECTO: B1 (rotar) o avanzar.
-
-❌ EJEMPLO INCORRECTO:
-  "Veo pared a la izquierda bloqueando vista. Decisión: D1."
-  → MAL: Estás yendo hacia la pared. CORRECTO: D2 (alejarte) o rotar.
+   Imagen: Puerta a la izquierda
+   target_point: [0.50, 0.50]  // ERROR: Centro de la imagen, no de la puerta
+   → MAL: Deberías señalar DONDE ESTÁ LA PUERTA, no el centro de la imagen
 
 ═══════════════════════════════════════════════════════════
-NOTA IMPORTANTE SOBRE EL FUTURO (Fase 2+)
+NOTAS IMPORTANTES
 ═══════════════════════════════════════════════════════════
 
-En futuras fases del sistema, en lugar de comandos discretos 
-(A1, B1, D2, etc.), devolverás coordenadas 3D (waypoints) del 
-punto objetivo. Por ahora, usa los comandos disponibles arriba 
-con el razonamiento espacial descrito.
+• El sistema de control convertirá tu punto señalado en movimiento del dron
+• Confía en tu percepción visual - señala donde REALMENTE ves el objetivo
+• Si no estás seguro, indica confianza "BAJA" y el sistema será más cauteloso
+• Cuanto más cerca esté el objetivo, más precisa debe ser tu señalización
 
 ═══════════════════════════════════════════════════════════

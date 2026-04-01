@@ -1,10 +1,10 @@
 ═══════════════════════════════════════════════════════════
-OUTPUT FORMAT
+OUTPUT FORMAT - SEE, POINT, FLY (SPF)
 ═══════════════════════════════════════════════════════════
 
 You must respond with a **single valid JSON object**. 
 
-Generate the `reasoning` field FIRST to think through your decision before acting.
+Generate the `reasoning` field FIRST to think through your decision before pointing.
 
 ═══════════════════════════════════════════════════════════
 JSON STRUCTURE
@@ -12,10 +12,12 @@ JSON STRUCTURE
 
 ```json
 {
-  "reasoning": "Breve explicación de lo que ves y por qué elegiste este movimiento (2-3 oraciones)",
-  "movement": "A2",
+  "reasoning": "Breve explicación de lo que ves y por qué señalas este punto (2-3 oraciones)",
+  "target_point": [0.50, 0.45],
+  "distance": "LEJOS",
+  "confidence": "ALTA",
   "room": "living room & kitchen",
-  "mission_progress": "Searching for door | Door visible far | Door close | Crossing door | Searching object | Approaching object | Reached target",
+  "mission_progress": "Door visible far",
   "memory_update": "Notas clave para recordar en el siguiente step"
 }
 ```
@@ -27,22 +29,38 @@ FIELD DEFINITIONS
 **"reasoning"** (string):
   Explica tu razonamiento visual y decisión en 2-3 oraciones:
   - ¿Qué ves relevante para la misión? (puerta, objeto, obstáculos)
-  - ¿Por qué elegiste este movimiento específico?
+  - ¿Por qué señalas este punto específico?
   - ¿Estás progresando hacia el objetivo?
   
-  Ejemplo: "Veo puerta abierta adelante a ~2m, ligeramente a la izquierda 
-  (~15°). Hay espacio libre. Decisión: A3 para acercarme rápidamente, el 
-  pequeño desalineamiento se corregirá después."
+  Ejemplo: "Veo puerta abierta a la izquierda a ~2m, con marco visible. 
+  Señalo el centro de la puerta (0.25, 0.45) para que el dron gire 
+  hacia ella y avance."
 
-**"movement"** (string):
-  El comando de movimiento a ejecutar. Debe ser EXACTAMENTE uno de:
-  - A1, A2, A3 (avanzar 10/20/30cm)
-  - B1, B2, B3 (rotar izquierda 15°/30°/45°)
-  - C1, C2, C3 (rotar derecha 15°/30°/45°)
-  - D1, D2, D3, D4 (strafe izq/der 5cm/15cm)
-  - E (esperar)
+**"target_point"** (array [x, y]):
+  Coordenadas normalizadas del punto objetivo en la imagen.
+  - x: 0.0 (borde izquierdo) a 1.0 (borde derecho)
+  - y: 0.0 (borde superior) a 1.0 (borde inferior)
   
-  Elige según los principios de navegación explicados arriba.
+  Ejemplos:
+  - [0.50, 0.45]: Centro-arriba (avanzar recto)
+  - [0.20, 0.50]: Izquierda (girar izquierda hacia objetivo)
+  - [0.80, 0.50]: Derecha (girar derecha hacia objetivo)
+  - [0.50, 0.30]: Arriba-centro (avanzar más rápido)
+  - [0.50, 0.70]: Abajo-centro (retroceder/frenar)
+
+**"distance"** (string):
+  Distancia estimada al objetivo. Debe ser uno de:
+  - "MUY_LEJOS": > 3 metros
+  - "LEJOS": 1-3 metros
+  - "CERCA": 0.5-1 metro
+  - "MUY_CERCA": < 0.5 metros
+  - "DESCONOCIDO": Cuando estás explorando sin objetivo visible
+
+**"confidence"** (string):
+  Tu nivel de confianza en la señalización. Debe ser uno de:
+  - "ALTA": El objetivo es claramente visible y distinguible
+  - "MEDIA": El objetivo es visible pero hay cierta ambigüedad
+  - "BAJA": No estás seguro, explorando o adivinando
 
 **"room"** (string):
   Nombre de la habitación actual según la topología, o "unknown" si no estás seguro.
@@ -65,25 +83,11 @@ FIELD DEFINITIONS
   Notas breves (máximo 200 caracteres) para tu futuro yo en el próximo step.
   
   Información útil a recordar:
-  - Obstáculos detectados ("Pared a la izquierda, evitar D1")
-  - Progreso de orientación ("Puerta ahora centrada, siguiente: avanzar")
-  - Decisiones tomadas ("Strafing derecha para margen, luego cruzar")
+  - Obstáculos detectados ("Pared a la izquierda, evitar")
+  - Progreso de orientación ("Puerta ahora centrada")
+  - Decisiones tomadas ("Girando izquierda para centrar puerta")
   
   NO repitas información obvia de la imagen - solo contexto útil.
-  
-  Ejemplo: "Puerta bathroom identificada, necesita margen derecho. 
-  Evitar strafe izquierda."
-
-═══════════════════════════════════════════════════════════
-VALIDATION RULES
-═══════════════════════════════════════════════════════════
-
-1. JSON must be valid and parseable
-2. All fields are REQUIRED (no missing fields)
-3. "movement" must be exactly one of the valid commands (A1, A2, ..., E)
-4. "mission_progress" must be one of the predefined states listed above
-5. "reasoning" should be informative but concise (2-3 sentences)
-6. "memory_update" max 200 characters
 
 ═══════════════════════════════════════════════════════════
 EXAMPLE OUTPUTS
@@ -92,8 +96,10 @@ EXAMPLE OUTPUTS
 **Example 1 - Searching for door:**
 ```json
 {
-  "reasoning": "No veo puertas abiertas en la vista actual. Necesito explorar más la habitación. Decisión: C2 para rotar 30° derecha y escanear nueva área.",
-  "movement": "C2",
+  "reasoning": "No veo puertas abiertas en la vista actual. Necesito explorar más la habitación. Señalo hacia la derecha para rotar y escanear nueva área.",
+  "target_point": [0.85, 0.50],
+  "distance": "DESCONOCIDO",
+  "confidence": "BAJA",
   "room": "living room & kitchen",
   "mission_progress": "Searching for door",
   "memory_update": "Explorando sala. Ya revisé frente y izquierda, ahora girando derecha."
@@ -103,55 +109,90 @@ EXAMPLE OUTPUTS
 **Example 2 - Door visible, approaching:**
 ```json
 {
-  "reasoning": "Puerta abierta visible adelante a ~3m, bien centrada. Espacio libre sin obstáculos. Decisión: A3 para avanzar 30cm y acercarme al objetivo.",
-  "movement": "A3",
+  "reasoning": "Puerta abierta visible adelante a ~3m, bien centrada con marco visible. Señalo el centro de la puerta para avanzar directamente hacia ella.",
+  "target_point": [0.50, 0.42],
+  "distance": "LEJOS",
+  "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Door visible far",
   "memory_update": "Puerta bathroom centrada. Continuar avances hacia ella."
 }
 ```
 
-**Example 3 - Door close, adjusting alignment:**
+**Example 3 - Door on the left, turning:**
 ```json
 {
-  "reasoning": "Puerta ocupa 35% del frame, desplazada 20% a la izquierda. Distancia ~1m. Necesito strafe izquierda para centrarla antes de cruzar. Decisión: D3.",
-  "movement": "D3",
+  "reasoning": "Puerta visible a la izquierda a ~2m. El centro de la puerta está en el tercio izquierdo de la imagen. Señalo su posición para que el dron gire hacia ella.",
+  "target_point": [0.22, 0.48],
+  "distance": "LEJOS",
+  "confidence": "ALTA",
   "room": "living room & kitchen",
-  "mission_progress": "Door close",
-  "memory_update": "Ajustando alineación lateral. Después de centrar, avanzar para cruzar."
+  "mission_progress": "Door visible far",
+  "memory_update": "Puerta bathroom detectada a la izquierda. Girando hacia ella."
 }
 ```
 
-**Example 4 - Crossing door safely:**
+**Example 4 - Door close, crossing:**
 ```json
 {
-  "reasoning": "Puerta centrada, ocupa 40% del frame, márgenes laterales ~25% ambos lados. Seguro para cruzar. Decisión: A2 para atravesar umbral.",
-  "movement": "A2",
+  "reasoning": "Puerta muy cerca (~0.8m), marco visible a ambos lados con márgenes suficientes. Señalo el centro exacto del hueco para cruzar de forma segura.",
+  "target_point": [0.48, 0.38],
+  "distance": "MUY_CERCA",
+  "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Crossing door",
-  "memory_update": "Cruzando umbral. Verificar habitación al otro lado."
+  "memory_update": "Cruzando umbral. Margen izq ~25%, der ~28%."
 }
 ```
 
-**Example 5 - Object detected, approaching:**
+**Example 5 - Avoiding obstacle:**
 ```json
 {
-  "reasoning": "Sink visible adelante a ~2m, ligeramente derecha. Es el objetivo. Decisión: A2 para acercarme, ajustaré alineación después.",
-  "movement": "A2",
-  "room": "bathroom",
-  "mission_progress": "Approaching object",
-  "memory_update": "Sink detectado. Aproximación progresiva, ajuste fino en siguiente step."
+  "reasoning": "Veo pared/obstáculo bloqueando el camino directo. Hay espacio libre a la izquierda. Señalo hacia la izquierda para esquivar el obstáculo.",
+  "target_point": [0.15, 0.50],
+  "distance": "CERCA",
+  "confidence": "MEDIA",
+  "room": "living room & kitchen",
+  "mission_progress": "Door visible far",
+  "memory_update": "Esquivando obstáculo. Puerta debería estar a la izquierda."
 }
 ```
+
+**Example 6 - Object detected, approaching:**
+```json
+{
+  "reasoning": "Sink visible adelante a ~1.5m, ligeramente a la derecha. Es el objetivo de la misión. Señalo su centro para acercarme.",
+  "target_point": [0.58, 0.45],
+  "distance": "LEJOS",
+  "confidence": "ALTA",
+  "room": "bathroom",
+  "mission_progress": "Approaching object",
+  "memory_update": "Sink detectado. Aproximación en progreso."
+}
+```
+
+═══════════════════════════════════════════════════════════
+VALIDATION RULES
+═══════════════════════════════════════════════════════════
+
+1. JSON must be valid and parseable
+2. All fields are REQUIRED (no missing fields)
+3. "target_point" must be an array of exactly 2 numbers between 0.0 and 1.0
+4. "distance" must be one of: "MUY_LEJOS", "LEJOS", "CERCA", "MUY_CERCA", "DESCONOCIDO"
+5. "confidence" must be one of: "ALTA", "MEDIA", "BAJA"
+6. "mission_progress" must be one of the predefined states listed above
+7. "reasoning" should be informative but concise (2-3 sentences)
+8. "memory_update" max 200 characters
 
 ═══════════════════════════════════════════════════════════
 CRITICAL REMINDERS
 ═══════════════════════════════════════════════════════════
 
-1. **Prioritize ADVANCING** when there's space ahead
-2. **Use STRAFE only when CLOSE** to target (<2m for doors, <1m for objects)
-3. **Never strafe towards walls** visible in your view
-4. **Progress constantly** - avoid oscillating back and forth
-5. **Keep reasoning concise** but informative
+1. **Point at the TARGET** - Not at empty space, but where you want to go
+2. **Point at the CENTER of doors/objects** - Not at the edges
+3. **Never point towards walls** - If obstacle ahead, point to the side
+4. **Center (0.5, 0.5) = advance straight** - Use when path is clear
+5. **Extreme X values = rotate** - x < 0.3 or x > 0.7 causes rotation
+6. **Confidence matters** - Low confidence = slower, more cautious movement
 
 ═══════════════════════════════════════════════════════════
