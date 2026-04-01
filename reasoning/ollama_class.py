@@ -14,49 +14,54 @@ class OllamaDescriptor(VLMBaseModel):
         self.model = model
         self.temperature = temperature
 
-    def generate_trajectory(self, image, user_query, topology=None, state=None,
+    def generate_trajectory(self, image, user_query, topology=None,
+                            mission_phase=None, mission_description=None, target_description=None,
                             previous_movement=None, mov_history=None, agent_memory=None, test=False):
         
         if test:
-            return {"room": "hallway", "movement": "B3", "state": "Oriented Towards Door", "description": "Test"}
+            return {"room": "hallway", "movement": "A2", "reasoning": "Test", "mission_progress": "Testing"}
 
-        # 1. Codificar imagen a Base64
+        # 1. Encode image to Base64
         img_b64_str = self.encode_image_base64(image)
         
-        # 2. Construir el contexto del usuario (¡Ahora con memoria!)
+        # 2. Build user context
         user_text_parts = [user_query]
-        if state: 
-            user_text_parts.append("Current FSM state: " + state)
+        
         if topology: 
             user_text_parts.append("Topology: " + json.dumps(topology))
         if previous_movement: 
             user_text_parts.append("Previous movement command: " + previous_movement)
         if mov_history: 
             user_text_parts.append("Movement history (last commands): " + str(mov_history))
-            
-        # 👇 AQUÍ INYECTAMOS LA MEMORIA EPISÓDICA AL MODELO 👇
+        
+        # Episodic memory injection
         if agent_memory: 
             user_text_parts.append("Agent internal memory (Notes from previous step): " + str(agent_memory))
             
         user_text = "\n\n".join(user_text_parts)
 
-        # 3. Cargar los prompts
-        system_prompt = load_system_prompt(path_dir="prompts", system_prompt_path="drone_system_prompt.txt", output_prompt_path="output_prompt.txt", curr_state=state)
+        # 3. Load unified prompt with mission injection
+        system_prompt = load_system_prompt(
+            path_dir="prompts",
+            mission_phase=mission_phase or "GENERAL",
+            mission_description=mission_description or "Navigate freely",
+            target_description=target_description or "Unknown"
+        )
 
-        # 4. Montar los mensajes formato Ollama
+        # 4. Build Ollama messages
         messages = [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_text, "images": [img_b64_str]}
         ]        
 
         try:
-            # 5. Llamada a la API local
+            # 5. Call Ollama API
             response = ollama.chat(model=self.model, messages=messages, format='json', options={"temperature": self.temperature})
             
-            # 6. Parseo seguro de JSON
+            # 6. Safe JSON parsing
             response_text = response['message']['content'].strip()
             
-            # Limpiamos las posibles etiquetas markdown que Qwen a veces devuelve
+            # Clean markdown tags that Qwen sometimes returns
             if response_text.startswith("```json"): 
                 response_text = response_text[7:-3].strip()
             elif response_text.startswith("```"): 

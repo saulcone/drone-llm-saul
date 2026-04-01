@@ -1,39 +1,49 @@
 import os
 
 
-def load_system_prompt(path_dir, system_prompt_path,
-                       output_prompt_path, curr_state):
-    """Load the system prompt from a file."""
-    print("current state: " + curr_state)
-    if curr_state == "Recognize Room":
-        state_prompt_path = "state_0.txt"
-    elif curr_state == "Position in the center of room":
-        state_prompt_path = "state_1.txt"
-    elif curr_state == "Stay on Room":
-        state_prompt_path = "state_2.txt"
-    elif curr_state == "Search Object":
-        state_prompt_path = "state_3.txt"
-    elif curr_state == "Reach Object":
-        state_prompt_path = "state_4.txt"
-    elif curr_state == "Describe Object":
-        state_prompt_path = "state_5.txt"
-    elif curr_state == "Search open Door":
-        state_prompt_path = "state_6.txt"
-    elif curr_state == "Oriented Towards Door":
-        state_prompt_path = "state_7.txt"
-    elif curr_state == "Go Through Door":
-        state_prompt_path = "state_8.txt"
+def load_system_prompt(path_dir, mission_phase, mission_description, target_description):
+    """
+    Load unified prompt with dynamic mission injection.
+    
+    Args:
+        path_dir: Directory containing prompt files
+        mission_phase: Current mission phase (e.g., "BÚSQUEDA GLOBAL")
+        mission_description: Detailed description of current mission
+        target_description: Target object/location description
+        
+    Returns:
+        Complete system prompt with mission context injected
+    """
+    print(f"[PROMPT] Loading unified prompt for mission phase: {mission_phase}")
+    
     try:
-        system_prompt_path = os.path.join(path_dir, system_prompt_path)
-        state_prompt_path = os.path.join(path_dir, state_prompt_path)
-        output_prompt_path = os.path.join(path_dir, output_prompt_path)
-        with open(system_prompt_path, "r", encoding="utf-8") as f:
-            system_prompt =  f.read()
-        with open(state_prompt_path, "r", encoding="utf-8") as f:
-            state_prompt =  f.read()
+        # Load base prompt files
+        system_base_path = os.path.join(path_dir, "drone_system_prompt.txt")
+        mission_prompt_path = os.path.join(path_dir, "unified_mission_prompt.txt")
+        output_prompt_path = os.path.join(path_dir, "output_prompt.txt")
+        
+        with open(system_base_path, "r", encoding="utf-8") as f:
+            system_base = f.read()
+        
+        with open(mission_prompt_path, "r", encoding="utf-8") as f:
+            mission_prompt = f.read()
+        
         with open(output_prompt_path, "r", encoding="utf-8") as f:
-            output_prompt =  f.read()        
-        prompt = system_prompt + "\n" + state_prompt + "\n" + output_prompt
-        return prompt
-    except FileNotFoundError:
-        raise RuntimeError(f"System prompt file not found at {prompt}")
+            output_prompt = f.read()
+        
+        # Inject mission context dynamically
+        mission_prompt = mission_prompt.format(
+            mission_phase=mission_phase,
+            mission_description=mission_description,
+            target_description=target_description
+        )
+        
+        # Combine all prompts
+        full_prompt = system_base + "\n\n" + mission_prompt + "\n\n" + output_prompt
+        
+        return full_prompt
+        
+    except FileNotFoundError as e:
+        raise RuntimeError(f"Prompt file not found: {str(e)}")
+    except KeyError as e:
+        raise RuntimeError(f"Missing placeholder in mission prompt: {str(e)}")

@@ -1,42 +1,157 @@
-## 📤 Output Format
+═══════════════════════════════════════════════════════════
+OUTPUT FORMAT
+═══════════════════════════════════════════════════════════
 
-You must respond with a **single valid JSON object**. It is CRITICAL that you generate the `description` field FIRST to reason before acting:
+You must respond with a **single valid JSON object**. 
+
+Generate the `reasoning` field FIRST to think through your decision before acting.
+
+═══════════════════════════════════════════════════════════
+JSON STRUCTURE
+═══════════════════════════════════════════════════════════
 
 ```json
 {
-  "description": "Step 0: MULTIPLE DOORS — Are there multiple open voids? Identify target via clues (e.g., checkered floor) and IGNORE others. Step 1: ANTI-OSCILLATION — Read 'mov_history'. Last 2 commands rotations? (e.g., C1->B1). If oscillating, DO NOT rotate. If door is central, emit A1. If diagonal, use D1/D2. Step 2: POSITION — Where is the door? (left, right, center, not_visible). Step 3: ROUGH CENTERING — If left/right, apply Rule 1 and ROTATE. If 'center', strictly NO ROTATION, emit A1 to approach. Step 4: DIAGONAL CHECK — If roughly centered, check edges. LEFT edge visible? RIGHT edge visible? Step 5: CROSSING CHECK — Is door_angle 'perpendicular' AND do frames occupy >60% of image? If NO, state remains 'Oriented Towards Door'. If YES and command is A1, transition to 'Position in the center of room'. Step 6: Final command decision.",
-  "door_position": "left | center | right | not_visible",
-  "door_angle": "perpendicular | diagonal_from_left | diagonal_from_right | unknown",
-  "room": "estimated_room_name_or_unknown",
-  "state": "next_FSM_state",
-  "movement": "valid_single_movement_command",
-  "memory_update": "..."
+  "reasoning": "Breve explicación de lo que ves y por qué elegiste este movimiento (2-3 oraciones)",
+  "movement": "A2",
+  "room": "living room & kitchen",
+  "mission_progress": "Searching for door | Door visible far | Door close | Crossing door | Searching object | Approaching object | Reached target",
+  "memory_update": "Notas clave para recordar en el siguiente step"
 }
+```
 
-✅ Field Definitions
+═══════════════════════════════════════════════════════════
+FIELD DEFINITIONS
+═══════════════════════════════════════════════════════════
 
-    "description": "... Step 4: SYMMETRY & DIAGONAL CHECK — Is one wall dominating the view? If the left wall is huge, angle is 'diagonal_from_left'. If right wall is huge, 'diagonal_from_right'. If perfectly symmetrical, 'perpendicular'. Step 5: PHASE C CHECK — If you are close AND diagonal, you MUST NOT advance (A1) or rotate. You MUST use lateral slides (D1 to slide left, D2 to slide right) to physically center your body. Step 6: CROSSING CHECK..."
+**"reasoning"** (string):
+  Explica tu razonamiento visual y decisión en 2-3 oraciones:
+  - ¿Qué ves relevante para la misión? (puerta, objeto, obstáculos)
+  - ¿Por qué elegiste este movimiento específico?
+  - ¿Estás progresando hacia el objetivo?
+  
+  Ejemplo: "Veo puerta abierta adelante a ~2m, ligeramente a la izquierda 
+  (~15°). Hay espacio libre. Decisión: A3 para acercarme rápidamente, el 
+  pequeño desalineamiento se corregirá después."
 
-    "door_position": Horizontal position of the candidate door opening in the image. Valid values: "left", "center", "right", "not_visible". This answers: WHERE is the door in the frame?
+**"movement"** (string):
+  El comando de movimiento a ejecutar. Debe ser EXACTAMENTE uno de:
+  - A1, A2, A3 (avanzar 10/20/30cm)
+  - B1, B2, B3 (rotar izquierda 15°/30°/45°)
+  - C1, C2, C3 (rotar derecha 15°/30°/45°)
+  - D1, D2, D3, D4 (strafe izq/der 5cm/15cm)
+  - E (esperar)
+  
+  Elige según los principios de navegación explicados arriba.
 
-- `"door_angle"`: Perpendicularity and physical alignment assessment. Valid values:
-    - `"perpendicular"`: SYMMETRICAL VIEW. The door is centered AND the walls/frames on the left and right take up an equal amount of visual space. You are physically aligned at 0 degrees or almost.
-    - `"diagonal_from_left"`: You are physically standing too far to the left. Evidence: A large wall dominates the LEFT side of the image, or you see the inner depth of the right frame.
-    - `"diagonal_from_right"`: You are physically standing too far to the right. Evidence: A large wall dominates the RIGHT side of the image, or you see the inner depth of the left frame.
-    - `"unknown"`: Both frames visible but too far to judge inner depth or symmetry.
+**"room"** (string):
+  Nombre de la habitación actual según la topología, o "unknown" si no estás seguro.
+  
+  Ejemplos: "living room & kitchen", "bathroom", "bedroom", "hallway", "unknown"
 
-    "room": Current room from topological map, or "unknown".
+**"mission_progress"** (string):
+  Tu estado actual respecto a la misión. Debe ser uno de:
+  - "Searching for door" - Buscando puerta, aún no visible
+  - "Door visible far" - Puerta detectada pero lejos (>2m)
+  - "Door close" - Puerta cerca (<2m), preparando cruce
+  - "Crossing door" - Cruzando el umbral de la puerta
+  - "Searching object" - Buscando objeto objetivo en habitación
+  - "Approaching object" - Objeto detectado, acercándose
+  - "Reached target" - Objetivo alcanzado
+  
+  Este campo ayuda al sistema a determinar transiciones de fase.
 
-    "state": Next FSM state. CRITICAL: Do NOT output Position in the center of room unless door_angle is perpendicular and the door occupies >60% of the visual frame. Otherwise, stay in Oriented Towards Door.
+**"memory_update"** (string):
+  Notas breves (máximo 200 caracteres) para tu futuro yo en el próximo step.
+  
+  Información útil a recordar:
+  - Obstáculos detectados ("Pared a la izquierda, evitar D1")
+  - Progreso de orientación ("Puerta ahora centrada, siguiente: avanzar")
+  - Decisiones tomadas ("Strafing derecha para margen, luego cruzar")
+  
+  NO repitas información obvia de la imagen - solo contexto útil.
+  
+  Ejemplo: "Puerta bathroom identificada, necesita margen derecho. 
+  Evitar strafe izquierda."
 
-    "movement": Single command (A1, B1, etc.) chosen AFTER reasoning.
+═══════════════════════════════════════════════════════════
+VALIDATION RULES
+═══════════════════════════════════════════════════════════
 
-    "memory_update": A short note (max 200 chars) to your future self. Record landmarks, ignored doors, recognized rooms, obstacles, or any observation that will prevent you from repeating mistakes or re-exploring areas. If you receive an Agent Memory input, read it before deciding. If nothing new happened, copy the previous memory verbatim.
+1. JSON must be valid and parseable
+2. All fields are REQUIRED (no missing fields)
+3. "movement" must be exactly one of the valid commands (A1, A2, ..., E)
+4. "mission_progress" must be one of the predefined states listed above
+5. "reasoning" should be informative but concise (2-3 sentences)
+6. "memory_update" max 200 characters
 
-⚠️ Important
+═══════════════════════════════════════════════════════════
+EXAMPLE OUTPUTS
+═══════════════════════════════════════════════════════════
 
-    Do not add extra text or explanations outside the JSON block.
+**Example 1 - Searching for door:**
+```json
+{
+  "reasoning": "No veo puertas abiertas en la vista actual. Necesito explorar más la habitación. Decisión: C2 para rotar 30° derecha y escanear nueva área.",
+  "movement": "C2",
+  "room": "living room & kitchen",
+  "mission_progress": "Searching for door",
+  "memory_update": "Explorando sala. Ya revisé frente y izquierda, ahora girando derecha."
+}
+```
 
-    Always follow the allowed command list and transition logic defined in the state prompt.
+**Example 2 - Door visible, approaching:**
+```json
+{
+  "reasoning": "Puerta abierta visible adelante a ~3m, bien centrada. Espacio libre sin obstáculos. Decisión: A3 para avanzar 30cm y acercarme al objetivo.",
+  "movement": "A3",
+  "room": "living room & kitchen",
+  "mission_progress": "Door visible far",
+  "memory_update": "Puerta bathroom centrada. Continuar avances hacia ella."
+}
+```
 
-    Use all available context (image, state, previous movement, user query, and map) to ensure safe and meaningful output.
+**Example 3 - Door close, adjusting alignment:**
+```json
+{
+  "reasoning": "Puerta ocupa 35% del frame, desplazada 20% a la izquierda. Distancia ~1m. Necesito strafe izquierda para centrarla antes de cruzar. Decisión: D3.",
+  "movement": "D3",
+  "room": "living room & kitchen",
+  "mission_progress": "Door close",
+  "memory_update": "Ajustando alineación lateral. Después de centrar, avanzar para cruzar."
+}
+```
+
+**Example 4 - Crossing door safely:**
+```json
+{
+  "reasoning": "Puerta centrada, ocupa 40% del frame, márgenes laterales ~25% ambos lados. Seguro para cruzar. Decisión: A2 para atravesar umbral.",
+  "movement": "A2",
+  "room": "living room & kitchen",
+  "mission_progress": "Crossing door",
+  "memory_update": "Cruzando umbral. Verificar habitación al otro lado."
+}
+```
+
+**Example 5 - Object detected, approaching:**
+```json
+{
+  "reasoning": "Sink visible adelante a ~2m, ligeramente derecha. Es el objetivo. Decisión: A2 para acercarme, ajustaré alineación después.",
+  "movement": "A2",
+  "room": "bathroom",
+  "mission_progress": "Approaching object",
+  "memory_update": "Sink detectado. Aproximación progresiva, ajuste fino en siguiente step."
+}
+```
+
+═══════════════════════════════════════════════════════════
+CRITICAL REMINDERS
+═══════════════════════════════════════════════════════════
+
+1. **Prioritize ADVANCING** when there's space ahead
+2. **Use STRAFE only when CLOSE** to target (<2m for doors, <1m for objects)
+3. **Never strafe towards walls** visible in your view
+4. **Progress constantly** - avoid oscillating back and forth
+5. **Keep reasoning concise** but informative
+
+═══════════════════════════════════════════════════════════

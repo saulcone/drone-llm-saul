@@ -104,16 +104,16 @@ def show_observations(img, height, pos, yaw, state):
     print(f"Yaw: {yaw}")
     print(f"State: {state}")
 
-def show_state(state, room, pred_room, goal_state, query, description, door_position):
-
+def show_state(mission_phase, room, pred_room, goal_state, query, reasoning, mission_progress):
+    """Display current mission state for manual control mode"""
     os.system('cls' if platform.system() == 'Windows' else 'clear')
-    print(f"State: {state}")
+    print(f"Mission Phase: {mission_phase}")
     print(f"Room: {room}")
     print(f"Predicted Room: {pred_room}")
     print(f"Goal State: {goal_state}")
     print(f"Query: {query}")
-    print(f"Description: {description}")
-    print(f"Door Position: {door_position}")
+    print(f"Reasoning: {reasoning}")
+    print(f"Mission Progress: {mission_progress}")
 
 def manual_control(key_ctrl):
 
@@ -146,14 +146,40 @@ def manual_control(key_ctrl):
 
     return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
-def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
+def get_cmd_vel(img, query, topology, mission_phase, mission_description, target_description, 
+                prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
+    """
+    Send image and mission context to server, get movement command.
+    
+    Args:
+        img: Current camera image
+        query: User query/goal
+        topology: Room connectivity graph
+        mission_phase: Current mission phase (e.g., "BÚSQUEDA GLOBAL")
+        mission_description: Detailed mission description
+        target_description: Target object/location
+        prev_movement: Previous movement command
+        mov_history: History of recent movements
+        agent_memory: Episodic memory from previous step
+        addr: Server address
+        
+    Returns:
+        Dict with "reasoning", "movement", "room", "mission_progress", "memory_update"
+    """
     url = addr + '/cmd_vel'
     _, img_encoded = cv2.imencode('.jpg', img)
     img_bytes = BytesIO(img_encoded.tobytes())
     files = {'image': ('image.jpg', img_bytes, 'image/jpeg')}
-    data = {'query': query, 'topology': json.dumps(topology), 'state': state,
-            'prev_movement': prev_movement, 'mov_history': json.dumps(mov_history),
-            'agent_memory': agent_memory}
+    data = {
+        'query': query,
+        'topology': json.dumps(topology),
+        'mission_phase': mission_phase,
+        'mission_description': mission_description,
+        'target_description': target_description,
+        'prev_movement': prev_movement,
+        'mov_history': json.dumps(mov_history),
+        'agent_memory': agent_memory
+    }
 
     try:
         response = requests.post(url, files=files, data=data)
@@ -161,7 +187,7 @@ def get_cmd_vel(img, query, topology, state, prev_movement, mov_history, agent_m
         return response.json()
     except Exception as e:
         print("Error decoding response:", e)
-        return {"movement": "", "state": "Start"}
+        return {"movement": "E", "reasoning": "Error", "mission_progress": "Error"}
 
 def move_drone(cont, movement, env=None, action=None, behavior_drone=None):
 
@@ -312,15 +338,27 @@ def run_simulation(args, topology, json_data=None):
     action = spec.action_spec.random_action(len(decision_steps))
     move_drone(20, [0, 0, 0, 0], env, action, behavior_drone)
 
-    state = "Recognize Room"
+    # Mission setup
+    from reasoning.mission_manager import MissionManager, MissionPhase
+    
+    # Parse target from query (e.g., query 8 = sink in bathroom)
+    target_object = args.target_object if hasattr(args, 'target_object') else "sink"
+    target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
+    
+    mission_manager = MissionManager(target_object=target_object, target_room=target_room)
+    print(f"\n{'='*60}")
+    print(f"[MISSION] Initialized: {target_object} in {target_room}")
+    print(f"[MISSION] Starting phase: {mission_manager.get_phase_name()}")
+    print(f"{'='*60}\n")
+    
     query_id = args.query
     query = get_query(query_id)
     prev_movement = ""
     mov_history = []
     pred_room = ""
     command = ""
-    description = ""
-    door_position = ""
+    reasoning = ""
+    mission_progress = ""
     agent_memory = ""  # Episodic memory: the drone's own notes from previous steps
     total_steps = 0
     total_time = 0.0
@@ -349,7 +387,9 @@ def run_simulation(args, topology, json_data=None):
         "C3": (90, [0, 0, 0.1, 0]),    # 90° rotation right
         # Slides laterales
         "D1": (5, [-0.1, 0, 0, 0]),    # 5cm slide left
-        "D2": (5, [0.1, 0, 0, 0])      # 5cm slide right
+        "D2": (5, [0.1, 0, 0, 0]),     # 5cm slide right
+        "D3": (15, [-0.1, 0, 0, 0]),   # 15cm slide left (larger strafe)
+        "D4": (15, [0.1, 0, 0, 0])     # 15cm slide right (larger strafe)
     }
 
     # Video writer
@@ -391,7 +431,11 @@ def run_simulation(args, topology, json_data=None):
         if manual:
 
             # Manual control mode
-            show_state(state, room, pred_room, goal_state, query, description, door_position)
+            show_state(
+                mission_manager.get_phase_name(),
+                room, pred_room, goal_state, query,
+                reasoning, mission_progress
+            )
             print(f"Query: {query}  | Room: {room} | Goal State: {goal_state}")
 
             # set predicted room
@@ -405,9 +449,21 @@ def run_simulation(args, topology, json_data=None):
 
         else:
 
-            # Get command velocity from the server
+            # Get mission context from mission manager
+            mission_ctx = mission_manager.get_mission_context()
+            
+            # Get command velocity from the server with mission context
             start_time = time.time()
-            response = get_cmd_vel(real_img, query, topology, state, prev_movement, mov_history, agent_memory=agent_memory, addr=args.addr)
+            response = get_cmd_vel(
+                real_img, query, topology,
+                mission_phase=mission_ctx["phase"],
+                mission_description=mission_ctx["description"],
+                target_description=mission_ctx["target"],
+                prev_movement=prev_movement,
+                mov_history=mov_history,
+                agent_memory=agent_memory,
+                addr=args.addr
+            )
             
             elapsed_time = time.time() - start_time
             total_time += elapsed_time
@@ -416,12 +472,25 @@ def run_simulation(args, topology, json_data=None):
                 print("Warning: Model returned None, skipping step.")
                 continue
 
-            command = response.get("movement")
-            state = response.get("state")
+            command = response.get("movement", "E")
             pred_room = response.get("room", "")
-            description = response.get("description", "")
-            door_position = response.get("door_position", "")
+            reasoning = response.get("reasoning", "")
+            mission_progress = response.get("mission_progress", "")
             agent_memory = response.get("memory_update", agent_memory)
+            
+            # Update mission phase based on VLM response
+            mission_manager.update_phase(response, room)
+            
+            # Check if mission complete
+            if mission_manager.is_complete():
+                print(f"\n{'='*60}")
+                print(f"🎉 MISIÓN COMPLETADA 🎉")
+                print(f"Target: {target_object}")
+                print(f"Steps: {total_steps}")
+                print(f"Total time: {total_time:.2f}s")
+                print(f"{'='*60}\n")
+                result = "Success"
+                break
 
             # === SAFETY GUARD: Interviene ANTES de ejecutar comandos de avance ===
             # NOTA: Desactivado temporalmente - confunde marcos de puertas con paredes
@@ -460,11 +529,11 @@ def run_simulation(args, topology, json_data=None):
                 "command": command,
                 "original_command": original_command if not manual else command,
                 "safety_override": safety_override if not manual else None,
-                "state": state,
+                "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
                 "room": room,
                 "pred_room": pred_room,
-                "description": description,
-                "door_position": door_position,
+                "reasoning": reasoning if not manual else "",
+                "mission_progress": mission_progress if not manual else "",
                 "agent_memory": agent_memory,
                 "goal_state": goal_state,
                 "elapsed_time": elapsed_time,
@@ -480,7 +549,7 @@ def run_simulation(args, topology, json_data=None):
             result = "max_steps_reached"
             break
         
-        if goal_state and (state == "Final" or args.manual):
+        if goal_state:
             print("Goal reached! Ending simulation.")
             result = "goal_reached"
             break
@@ -489,10 +558,6 @@ def run_simulation(args, topology, json_data=None):
             print("Collision detected! Ending simulation.")
             result = "collision_detected"
             break
-
-        if not goal_state and state == "Final":
-            print("Final state reached without goal! Ending simulation.")
-            result = "false_goal_reached"
             break
 
     if args.save_logs and json_data:
@@ -564,13 +629,16 @@ if __name__ == "__main__":
     parser.add_argument('--run_experiment', '-e', action='store_true', help='Run multiple executions of the simulation')
     parser.add_argument('--experiment_name', '-n', type=str, default="default_experiment", help='Name of the experiment for logging')
     parser.add_argument('--manual', '-m', action='store_true', help='Enable manual control mode')
-    #parser.add_argument('--seed', '-s', type=int, default=42, help='Random seed for reproducibility')
     parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone (1-10)')
     parser.add_argument('--num_repeats', '-r', type=int, default=1, help='Number of repeats for each spawn point')
     parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
     parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')
+    
+    # NEW: Mission parameters
+    parser.add_argument('--target_object', '-to', type=str, default="sink", help='Target object to reach (e.g., sink, red cup)')
+    parser.add_argument('--target_room', '-tr', type=str, default="bathroom", help='Target room where object is located')
 
     args = parser.parse_args()
 

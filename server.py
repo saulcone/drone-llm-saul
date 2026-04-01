@@ -42,16 +42,28 @@ app = Flask(__name__)
 
 @app.route('/cmd_vel', methods=['POST'])
 def cmd_vel():
-    if 'image' not in request.files or 'query' not in request.form or 'topology' not in request.form or 'state' not in request.form or 'prev_movement' not in request.form or 'mov_history' not in request.form:
-        return jsonify({'error': 'Missing image, query, or topology'}), 400
+    # Check required fields
+    required_files = ['image']
+    required_form = ['query', 'topology', 'prev_movement', 'mov_history']
+    
+    if 'image' not in request.files:
+        return jsonify({'error': 'Missing image file'}), 400
+    
+    for field in required_form:
+        if field not in request.form:
+            return jsonify({'error': f'Missing form field: {field}'}), 400
 
     image_file = request.files['image']
     query = request.form['query']
     topology_json = request.form['topology']
-    state = request.form['state']    
     previous_movement = request.form.get('prev_movement', None)
     mov_history = request.form.get('mov_history', None)
     agent_memory = request.form.get('agent_memory', '')
+    
+    # NEW: Mission parameters
+    mission_phase = request.form.get('mission_phase', 'GENERAL')
+    mission_description = request.form.get('mission_description', 'Navigate freely')
+    target_description = request.form.get('target_description', 'Unknown')
 
     try:
         topology = json.loads(topology_json)
@@ -63,11 +75,17 @@ def cmd_vel():
     np_arr = np.frombuffer(img_bytes, np.uint8)
     img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
-    # Call Reasoning model
-    response = vlm_model.generate_trajectory(img, query, topology=topology, 
-                            state=state, previous_movement=previous_movement,
-                            mov_history=mov_history,
-                            agent_memory=agent_memory)
+    # Call Reasoning model with mission context
+    response = vlm_model.generate_trajectory(
+        img, query, 
+        topology=topology,
+        mission_phase=mission_phase,
+        mission_description=mission_description,
+        target_description=target_description,
+        previous_movement=previous_movement,
+        mov_history=mov_history,
+        agent_memory=agent_memory
+    )
     
     gpt_response = jsonpickle.encode(response)
 
