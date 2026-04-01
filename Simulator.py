@@ -21,6 +21,8 @@ from mlagents_envs.side_channel.side_channel import (
 
 # Safety Guard: Detector de proximidad a paredes (sin VLM)
 from reasoning.wall_proximity_detector import WallProximityDetector
+# Adaptive Distance Scaling for SPF system
+from reasoning.adaptive_scaling import AdaptiveScaler, STATIC_MOVE_MAP
 
 # --- Teclado (pynput) ---
 class KeyController:
@@ -369,28 +371,13 @@ def run_simulation(args, topology, json_data=None):
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
     safety_override = None  # Guarda info cuando Safety Guard interviene
+    
+    # Adaptive Distance Scaling: scales movement based on distance to target
+    adaptive_scaler = AdaptiveScaler()
+    use_adaptive_scaling = getattr(args, 'adaptive', True)  # Enable by default
 
-    move_map = {
-        # Avance
-        "A1": (10, [0, 0.1, 0, 0]),    # 10cm forward
-        "A2": (25, [0, 0.1, 0, 0]),    # 25cm forward
-        "A3": (50, [0, 0.1, 0, 0]),    # 50cm forward
-        # Rotación izquierda (B = left)
-        "B0": (5, [0, 0, -0.1, 0]),    # 5° micro-rotation left (NUEVO - ajuste fino)
-        "B1": (15, [0, 0, -0.1, 0]),   # 15° rotation left
-        "B2": (45, [0, 0, -0.1, 0]),   # 45° rotation left
-        "B3": (90, [0, 0, -0.1, 0]),   # 90° rotation left
-        # Rotación derecha (C = right)
-        "C0": (5, [0, 0, 0.1, 0]),     # 5° micro-rotation right (NUEVO - ajuste fino)
-        "C1": (15, [0, 0, 0.1, 0]),    # 15° rotation right
-        "C2": (45, [0, 0, 0.1, 0]),    # 45° rotation right
-        "C3": (90, [0, 0, 0.1, 0]),    # 90° rotation right
-        # Slides laterales
-        "D1": (5, [-0.1, 0, 0, 0]),    # 5cm slide left
-        "D2": (5, [0.1, 0, 0, 0]),     # 5cm slide right
-        "D3": (15, [-0.1, 0, 0, 0]),   # 15cm slide left (larger strafe)
-        "D4": (15, [0.1, 0, 0, 0])     # 15cm slide right (larger strafe)
-    }
+    # Static move_map for fallback/manual mode
+    move_map = STATIC_MOVE_MAP
 
     # Video writer
     if args.save_video:
@@ -446,6 +433,8 @@ def run_simulation(args, topology, json_data=None):
             distance = None
             confidence = None
             oscillation_override = False
+            move_steps = None
+            scaling_phase = "Manual"
             
             movement = manual_control(key_ctrl)
             pred = np.array([[*movement, 0]], dtype=np.float32)
@@ -515,10 +504,22 @@ def run_simulation(args, topology, json_data=None):
             safety_override = None
             # === END SAFETY GUARD ===
 
-            if args.fast:
-                move_drone_fast(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
+            # === ADAPTIVE DISTANCE SCALING ===
+            # Scale movement based on distance to target
+            if use_adaptive_scaling and command != "E":
+                move_steps, move_vec = adaptive_scaler.get_adaptive_move(command, distance, confidence)
+                scaling_phase = adaptive_scaler.get_phase_description()
+                print(f"[ADAPTIVE] {scaling_phase}: {command} -> steps={move_steps}")
             else:
-                move_drone(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
+                move_steps, move_vec = move_map.get(command, (10, [0, 0, 0, 0]))
+                scaling_phase = "Static"
+            # === END ADAPTIVE SCALING ===
+
+            if command != "E":  # Don't move on wait command
+                if args.fast:
+                    move_drone_fast(move_steps, move_vec, env, action, behavior_drone)
+                else:
+                    move_drone(move_steps, move_vec, env, action, behavior_drone)
 
             prev_movement = command
 
@@ -539,6 +540,9 @@ def run_simulation(args, topology, json_data=None):
                 "distance": distance if not manual else None,
                 "confidence": confidence if not manual else None,
                 "oscillation_override": oscillation_override if not manual else False,
+                # Adaptive scaling data
+                "scaling_phase": scaling_phase if not manual else "Manual",
+                "move_steps": move_steps if not manual else None,
                 # Mission data
                 "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
                 "room": room,
@@ -650,6 +654,10 @@ if __name__ == "__main__":
     # NEW: Mission parameters
     parser.add_argument('--target_object', '-to', type=str, default="sink", help='Target object to reach (e.g., sink, red cup)')
     parser.add_argument('--target_room', '-tr', type=str, default="bathroom", help='Target room where object is located')
+    
+    # NEW: Adaptive scaling
+    parser.add_argument('--adaptive', action='store_true', default=True, help='Enable adaptive distance scaling (default: True)')
+    parser.add_argument('--no-adaptive', dest='adaptive', action='store_false', help='Disable adaptive distance scaling')
 
     args = parser.parse_args()
 
