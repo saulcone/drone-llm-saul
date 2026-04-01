@@ -2,7 +2,10 @@
 """
 Detector de proximidad a paredes usando análisis de imagen puro (sin VLM).
 Analiza los bordes verticales de la imagen para detectar si hay paredes/marcos cerca.
-No depende de bounding boxes alucinados de LLaVA.
+
+SPF System Integration:
+- Can be used as safety layer to prevent collisions
+- Works independently of VLM decisions
 """
 
 import cv2
@@ -103,22 +106,19 @@ class WallProximityDetector:
             "correction": correction
         }
     
-    def get_safe_command(self, image_cv2, intended_command, current_state=""):
+    def get_safe_command(self, image_cv2, intended_command):
         """
         Evalúa un comando y lo modifica si detecta riesgo de colisión.
         
+        For SPF system: Only intervenes on forward commands (A*) to prevent collisions.
+        
         Args:
             image_cv2: Imagen BGR de OpenCV
-            intended_command: Comando original del VLM (ej: "A1")
-            current_state: Estado actual del dron
+            intended_command: Comando original del WaypointController (ej: "A1")
             
         Returns:
             tuple: (comando_seguro, mensaje_explicativo)
         """
-        # Solo intervenir en estados de cruce de puerta
-        if current_state not in ["Oriented Towards Door", "Go Through Door"]:
-            return intended_command, "State not monitored"
-        
         # Solo evaluar comandos de avance
         if not intended_command.startswith("A"):
             return intended_command, "Non-forward command, no intervention"

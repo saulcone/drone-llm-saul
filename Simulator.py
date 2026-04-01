@@ -508,23 +508,12 @@ def run_simulation(args, topology, json_data=None):
                 result = "Success"
                 break
 
-            # === SAFETY GUARD: Interviene ANTES de ejecutar comandos de avance ===
-            # NOTA: Desactivado temporalmente - confunde marcos de puertas con paredes
-            # TODO: Mejorar la detección para distinguir marcos vs paredes reales
+            # === SAFETY GUARD (Disabled) ===
+            # NOTE: Can be enabled for SPF system - no longer depends on FSM states
+            # Use: wall_detector.get_safe_command(real_img, command)
             original_command = command
             safety_override = None
-            
-            # if state in ["Oriented Towards Door", "Go Through Door"] and command.startswith("A"):
-            #     safe_command, safety_msg = wall_detector.get_safe_command(real_img, command, state)
-            #     if safe_command != command:
-            #         safety_override = {
-            #             "original": command,
-            #             "corrected": safe_command,
-            #             "reason": safety_msg
-            #         }
-            #         command = safe_command
-            #         print(f"[SAFETY GUARD] {safety_msg}")
-            # === FIN SAFETY GUARD ===
+            # === END SAFETY GUARD ===
 
             if args.fast:
                 move_drone_fast(*move_map.get(command, (10, [0, 0, 0, 0])), env, action, behavior_drone)
