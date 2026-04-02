@@ -20,7 +20,7 @@ from mlagents_envs.side_channel.side_channel import (
 )
 
 # Safety Guard: Detector de proximidad a paredes (sin VLM)
-from reasoning.wall_proximity_detector import WallProximityDetector
+from reasoning.wall_proximity_detector import WallProximityDetector, SafetyEnvelope
 # Adaptive Distance Scaling for SPF system
 from reasoning.adaptive_scaling import AdaptiveScaler, STATIC_MOVE_MAP
 # MPC Controller for smooth trajectory planning
@@ -374,7 +374,9 @@ def run_simulation(args, topology, json_data=None):
     
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
+    safety_envelope = SafetyEnvelope()  # Phase 4: Virtual safety envelope for door crossing
     safety_override = None  # Guarda info cuando Safety Guard interviene
+    use_safety_envelope = getattr(args, 'safety', True)  # Enable by default
     
     # Adaptive Distance Scaling: scales movement based on distance to target
     adaptive_scaler = AdaptiveScaler()
@@ -506,12 +508,43 @@ def run_simulation(args, topology, json_data=None):
                 result = "Success"
                 break
 
-            # === SAFETY GUARD (Disabled) ===
-            # NOTE: Can be enabled for SPF system - no longer depends on FSM states
-            # Use: wall_detector.get_safe_command(real_img, command)
+            # === SAFETY ENVELOPE (Phase 4) ===
+            # Virtual safety layer that overrides VLM when collision risk detected
             original_command = command
             safety_override = None
-            # === END SAFETY GUARD ===
+            
+            if use_safety_envelope:
+                # Check if current phase involves crossing doors
+                current_phase = mission_manager.get_current_phase()
+                is_crossing = current_phase and "TRAVES" in str(current_phase).upper()
+                is_approaching = current_phase and "APROXIM" in str(current_phase).upper()
+                
+                # Also check mission_progress for crossing indicators
+                crossing_progress = any(x in mission_progress.lower() for x in 
+                    ["crossing", "cruzando", "atraves", "travesía", "entering", "entrando"])
+                
+                if is_crossing or is_approaching or crossing_progress:
+                    # Activate safety envelope during door crossing/approaching
+                    safe_command, override_reason, analysis = safety_envelope.check_crossing_safety(
+                        image_cv2=real_img,
+                        target_point=target_point,
+                        distance=distance,
+                        intended_command=command
+                    )
+                    
+                    if override_reason:
+                        # Safety envelope intervened
+                        command = safe_command
+                        safety_override = override_reason
+                        print(f"[SAFETY] ⚠️ {override_reason}")
+                        print(f"[SAFETY] Command changed: {original_command} -> {command}")
+                        
+                        # Send feedback to VLM via memory update
+                        agent_memory += f" [SAFETY ALERT: {override_reason}]"
+                    elif analysis:
+                        # Log safety status even when not intervening
+                        print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
+            # === END SAFETY ENVELOPE ===
 
             # === MPC CONTROLLER (Phase 4) ===
             # Smooth continuous trajectory planning from waypoints
@@ -708,6 +741,10 @@ if __name__ == "__main__":
     # NEW: MPC Controller (Phase 4)
     parser.add_argument('--mpc', action='store_true', default=False, help='Enable MPC smooth trajectory controller')
     parser.add_argument('--no-mpc', dest='mpc', action='store_false', help='Disable MPC (use discrete commands)')
+    
+    # NEW: Safety Envelope (Phase 4) - collision prevention during door crossing
+    parser.add_argument('--safety', action='store_true', default=True, help='Enable safety envelope for door crossing (default: on)')
+    parser.add_argument('--no-safety', dest='safety', action='store_false', help='Disable safety envelope')
 
     args = parser.parse_args()
 

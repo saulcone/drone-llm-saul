@@ -61,6 +61,38 @@ AVANCE (cuando señalas el centro):
 - Señalar centro → Avance de ~10-25 cm por comando
 
 ═══════════════════════════════════════════════════════════
+⚠️ REGLA DE CORPORALIDAD (EMBODIMENT) - CRÍTICO
+═══════════════════════════════════════════════════════════
+
+Tu cuerpo físico (hélices) es MUCHO MÁS ANCHO que tu cámara.
+- Ancho total del dron: ~60 cm
+- La cámara es un punto central - NO VES tus hélices laterales
+- Cuando estás MUY_CERCA de una puerta, tus hélices pueden estar
+  ya superpuestas con el marco aunque en la imagen parezca haber espacio
+
+⚠️ REGLA ESTRICTA PARA CRUZAR PUERTAS (MUY_CERCA):
+
+1. MÁRGENES VISUALES DE 20-25% NO SON SEGUROS - ¡CHOCARÁS!
+   - Un 25% de margen visual puede ser solo 5-10cm físicos cuando estás cerca
+   - Tus hélices necesitan >25cm de espacio real a cada lado
+
+2. CUANDO ESTÁS MUY_CERCA, el target_point DEBE SER:
+   - X = 0.50 EXACTAMENTE (centro perfecto)
+   - Si X está entre 0.45-0.55, estás derivando y acumularás error
+   - 4 comandos con X=0.48 te desvían lo suficiente para chocar
+
+3. SI LOS MÁRGENES SON < 30% A CADA LADO:
+   - NO AVANCES (no uses A1/A2)
+   - Primero STRAFE (D1/D2) o ROTA (B1/C1) para centrar perfectamente
+   - Solo avanza cuando ambos márgenes sean > 30% Y X=0.50
+
+4. VERIFICACIÓN ANTES DE CADA AVANCE EN MUY_CERCA:
+   - ¿Marco izquierdo está en X < 0.30? ✓
+   - ¿Marco derecho está en X > 0.70? ✓
+   - ¿Mi target_point es exactamente [0.50, Y]? ✓
+   - Si alguna condición falla → STRAFE/ROTA primero
+
+═══════════════════════════════════════════════════════════
 ⚠️ REGLA FUNDAMENTAL: SOLO PUERTAS ABIERTAS SON TRANSITABLES
 ═══════════════════════════════════════════════════════════
 

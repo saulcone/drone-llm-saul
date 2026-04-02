@@ -6,6 +6,10 @@ Analiza los bordes verticales de la imagen para detectar si hay paredes/marcos c
 SPF System Integration:
 - Can be used as safety layer to prevent collisions
 - Works independently of VLM decisions
+
+Phase 4 Enhancement:
+- SafetyEnvelope class provides collision prevention during door crossing
+- Overrides VLM commands when physical collision is imminent
 """
 
 import cv2
@@ -133,6 +137,124 @@ class WallProximityDetector:
         
         # Si estamos centrados, permitir avance
         return intended_command, f"Path clear (imbalance={analysis['imbalance']:.2f})"
+
+
+class SafetyEnvelope:
+    """
+    Phase 4: Virtual Safety Envelope for door crossing.
+    
+    Provides a physical safety layer that overrides VLM commands when
+    collision risk is detected. Uses image analysis to estimate if
+    drone body (including propellers) will fit through the opening.
+    
+    The drone is ~60cm wide, camera is centered. This means we need
+    ~30cm clearance on each side to avoid collision.
+    """
+    
+    # Drone physical parameters
+    DRONE_WIDTH_CM = 60
+    SAFETY_MARGIN_CM = 5  # Extra margin beyond physical width
+    
+    # Image analysis parameters  
+    DANGER_ZONE_THRESHOLD = 0.25  # If wall is in 25% of image edge, collision likely
+    CRITICAL_DENSITY_THRESHOLD = 0.20  # High edge density = close obstacle
+    
+    def __init__(self):
+        self.wall_detector = WallProximityDetector(
+            edge_threshold=40,  # More sensitive
+            imbalance_threshold=0.20  # Stricter balance requirement
+        )
+        self.last_analysis = None
+        self.intervention_count = 0
+        
+    def check_crossing_safety(self, image_cv2, target_point, distance, intended_command):
+        """
+        Check if it's safe to execute a forward command during door crossing.
+        
+        Args:
+            image_cv2: Current camera image
+            target_point: [x, y] waypoint from VLM
+            distance: Distance estimate from VLM
+            intended_command: Command VLM wants to execute
+            
+        Returns:
+            tuple: (safe_command, override_reason, analysis_data)
+        """
+        # Only intervene on forward commands when very close
+        if not intended_command.startswith("A"):
+            return intended_command, None, None
+            
+        if distance not in ["MUY_CERCA", "CERCA"]:
+            return intended_command, None, None
+        
+        # Analyze image for wall proximity
+        analysis = self.wall_detector.analyze_proximity(image_cv2)
+        analysis["target_x"] = target_point[0] if target_point else 0.5
+        self.last_analysis = analysis
+        
+        # Check 1: Is target_point dangerously off-center?
+        target_x = target_point[0] if target_point else 0.5
+        if distance == "MUY_CERCA" and abs(target_x - 0.5) > 0.05:
+            # Target is not centered - accumulated drift risk
+            if target_x < 0.5:
+                # Drifting left, correct right
+                self.intervention_count += 1
+                return "D2", f"SAFETY: Target X={target_x:.2f} drifting LEFT. Strafe RIGHT to center.", analysis
+            else:
+                # Drifting right, correct left
+                self.intervention_count += 1
+                return "D1", f"SAFETY: Target X={target_x:.2f} drifting RIGHT. Strafe LEFT to center.", analysis
+        
+        # Check 2: Is there high edge density in danger zones?
+        left_danger = analysis["left_density"] > self.CRITICAL_DENSITY_THRESHOLD
+        right_danger = analysis["right_density"] > self.CRITICAL_DENSITY_THRESHOLD
+        
+        if left_danger and right_danger:
+            # Both sides have obstacles - might be too narrow or entering at angle
+            if abs(analysis["imbalance"]) > 0.15:
+                # Off-center, correct toward less dangerous side
+                if analysis["imbalance"] < 0:
+                    self.intervention_count += 1
+                    return "D2", f"SAFETY: Walls both sides, closer LEFT. Strafe RIGHT.", analysis
+                else:
+                    self.intervention_count += 1
+                    return "D1", f"SAFETY: Walls both sides, closer RIGHT. Strafe LEFT.", analysis
+            else:
+                # Centered but tight - allow very small advance
+                if intended_command in ["A2", "A3"]:
+                    return "A1", f"SAFETY: Tight passage. Reduced to A1.", analysis
+                    
+        elif left_danger:
+            # Left wall close - strafe right
+            self.intervention_count += 1
+            return "D2", f"SAFETY: Wall LEFT (density={analysis['left_density']:.2f}). Strafe RIGHT.", analysis
+            
+        elif right_danger:
+            # Right wall close - strafe left
+            self.intervention_count += 1
+            return "D1", f"SAFETY: Wall RIGHT (density={analysis['right_density']:.2f}). Strafe LEFT.", analysis
+        
+        # Check 3: Imbalance check (less severe but still risky)
+        if abs(analysis["imbalance"]) > 0.25:
+            if analysis["imbalance"] < 0:
+                return "D2", f"SAFETY: Imbalance LEFT ({analysis['imbalance']:.2f}). Small strafe RIGHT.", analysis
+            else:
+                return "D1", f"SAFETY: Imbalance RIGHT ({analysis['imbalance']:.2f}). Small strafe LEFT.", analysis
+        
+        # All checks passed - safe to proceed
+        return intended_command, None, analysis
+    
+    def get_status(self):
+        """Get current safety envelope status"""
+        return {
+            "interventions": self.intervention_count,
+            "last_analysis": self.last_analysis
+        }
+    
+    def reset(self):
+        """Reset intervention counter"""
+        self.intervention_count = 0
+        self.last_analysis = None
 
 
 class DoorFrameAnalyzer:

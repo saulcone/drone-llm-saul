@@ -141,20 +141,33 @@ EXAMPLE OUTPUTS
 }
 ```
 
-**Example 4 - Door close, crossing:**
+**Example 4 - Door close, need to center first:**
 ```json
 {
-  "reasoning": "Puerta muy cerca (~0.8m), marco visible a ambos lados con márgenes suficientes. Señalo el centro exacto del hueco para cruzar de forma segura.",
-  "target_point": [0.48, 0.38],
+  "reasoning": "Puerta cerca pero marco derecho muy cerca del borde (X~0.70). El dron tiene 60cm de ancho y colisionaría. Debo STRAFEAR IZQUIERDA para centrar la puerta antes de avanzar.",
+  "target_point": [0.35, 0.50],
   "distance": "MUY_CERCA",
   "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Crossing door",
-  "memory_update": "Cruzando umbral. Margen izq ~25%, der ~28%."
+  "memory_update": "Puerta descentrada derecha. Strafe izquierda para centrar. Margen der insuficiente (~30%)."
 }
 ```
 
-**Example 5 - Avoiding obstacle:**
+**Example 5 - Door perfectly centered, safe to cross:**
+```json
+{
+  "reasoning": "Puerta centrada perfectamente (X=0.50). Marco izquierdo en X~0.20, marco derecho en X~0.80. Márgenes >35% a ambos lados. SEGURO para cruzar.",
+  "target_point": [0.50, 0.40],
+  "distance": "MUY_CERCA",
+  "confidence": "ALTA",
+  "room": "living room & kitchen",
+  "mission_progress": "Crossing door",
+  "memory_update": "Puerta centrada. Márgenes seguros (izq 35%, der 35%). Avanzando."
+}
+```
+
+**Example 6 - Avoiding obstacle:**
 ```json
 {
   "reasoning": "Veo pared/obstáculo bloqueando el camino directo. Hay espacio libre a la izquierda. Señalo hacia la izquierda para esquivar el obstáculo.",
@@ -167,7 +180,7 @@ EXAMPLE OUTPUTS
 }
 ```
 
-**Example 6 - Object detected, approaching:**
+**Example 7 - Object detected, approaching:**
 ```json
 {
   "reasoning": "Sink visible adelante a ~1.5m, ligeramente a la derecha. Es el objetivo de la misión. Señalo su centro para acercarme.",
