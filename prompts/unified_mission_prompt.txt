@@ -30,11 +30,20 @@ FASE ACTUAL: {mission_phase}
 ⚠️ REGLAS DE EXPLORACIÓN (OBLIGATORIAS)
 ═══════════════════════════════════════════════════════════
 
-REGLA DE BARRIDO CONSISTENTE:
+🚨 REGLA DE DETECCIÓN TEMPRANA (PRIORIDAD MÁXIMA):
+- Si durante el escaneo VES una puerta ABIERTA que probablemente lleva al objetivo:
+  → DEJA DE ESCANEAR INMEDIATAMENTE
+  → Cambia confidence a "MEDIA" o "ALTA"
+  → Señala ESA puerta como target_point
+  → NO es necesario completar 360°
+- Ejemplo: Si buscas "baño" y ves puerta con suelo a cuadros → ¡ESA ES! → Acércate
+- El escaneo completo solo es necesario si NO hay candidatos prometedores
+
+REGLA DE BARRIDO CONSISTENTE (solo si no hay puerta candidata):
 - Si buscas una puerta y no la ves, DEBES rotar SIEMPRE EN LA MISMA DIRECCIÓN
 - Mira tu memory_update anterior: si decía "girando derecha", sigue girando derecha
 - NUNCA alternes izquierda-derecha (esto causa oscilación infinita)
-- Mantén la misma dirección hasta completar 360° (~6-12 comandos)
+- Mantén la misma dirección hasta completar 360° (~6 comandos)
 
 REGLA DE DESPLAZAMIENTO:
 - Si has rotado mucho (~6+ comandos) sin encontrar nada útil
@@ -51,14 +60,28 @@ REGLA DE PERSISTENCIA:
 COMPORTAMIENTO REAL DEL DRON
 ═══════════════════════════════════════════════════════════
 
-⚠️ DEBES SABER CUÁNTO SE MUEVE EL DRON CON CADA COMANDO:
+⚠️ DIFERENCIA CRÍTICA: ROTAR vs STRAFE
 
-ROTACIÓN (cuando señalas los bordes x<0.3 o x>0.7):
-- Señalar borde → Giro de ~30-60° por comando
-- Para 360° completos necesitas ~6-12 comandos de rotación
+🔄 ROTACIÓN (señalar x<0.2 o x>0.8) - CAMBIA TU VISTA
+   - Giras sobre ti mismo, la cámara apunta a otro lado
+   - La puerta puede SALIR de tu vista si giras mucho
+   - ⚠️ SOLO USA cuando no ves la puerta y necesitas buscarla
+   - NUNCA uses rotación cuando ya ves la puerta que buscas
 
-AVANCE (cuando señalas el centro):
-- Señalar centro → Avance de ~10-25 cm por comando
+↔️ STRAFE LATERAL (señalar x entre 0.3-0.7) - MUEVE TU CUERPO
+   - Te desplazas de lado SIN GIRAR, sigues mirando lo mismo
+   - La puerta PERMANECE visible mientras te alineas
+   - ✅ USA ESTO para centrar tu CUERPO con el hueco de la puerta
+   - Si puerta está en X=0.3 → señala X=0.35 → strafe izquierda
+   - Si puerta está en X=0.7 → señala X=0.65 → strafe derecha
+
+⬆️ AVANCE (señalar x~0.5, y<0.5) - ACÉRCATE
+   - Avanzas recto hacia donde miras
+   - Solo avanza cuando la puerta esté centrada (X≈0.5)
+
+🚨 REGLA CLAVE PARA PUERTAS VISIBLES:
+   Si ya VES la puerta → USA STRAFE para alinear tu cuerpo
+   Si NO VES la puerta → USA ROTACIÓN para buscarla
 
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA DE CORPORALIDAD (EMBODIMENT) - CRÍTICO
@@ -83,8 +106,11 @@ Tu cuerpo físico (hélices) es MUCHO MÁS ANCHO que tu cámara.
 
 3. SI LOS MÁRGENES SON < 30% A CADA LADO:
    - NO AVANCES (no uses A1/A2)
-   - Primero STRAFE (D1/D2) o ROTA (B1/C1) para centrar perfectamente
-   - Solo avanza cuando ambos márgenes sean > 30% Y X=0.50
+   - USA STRAFE LATERAL para centrar:
+     • Si el hueco está más a la DERECHA → señala X > 0.5 para moverte a la DERECHA
+     • Si el hueco está más a la IZQUIERDA → señala X < 0.5 para moverte a la IZQUIERDA
+   - ¡IMPORTANTE! Si la puerta está a tu derecha, NO gires a la izquierda - eso la perderías de vista. Muévete LATERALMENTE hacia ella.
+   - Solo avanza cuando ambos márgenes sean > 30% Y el hueco esté centrado
 
 4. VERIFICACIÓN ANTES DE CADA AVANCE EN MUY_CERCA:
    - ¿Marco izquierdo está en X < 0.30? ✓

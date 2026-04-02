@@ -180,66 +180,60 @@ class SafetyEnvelope:
         Returns:
             tuple: (safe_command, override_reason, analysis_data)
         """
-        # Only intervene on forward commands when very close
+        # Only intervene on forward commands
         if not intended_command.startswith("A"):
             return intended_command, None, None
-            
-        if distance not in ["MUY_CERCA", "CERCA"]:
-            return intended_command, None, None
         
-        # Analyze image for wall proximity
+        # Analyze image for wall proximity - ALWAYS analyze, not just when close
         analysis = self.wall_detector.analyze_proximity(image_cv2)
-        analysis["target_x"] = target_point[0] if target_point else 0.5
+        target_x = target_point[0] if target_point else 0.5
+        analysis["target_x"] = target_x
         self.last_analysis = analysis
         
-        # Check 1: Is target_point dangerously off-center?
-        target_x = target_point[0] if target_point else 0.5
-        if distance == "MUY_CERCA" and abs(target_x - 0.5) > 0.05:
-            # Target is not centered - accumulated drift risk
-            if target_x < 0.5:
-                # Drifting left, correct right
+        # === CHECK FOR EXTREME IMBALANCE (wall on one side) ===
+        # If imbalance > 0.5, there's definitely a wall close on one side
+        if abs(analysis["imbalance"]) > 0.5:
+            if analysis["imbalance"] < 0:
+                # More edges on LEFT = wall on left = strafe RIGHT
                 self.intervention_count += 1
-                return "D2", f"SAFETY: Target X={target_x:.2f} drifting LEFT. Strafe RIGHT to center.", analysis
+                return "D2", f"SAFETY: Wall detected LEFT (imbalance={analysis['imbalance']:.2f}). Strafe RIGHT.", analysis
             else:
-                # Drifting right, correct left
+                # More edges on RIGHT = wall on right = strafe LEFT
                 self.intervention_count += 1
-                return "D1", f"SAFETY: Target X={target_x:.2f} drifting RIGHT. Strafe LEFT to center.", analysis
+                return "D1", f"SAFETY: Wall detected RIGHT (imbalance={analysis['imbalance']:.2f}). Strafe LEFT.", analysis
+        
+        # For distances other than CERCA/MUY_CERCA, only do basic imbalance check above
+        if distance not in ["MUY_CERCA", "CERCA"]:
+            return intended_command, None, analysis
+        
+        # === CLOSE PROXIMITY CHECKS ===
+        
+        # Check 1: Is target_point dangerously off-center? 
+        if abs(target_x - 0.5) > 0.10:
+            # Target is off-center - risk of collision
+            if target_x < 0.5:
+                self.intervention_count += 1
+                return "D1", f"SAFETY: Door at X={target_x:.2f}. Strafe LEFT to align.", analysis
+            else:
+                self.intervention_count += 1
+                return "D2", f"SAFETY: Door at X={target_x:.2f}. Strafe RIGHT to align.", analysis
         
         # Check 2: Is there high edge density in danger zones?
         left_danger = analysis["left_density"] > self.CRITICAL_DENSITY_THRESHOLD
         right_danger = analysis["right_density"] > self.CRITICAL_DENSITY_THRESHOLD
         
         if left_danger and right_danger:
-            # Both sides have obstacles - might be too narrow or entering at angle
-            if abs(analysis["imbalance"]) > 0.15:
-                # Off-center, correct toward less dangerous side
-                if analysis["imbalance"] < 0:
-                    self.intervention_count += 1
-                    return "D2", f"SAFETY: Walls both sides, closer LEFT. Strafe RIGHT.", analysis
-                else:
-                    self.intervention_count += 1
-                    return "D1", f"SAFETY: Walls both sides, closer RIGHT. Strafe LEFT.", analysis
-            else:
-                # Centered but tight - allow very small advance
-                if intended_command in ["A2", "A3"]:
-                    return "A1", f"SAFETY: Tight passage. Reduced to A1.", analysis
-                    
-        elif left_danger:
-            # Left wall close - strafe right
+            # Both sides have obstacles - tight passage
+            if intended_command in ["A2", "A3"]:
+                return "A1", f"SAFETY: Tight passage. Reduced to A1.", analysis
+                     
+        elif left_danger and not right_danger:
             self.intervention_count += 1
             return "D2", f"SAFETY: Wall LEFT (density={analysis['left_density']:.2f}). Strafe RIGHT.", analysis
             
-        elif right_danger:
-            # Right wall close - strafe left
+        elif right_danger and not left_danger:
             self.intervention_count += 1
             return "D1", f"SAFETY: Wall RIGHT (density={analysis['right_density']:.2f}). Strafe LEFT.", analysis
-        
-        # Check 3: Imbalance check (less severe but still risky)
-        if abs(analysis["imbalance"]) > 0.25:
-            if analysis["imbalance"] < 0:
-                return "D2", f"SAFETY: Imbalance LEFT ({analysis['imbalance']:.2f}). Small strafe RIGHT.", analysis
-            else:
-                return "D1", f"SAFETY: Imbalance RIGHT ({analysis['imbalance']:.2f}). Small strafe LEFT.", analysis
         
         # All checks passed - safe to proceed
         return intended_command, None, analysis

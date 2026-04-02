@@ -25,9 +25,12 @@ class WaypointController:
     """
     
     # Thresholds for X position (horizontal)
-    X_CENTER_THRESHOLD = 0.15  # Within 0.35-0.65 is "centered"
-    X_TURN_THRESHOLD = 0.25    # Beyond 0.25 or 0.75 is "turn needed"
-    X_HARD_TURN_THRESHOLD = 0.35  # Beyond 0.15 or 0.85 is "hard turn"
+    # CRITICAL: Only allow advance when PERFECTLY centered (0.45-0.55)
+    # This prevents collision with door frames when crossing
+    X_CENTER_THRESHOLD = 0.05  # Within 0.45-0.55 is "safe to advance"
+    X_STRAFE_THRESHOLD = 0.05  # Beyond ±0.05 from center needs strafe
+    X_TURN_THRESHOLD = 0.40    # Beyond 0.10 or 0.90 needs rotation (edge of view)
+    X_HARD_TURN_THRESHOLD = 0.45  # Beyond 0.05 or 0.95 needs hard turn
     
     # Thresholds for Y position (vertical/depth)
     Y_FORWARD_THRESHOLD = 0.55  # Below 0.55 = forward motion
@@ -90,7 +93,86 @@ class WaypointController:
         # Determine primary action based on x deviation
         abs_x_dev = abs(x_deviation)
         
-        # ==================== ROTATION NEEDED ====================
+        # ==================== DOOR VISIBLE - PREFER STRAFE OVER ROTATION ====================
+        # When door/target is visible (any distance), use STRAFE to align body
+        # Only use rotation when searching (distance=DESCONOCIDO or target at extreme edge)
+        
+        # CRITICAL FIX: If not perfectly centered (0.45-0.55), ALWAYS strafe first
+        # This prevents collision with door frames during crossing
+        # X=0.65 means door is 15% to the right - MUST strafe right before advancing
+        
+        if abs_x_dev > self.X_CENTER_THRESHOLD and distance != "DESCONOCIDO":
+            # Door visible but not centered - STRAFE to align body
+            # NEVER advance until X is within ±0.05 of center
+            
+            if abs_x_dev > 0.25:
+                # Larger misalignment - larger strafe
+                if x_deviation < 0:
+                    command = self.STRAFE_MAP["left_large"]  # D3: 15cm left
+                else:
+                    command = self.STRAFE_MAP["right_large"]  # D4: 15cm right
+            elif abs_x_dev > 0.10:
+                # Medium misalignment - medium strafe  
+                if x_deviation < 0:
+                    command = self.STRAFE_MAP["left_large"]  # D3: 15cm left
+                else:
+                    command = self.STRAFE_MAP["right_large"]  # D4: 15cm right
+            else:
+                # Small misalignment (0.05 < abs_x_dev <= 0.10) - small strafe
+                if x_deviation < 0:
+                    command = self.STRAFE_MAP["left_small"]  # D1: 5cm left
+                else:
+                    command = self.STRAFE_MAP["right_small"]  # D2: 5cm right
+            
+            # REMOVED: The "advance after 2 strafes" logic that caused the crash
+            # The drone should NEVER advance until properly centered
+            # Previous bug: After 2 strafes it would advance even with X=0.65
+            
+            self.last_command = command
+            self.command_history.append(command)
+            if len(self.command_history) > 10:
+                self.command_history.pop(0)
+            return command
+        
+        # ==================== CLOSE PROXIMITY - FINE STRAFE ====================
+        # When very close, use small precise strafes for final alignment
+        if distance in ["MUY_CERCA", "CERCA"] and abs_x_dev > 0.02:
+            if x_deviation < 0:
+                command = self.STRAFE_MAP["left_small"]  # D1: 5cm left
+            else:
+                command = self.STRAFE_MAP["right_small"]  # D2: 5cm right
+            
+            self.last_command = command
+            self.command_history.append(command)
+            if len(self.command_history) > 10:
+                self.command_history.pop(0)
+            return command
+        
+        # ==================== WELL CENTERED - SAFE TO ADVANCE ====================
+        # ONLY advance when X is within 0.45-0.55 (±0.05 from center)
+        if abs_x_dev <= self.X_CENTER_THRESHOLD:
+            # Target is centered, advance based on distance
+            if distance == "MUY_CERCA":
+                command = "A1"
+            elif distance == "CERCA":
+                command = "A1"
+            elif distance == "LEJOS":
+                command = "A2"
+            elif distance == "MUY_LEJOS":
+                command = "A3"
+            else:
+                command = "A2"  # Default
+            
+            self.last_command = command
+            self.command_history.append(command)
+            if len(self.command_history) > 10:
+                self.command_history.pop(0)
+            return command
+        
+        # ==================== ROTATION NEEDED (searching or extreme edge) ====================
+        # Only rotate when:
+        # 1. Target at extreme edge (abs_x_dev >= 0.40)
+        # 2. Distance is unknown (searching mode)
         if abs_x_dev > self.X_HARD_TURN_THRESHOLD:
             # Hard turn needed (target is at extreme edge)
             if x_deviation < 0:

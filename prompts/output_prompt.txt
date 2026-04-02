@@ -33,20 +33,26 @@ FIELD DEFINITIONS
   - ¿Estás progresando hacia el objetivo?
   
   Ejemplo: "Veo puerta abierta a la izquierda a ~2m, con marco visible. 
-  Señalo el centro de la puerta (0.25, 0.45) para que el dron gire 
-  hacia ella y avance."
+  Señalo hacia la puerta (0.35, 0.45) para que el dron se desplace 
+  lateralmente hacia ella y la centre."
 
 **"target_point"** (array [x, y]):
   Coordenadas normalizadas del punto objetivo en la imagen.
   - x: 0.0 (borde izquierdo) a 1.0 (borde derecho)
   - y: 0.0 (borde superior) a 1.0 (borde inferior)
   
+  🚨 REGLA CLAVE:
+  - Si YA VES la puerta/objetivo → señala CERCA del centro (0.3-0.7)
+    Esto genera STRAFE para alinear tu cuerpo sin perder de vista
+  - Si NO VES nada y buscas → señala los extremos (0.1 o 0.9)
+    Esto genera ROTACIÓN para buscar en nueva dirección
+  
   Ejemplos:
-  - [0.50, 0.45]: Centro-arriba (avanzar recto)
-  - [0.20, 0.50]: Izquierda (girar izquierda hacia objetivo)
-  - [0.80, 0.50]: Derecha (girar derecha hacia objetivo)
-  - [0.50, 0.30]: Arriba-centro (avanzar más rápido)
-  - [0.50, 0.70]: Abajo-centro (retroceder/frenar)
+  - [0.50, 0.45]: Centro (avanzar recto)
+  - [0.35, 0.50]: Puerta visible a la izquierda → STRAFE izquierda
+  - [0.65, 0.50]: Puerta visible a la derecha → STRAFE derecha
+  - [0.10, 0.50]: Buscando, no veo nada → ROTAR izquierda
+  - [0.90, 0.50]: Buscando, no veo nada → ROTAR derecha
 
 **"distance"** (string):
   Distancia estimada al objetivo. Debe ser uno de:
@@ -76,6 +82,12 @@ FIELD DEFINITIONS
   - "Searching object" - Buscando objeto objetivo en habitación
   - "Approaching object" - Objeto detectado, acercándose
   - "Reached target" - Objetivo alcanzado
+  
+  🚨 REGLA CRÍTICA DE TRANSICIÓN 🚨
+  - "Door close" → SOLO usar si la puerta está CENTRADA (X entre 0.45-0.55)
+  - "Crossing door" → SOLO usar si X está EXACTAMENTE cerca de 0.50
+  - Si la puerta está en X=0.65, NO cambies a "Crossing" ni "Door close"
+  - PRIMERO señala el centro de la puerta para STRAFE hasta que X≈0.50
   
   Este campo ayuda al sistema a determinar transiciones de fase.
 
@@ -141,29 +153,29 @@ EXAMPLE OUTPUTS
 }
 ```
 
-**Example 4 - Door close, need to center first:**
+**Example 4 - Door close but NOT centered (X=0.65), MUST strafe first:**
 ```json
 {
-  "reasoning": "Puerta cerca pero marco derecho muy cerca del borde (X~0.70). El dron tiene 60cm de ancho y colisionaría. Debo STRAFEAR IZQUIERDA para centrar la puerta antes de avanzar.",
-  "target_point": [0.35, 0.50],
-  "distance": "MUY_CERCA",
+  "reasoning": "Puerta cerca (~1m) pero está desplazada a la derecha (X~0.65). El dron tiene 60cm de ancho. Si avanzo ahora, mi ala derecha chocará con el marco. DEBO hacer STRAFE DERECHA para centrar la puerta ANTES de cruzar. NO puedo cambiar a 'Crossing door' hasta que X≈0.50.",
+  "target_point": [0.65, 0.50],
+  "distance": "CERCA",
   "confidence": "ALTA",
   "room": "living room & kitchen",
-  "mission_progress": "Crossing door",
-  "memory_update": "Puerta descentrada derecha. Strafe izquierda para centrar. Margen der insuficiente (~30%)."
+  "mission_progress": "Door close",
+  "memory_update": "Puerta descentrada DERECHA (X=0.65). STRAFE derecha para centrar. NO avanzar hasta X≈0.50."
 }
 ```
 
-**Example 5 - Door perfectly centered, safe to cross:**
+**Example 5 - Door perfectly centered (X≈0.50), NOW safe to cross:**
 ```json
 {
-  "reasoning": "Puerta centrada perfectamente (X=0.50). Marco izquierdo en X~0.20, marco derecho en X~0.80. Márgenes >35% a ambos lados. SEGURO para cruzar.",
+  "reasoning": "Puerta CENTRADA perfectamente (X=0.50). Marco izquierdo en X~0.20, marco derecho en X~0.80. Márgenes >35% a ambos lados. Ahora SÍ es SEGURO cambiar a 'Crossing door' y avanzar.",
   "target_point": [0.50, 0.40],
   "distance": "MUY_CERCA",
   "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Crossing door",
-  "memory_update": "Puerta centrada. Márgenes seguros (izq 35%, der 35%). Avanzando."
+  "memory_update": "Puerta centrada (X=0.50). Márgenes seguros (izq 35%, der 35%). Avanzando."
 }
 ```
 

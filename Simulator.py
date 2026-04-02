@@ -21,10 +21,14 @@ from mlagents_envs.side_channel.side_channel import (
 
 # Safety Guard: Detector de proximidad a paredes (sin VLM)
 from reasoning.wall_proximity_detector import WallProximityDetector, SafetyEnvelope
+# Phase 5: Depth-based reactive safety layer
+from reasoning.depth_safety_guard import DepthSafetyGuard, CombinedSafetyGuard
 # Adaptive Distance Scaling for SPF system
 from reasoning.adaptive_scaling import AdaptiveScaler, STATIC_MOVE_MAP
 # MPC Controller for smooth trajectory planning
 from reasoning.mpc_controller import MPCController, create_mpc_controller
+# Phase 4+5 Enhanced: Continuous proportional control with safety envelope v2
+from reasoning.continuous_controller import ContinuousController, SafetyEnvelopeV2, ControlMode, VelocityCommand
 
 # --- Teclado (pynput) ---
 class KeyController:
@@ -375,6 +379,11 @@ def run_simulation(args, topology, json_data=None):
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
     safety_envelope = SafetyEnvelope()  # Phase 4: Virtual safety envelope for door crossing
+    
+    # Phase 5: Depth-based reactive safety (combines edge + depth analysis)
+    depth_safety = DepthSafetyGuard(use_depth_model=False, model_type="edge_fallback")
+    use_depth_safety = getattr(args, 'depth_safety', False)  # Disabled by default, enable with --depth-safety
+    
     safety_override = None  # Guarda info cuando Safety Guard interviene
     use_safety_envelope = getattr(args, 'safety', True)  # Enable by default
     
@@ -385,6 +394,11 @@ def run_simulation(args, topology, json_data=None):
     # MPC Controller: smooth trajectory planning (Phase 4)
     mpc_controller = create_mpc_controller()
     use_mpc = getattr(args, 'mpc', False)  # Disabled by default, enable with --mpc
+    
+    # Phase 4+5 Enhanced: Continuous proportional controller with safety envelope v2
+    continuous_controller = ContinuousController()
+    safety_envelope_v2 = SafetyEnvelopeV2()
+    use_continuous = getattr(args, 'continuous', False)  # Disabled by default, enable with --continuous
 
     # Static move_map for fallback/manual mode
     move_map = STATIC_MOVE_MAP
@@ -515,7 +529,7 @@ def run_simulation(args, topology, json_data=None):
             
             if use_safety_envelope:
                 # Check if current phase involves crossing doors
-                current_phase = mission_manager.get_current_phase()
+                current_phase = mission_manager.current_phase
                 is_crossing = current_phase and "TRAVES" in str(current_phase).upper()
                 is_approaching = current_phase and "APROXIM" in str(current_phase).upper()
                 
@@ -541,16 +555,69 @@ def run_simulation(args, topology, json_data=None):
                         
                         # Send feedback to VLM via memory update
                         agent_memory += f" [SAFETY ALERT: {override_reason}]"
-                    elif analysis:
+                    elif analysis and "imbalance" in analysis:
                         # Log safety status even when not intervening
                         print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
-            # === END SAFETY ENVELOPE ===
+            
+            # === DEPTH SAFETY GUARD (Phase 5) ===
+            # Reactive safety using depth estimation - runs AFTER envelope
+            if use_depth_safety and command.startswith("A"):
+                depth_cmd, depth_reason, depth_analysis = depth_safety.check_safety(
+                    image_cv2=real_img,
+                    intended_command=command,
+                    distance=distance
+                )
+                
+                if depth_reason:
+                    # Depth safety intervened
+                    command = depth_cmd
+                    safety_override = depth_reason
+                    print(f"[DEPTH] ⚠️ {depth_reason}")
+                    print(f"[DEPTH] Command changed: {original_command} -> {command}")
+                elif depth_analysis and depth_analysis.get("path_clear"):
+                    print(f"[DEPTH] ✓ Path clear")
+            # === END SAFETY GUARDS ===
 
+            # === CONTINUOUS CONTROLLER (Phase 4+5 Enhanced) ===
+            # Proportional velocity control with integrated safety envelope
+            if use_continuous and command != "E":
+                # Compute proportional velocity from target_point
+                velocity_cmd = continuous_controller.compute_velocity(
+                    target_point=tuple(target_point),
+                    distance=distance,
+                    confidence=confidence
+                )
+                
+                # Apply safety envelope v2 (ABSOLUTE AUTHORITY)
+                safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
+                    image_cv2=real_img,
+                    velocity_cmd=velocity_cmd,
+                    distance=distance
+                )
+                
+                if safety_reason:
+                    # Safety envelope intervened
+                    print(f"[SAFETY-V2] ⚠️ {safety_reason}")
+                    velocity_cmd = safe_velocity
+                    safety_override = safety_reason
+                else:
+                    imbalance = safety_analysis.get("imbalance", 0) if safety_analysis else 0
+                    print(f"[SAFETY-V2] ✓ Clear (imbalance={imbalance:.2f})")
+                
+                # Convert velocity to movement parameters
+                move_steps, move_vec = continuous_controller.velocity_to_steps(velocity_cmd)
+                
+                # Log continuous controller status
+                mode = continuous_controller.mode.value
+                print(f"[CONTINUOUS] Mode: {mode}, Velocity: vx={velocity_cmd.vx:.3f} vy={velocity_cmd.vy:.3f} vyaw={velocity_cmd.vyaw:.3f}")
+                print(f"[CONTINUOUS] Output: steps={move_steps}, vec={[f'{v:.2f}' for v in move_vec]}")
+                scaling_phase = f"CONTINUOUS-{mode}"
+            
             # === MPC CONTROLLER (Phase 4) ===
             # Smooth continuous trajectory planning from waypoints
-            if use_mpc and command != "E":
+            elif use_mpc and command != "E":
                 # Determine if we're in scanning mode
-                current_phase = mission_manager.get_current_phase()
+                current_phase = mission_manager.current_phase
                 is_scanning = current_phase and "ESCANEO" in str(current_phase).upper()
                 
                 # Compute smooth velocity command
@@ -600,6 +667,9 @@ def run_simulation(args, topology, json_data=None):
         if args.save_logs:
             # Get MPC status if enabled
             mpc_status = mpc_controller.get_status() if use_mpc else None
+            # Get continuous controller status if enabled
+            continuous_status = continuous_controller.get_status() if use_continuous else None
+            safety_v2_status = safety_envelope_v2.get_status() if use_continuous else None
             
             log_data = {
                 "step": str(total_steps),
@@ -613,14 +683,18 @@ def run_simulation(args, topology, json_data=None):
                 "target_point": target_point if not manual else None,
                 "distance": distance if not manual else None,
                 "confidence": confidence if not manual else None,
-                "oscillation_override": oscillation_override if not manual else False,
+                "oscillation_override": bool(oscillation_override) if not manual else False,
                 # Adaptive scaling data
                 "scaling_phase": scaling_phase if not manual else "Manual",
-                "move_steps": move_steps if not manual else None,
-                "move_vec": move_vec if not manual else None,
+                "move_steps": int(move_steps) if not manual and move_steps is not None else None,
+                "move_vec": [float(v) for v in move_vec] if not manual and move_vec is not None else None,
                 # MPC data (Phase 4)
-                "mpc_enabled": use_mpc,
+                "mpc_enabled": bool(use_mpc),
                 "mpc_status": mpc_status,
+                # Continuous Controller data (Phase 4+5 Enhanced)
+                "continuous_enabled": bool(use_continuous),
+                "continuous_status": continuous_status,
+                "safety_v2_status": safety_v2_status,
                 # Mission data
                 "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
                 "room": room,
@@ -628,8 +702,8 @@ def run_simulation(args, topology, json_data=None):
                 "reasoning": reasoning if not manual else "",
                 "mission_progress": mission_progress if not manual else "",
                 "agent_memory": agent_memory,
-                "goal_state": goal_state,
-                "elapsed_time": elapsed_time,
+                "goal_state": bool(goal_state) if goal_state is not None else None,
+                "elapsed_time": float(elapsed_time),
             }
 
             json_data["Step_" + str(total_steps)] = log_data
@@ -745,6 +819,18 @@ if __name__ == "__main__":
     # NEW: Safety Envelope (Phase 4) - collision prevention during door crossing
     parser.add_argument('--safety', action='store_true', default=True, help='Enable safety envelope for door crossing (default: on)')
     parser.add_argument('--no-safety', dest='safety', action='store_false', help='Disable safety envelope')
+    
+    # NEW: Depth Safety Guard (Phase 5) - reactive depth-based collision prevention
+    parser.add_argument('--depth-safety', dest='depth_safety', action='store_true', default=False, 
+                        help='Enable depth-based safety guard (Phase 5)')
+    parser.add_argument('--no-depth-safety', dest='depth_safety', action='store_false', 
+                        help='Disable depth safety guard')
+    
+    # NEW: Continuous Controller (Phase 4 Enhanced) - proportional velocity control
+    parser.add_argument('--continuous', action='store_true', default=False,
+                        help='Enable continuous proportional control (Phase 4 Enhanced)')
+    parser.add_argument('--no-continuous', dest='continuous', action='store_false',
+                        help='Disable continuous control (use discrete commands)')
 
     args = parser.parse_args()
 

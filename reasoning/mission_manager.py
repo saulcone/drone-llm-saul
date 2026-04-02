@@ -165,6 +165,24 @@ class MissionManager:
                 self.open_door_found = True
                 print(f"[MISSION] Open door found!")
         
+        # Early detection: door with visual hints of target room
+        # E.g., "suelo cuadros" or "checkered floor" suggests bathroom
+        target_hints = {
+            "bathroom": ["cuadros", "checkered", "azulejo", "tiles", "lavabo", "sink", "baño"],
+            "bedroom": ["cama", "bed", "silla", "chair", "ventana", "window", "bedroom"],
+            "kitchen": ["cocina", "kitchen", "fregadero", "nevera", "refrigerator"]
+        }
+        
+        hints_for_target = target_hints.get(self.target_room, [])
+        found_hint = any(hint in reasoning for hint in hints_for_target)
+        
+        if found_hint and self.current_phase == MissionPhase.ESCANEO:
+            # Found visual hint of target - treat as high-confidence door detection
+            if not self.door_detected:
+                self.door_detected = True
+                self.open_door_found = True
+                print(f"[MISSION] 🎯 Target room hint detected! Likely {self.target_room}")
+        
         # Update internal flags based on VLM reasoning
         if "door" in reasoning or "puerta" in reasoning:
             if "visible" in reasoning or "detected" in reasoning or "veo" in reasoning:
@@ -193,15 +211,23 @@ class MissionManager:
         # ==================== PHASE TRANSITIONS ====================
         
         if self.current_phase == MissionPhase.ESCANEO:
+            # Early transition: if we found hints of target room, go immediately
+            if found_hint and self.door_detected:
+                self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
+                self.scan_complete = True
+                print(f"\n{'='*60}")
+                print(f"[MISSION] PHASE TRANSITION: ESCANEO → BÚSQUEDA GLOBAL")
+                print(f"[MISSION] 🎯 Target room hint detected early - skipping full scan!")
+                print(f"{'='*60}\n")
             # Transition from scan when open door found with high confidence
-            if self.open_door_found and confidence in ["ALTA", "MEDIA"]:
+            elif self.open_door_found and confidence in ["ALTA", "MEDIA"]:
                 self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
                 self.scan_complete = True
                 print(f"\n{'='*60}")
                 print(f"[MISSION] PHASE TRANSITION: ESCANEO → BÚSQUEDA GLOBAL")
                 print(f"[MISSION] Open door found, beginning approach")
                 print(f"{'='*60}\n")
-            # Also transition if we've scanned enough (4+ rotations)
+            # Also transition if we've scanned enough (6 rotations)
             elif self.scan_rotations >= 6:
                 self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
                 self.scan_complete = True
