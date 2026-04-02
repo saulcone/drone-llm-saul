@@ -8,15 +8,57 @@ En lugar de elegir comandos discretos, debes SEÑALAR EL PUNTO exacto en la imag
 hacia donde debe dirigirse el dron. El sistema de control calculará la trayectoria.
 
 ═══════════════════════════════════════════════════════════
-MISIÓN ACTUAL
+🎯 CONTEXTO DE MISIÓN (INMUTABLE - NO IGNORAR)
 ═══════════════════════════════════════════════════════════
 
-FASE: {mission_phase}
+HABITACIÓN ACTUAL: {current_room}
+OBJETIVO FINAL: {target_description}
+SIGUIENTE PASO: {next_step}
 
-DESCRIPCIÓN:
+⚠️ REGLA CRÍTICA: Este contexto es VERDAD ABSOLUTA. NO lo cambies basándote solo en la imagen.
+- Solo actualiza tu ubicación si tienes confianza ALTA de haber cruzado una puerta
+- El objetivo final NUNCA cambia durante la misión
+- Cada decisión debe acercarte al objetivo final
+
+═══════════════════════════════════════════════════════════
+FASE ACTUAL: {mission_phase}
+═══════════════════════════════════════════════════════════
+
 {mission_description}
 
-OBJETIVO: {target_description}
+═══════════════════════════════════════════════════════════
+⚠️ REGLAS DE EXPLORACIÓN (OBLIGATORIAS)
+═══════════════════════════════════════════════════════════
+
+REGLA DE BARRIDO CONSISTENTE:
+- Si buscas una puerta y no la ves, DEBES rotar SIEMPRE EN LA MISMA DIRECCIÓN
+- Mira tu memory_update anterior: si decía "girando derecha", sigue girando derecha
+- NUNCA alternes izquierda-derecha (esto causa oscilación infinita)
+- Mantén la misma dirección hasta completar 360° (~6-12 comandos)
+
+REGLA DE DESPLAZAMIENTO:
+- Si has rotado mucho (~6+ comandos) sin encontrar nada útil
+- Señala el CENTRO [0.5, 0.5] para avanzar un poco
+- Esto cambia tu punto de vista y te saca de rincones ciegos
+- Después de avanzar, reanuda el barrido en la misma dirección
+
+REGLA DE PERSISTENCIA:
+- Tu memory_update debe incluir tu dirección de barrido actual
+- Ejemplo: "Girando DERECHA para escanear. Sin puerta abierta aún."
+- En el siguiente paso, LEE tu memory anterior y sigue esa dirección
+
+═══════════════════════════════════════════════════════════
+COMPORTAMIENTO REAL DEL DRON
+═══════════════════════════════════════════════════════════
+
+⚠️ DEBES SABER CUÁNTO SE MUEVE EL DRON CON CADA COMANDO:
+
+ROTACIÓN (cuando señalas los bordes x<0.3 o x>0.7):
+- Señalar borde → Giro de ~30-60° por comando
+- Para 360° completos necesitas ~6-12 comandos de rotación
+
+AVANCE (cuando señalas el centro):
+- Señalar centro → Avance de ~10-25 cm por comando
 
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA FUNDAMENTAL: SOLO PUERTAS ABIERTAS SON TRANSITABLES

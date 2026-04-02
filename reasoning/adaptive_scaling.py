@@ -61,8 +61,8 @@ class AdaptiveScaler:
             "strafe_steps": 3,        # Micro strafe
         },
         DistanceLevel.DESCONOCIDO: {
-            "forward_steps": 15,      # Conservative default
-            "rotation_degrees": 15,
+            "forward_steps": 15,      # Conservative default for forward
+            "rotation_degrees": 60,   # LARGER rotation for scanning (was 15)
             "strafe_steps": 5,
         },
     }
@@ -115,7 +115,12 @@ class AdaptiveScaler:
         if movement_type == "forward":
             steps = int(scale["forward_steps"] * conf_mod)
         elif movement_type in ["rotate_left", "rotate_right"]:
-            steps = int(scale["rotation_degrees"] * conf_mod)
+            # For scanning (DESCONOCIDO), don't reduce rotation by confidence
+            # We WANT to rotate fast to scan the room quickly
+            if dist_level == DistanceLevel.DESCONOCIDO:
+                steps = scale["rotation_degrees"]  # Full rotation, no confidence penalty
+            else:
+                steps = int(scale["rotation_degrees"] * conf_mod)
         elif movement_type in ["strafe_left", "strafe_right"]:
             steps = int(scale["strafe_steps"] * conf_mod)
         else:

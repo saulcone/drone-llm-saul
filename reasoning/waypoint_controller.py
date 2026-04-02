@@ -179,14 +179,21 @@ class WaypointController:
             
         return command
     
-    def check_oscillation(self):
+    def check_oscillation(self, is_scanning=False):
         """
         Check if recent commands suggest oscillation.
+        
+        Args:
+            is_scanning: If True, be more lenient (scanning requires rotations)
         
         Returns:
             bool: True if oscillation detected
         """
         if len(self.command_history) < 4:
+            return False
+        
+        # During scanning, don't flag rotation as oscillation
+        if is_scanning:
             return False
             
         recent = self.command_history[-4:]
@@ -201,20 +208,35 @@ class WaypointController:
             
         return False
     
-    def get_anti_oscillation_command(self, target_point, distance):
+    def get_anti_oscillation_command(self, target_point, distance, is_scanning=False):
         """
         Generate a command that breaks oscillation pattern.
         
         When oscillation is detected, prioritize forward movement
         instead of lateral adjustments.
+        
+        During scanning phase, continue rotating instead of stopping.
         """
+        # During scanning, allow rotations - pick a consistent direction
+        if is_scanning or distance == "DESCONOCIDO":
+            # Pick a direction based on last dominant movement
+            recent = self.command_history[-6:] if len(self.command_history) >= 6 else self.command_history
+            right_count = sum(1 for c in recent if c.startswith('C'))
+            left_count = sum(1 for c in recent if c.startswith('B'))
+            
+            # Continue in the dominant direction, or default to right
+            if left_count > right_count:
+                return "B2"  # Continue left
+            else:
+                return "C2"  # Continue right
+        
         # If we can advance, do so
         if distance in ["MUY_LEJOS", "LEJOS"]:
             return "A2"  # Just advance
         elif distance == "CERCA":
             return "A1"  # Careful advance
         else:
-            return "E"  # Wait and let VLM reassess
+            return "A1"  # Default to small advance instead of waiting
 
 
 def create_waypoint_controller():

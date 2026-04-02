@@ -23,6 +23,8 @@ from mlagents_envs.side_channel.side_channel import (
 from reasoning.wall_proximity_detector import WallProximityDetector
 # Adaptive Distance Scaling for SPF system
 from reasoning.adaptive_scaling import AdaptiveScaler, STATIC_MOVE_MAP
+# MPC Controller for smooth trajectory planning
+from reasoning.mpc_controller import MPCController, create_mpc_controller
 
 # --- Teclado (pynput) ---
 class KeyController:
@@ -376,6 +378,10 @@ def run_simulation(args, topology, json_data=None):
     # Adaptive Distance Scaling: scales movement based on distance to target
     adaptive_scaler = AdaptiveScaler()
     use_adaptive_scaling = getattr(args, 'adaptive', True)  # Enable by default
+    
+    # MPC Controller: smooth trajectory planning (Phase 4)
+    mpc_controller = create_mpc_controller()
+    use_mpc = getattr(args, 'mpc', False)  # Disabled by default, enable with --mpc
 
     # Static move_map for fallback/manual mode
     move_map = STATIC_MOVE_MAP
@@ -505,16 +511,46 @@ def run_simulation(args, topology, json_data=None):
             safety_override = None
             # === END SAFETY GUARD ===
 
-            # === ADAPTIVE DISTANCE SCALING ===
+            # === MPC CONTROLLER (Phase 4) ===
+            # Smooth continuous trajectory planning from waypoints
+            if use_mpc and command != "E":
+                # Determine if we're in scanning mode
+                current_phase = mission_manager.get_current_phase()
+                is_scanning = current_phase and "ESCANEO" in str(current_phase).upper()
+                
+                # Compute smooth velocity command
+                velocity_cmd = mpc_controller.compute_velocity(
+                    target_point=tuple(target_point),
+                    distance=distance,
+                    confidence=confidence,
+                    is_scanning=is_scanning
+                )
+                
+                # Convert to movement parameters
+                move_steps, move_vec = mpc_controller.get_movement_steps(velocity_cmd)
+                
+                # Log MPC status
+                status = mpc_controller.get_status()
+                print(f"[MPC] Mode: {status['mode']}, Cmd: vx={status['last_cmd']['vx']:.2f} vy={status['last_cmd']['vy']:.2f} vyaw={status['last_cmd']['vyaw']:.2f}")
+                scaling_phase = f"MPC-{status['mode']}"
+                
+            # === ADAPTIVE DISTANCE SCALING (legacy fallback) ===
             # Scale movement based on distance to target
-            if use_adaptive_scaling and command != "E":
+            elif use_adaptive_scaling and command != "E":
                 move_steps, move_vec = adaptive_scaler.get_adaptive_move(command, distance, confidence)
                 scaling_phase = adaptive_scaler.get_phase_description()
-                print(f"[ADAPTIVE] {scaling_phase}: {command} -> steps={move_steps}")
+                # More descriptive output based on command type
+                if command.startswith("B") or command.startswith("C"):
+                    direction = "LEFT" if command.startswith("B") else "RIGHT"
+                    print(f"[ADAPTIVE] {scaling_phase}: ROTATE {direction} ~{move_steps}°")
+                elif command.startswith("A"):
+                    print(f"[ADAPTIVE] {scaling_phase}: FORWARD ~{move_steps}cm")
+                else:
+                    print(f"[ADAPTIVE] {scaling_phase}: {command} -> steps={move_steps}")
             else:
                 move_steps, move_vec = move_map.get(command, (10, [0, 0, 0, 0]))
                 scaling_phase = "Static"
-            # === END ADAPTIVE SCALING ===
+            # === END MOVEMENT SCALING ===
 
             if command != "E":  # Don't move on wait command
                 if args.fast:
@@ -527,7 +563,9 @@ def run_simulation(args, topology, json_data=None):
     
 
         if args.save_logs:
-
+            # Get MPC status if enabled
+            mpc_status = mpc_controller.get_status() if use_mpc else None
+            
             log_data = {
                 "step": str(total_steps),
                 "position": str(pos),
@@ -544,6 +582,10 @@ def run_simulation(args, topology, json_data=None):
                 # Adaptive scaling data
                 "scaling_phase": scaling_phase if not manual else "Manual",
                 "move_steps": move_steps if not manual else None,
+                "move_vec": move_vec if not manual else None,
+                # MPC data (Phase 4)
+                "mpc_enabled": use_mpc,
+                "mpc_status": mpc_status,
                 # Mission data
                 "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
                 "room": room,
@@ -660,6 +702,10 @@ if __name__ == "__main__":
     # NEW: Adaptive scaling
     parser.add_argument('--adaptive', action='store_true', default=True, help='Enable adaptive distance scaling (default: True)')
     parser.add_argument('--no-adaptive', dest='adaptive', action='store_false', help='Disable adaptive distance scaling')
+    
+    # NEW: MPC Controller (Phase 4)
+    parser.add_argument('--mpc', action='store_true', default=False, help='Enable MPC smooth trajectory controller')
+    parser.add_argument('--no-mpc', dest='mpc', action='store_false', help='Disable MPC (use discrete commands)')
 
     args = parser.parse_args()
 

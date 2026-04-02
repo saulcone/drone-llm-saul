@@ -86,7 +86,9 @@ class OllamaDescriptor(VLMBaseModel):
             parsed_response = json.loads(response_text)
             
             # 7. SPF: Convert waypoint to movement command
-            parsed_response = self._process_waypoint_response(parsed_response)
+            # Pass mission_phase to detect if we're in scanning mode
+            is_scanning = mission_phase and "ESCANEO" in str(mission_phase).upper()
+            parsed_response = self._process_waypoint_response(parsed_response, is_scanning=is_scanning)
             
             return parsed_response
             
@@ -94,7 +96,7 @@ class OllamaDescriptor(VLMBaseModel):
             logger.exception(f"Error calling Ollama model {self.model}: {str(e)}")
             return None
     
-    def _process_waypoint_response(self, response):
+    def _process_waypoint_response(self, response, is_scanning=False):
         """
         Process VLM response with SPF (See, Point, Fly) system.
         
@@ -103,6 +105,7 @@ class OllamaDescriptor(VLMBaseModel):
         
         Args:
             response: Dict with target_point, distance, confidence, etc.
+            is_scanning: If True, be lenient with oscillation detection
             
         Returns:
             Dict with added 'movement' field computed from waypoint
@@ -125,9 +128,10 @@ class OllamaDescriptor(VLMBaseModel):
         )
         
         # Check for oscillation and apply anti-oscillation if needed
-        if self.waypoint_controller.check_oscillation():
+        # Pass is_scanning to be lenient during scanning phase
+        if self.waypoint_controller.check_oscillation(is_scanning=is_scanning):
             logger.info("[SPF] Oscillation detected, applying anti-oscillation strategy")
-            movement = self.waypoint_controller.get_anti_oscillation_command(target_point, distance)
+            movement = self.waypoint_controller.get_anti_oscillation_command(target_point, distance, is_scanning=is_scanning)
             response["_oscillation_override"] = True
         
         # Add computed movement to response
