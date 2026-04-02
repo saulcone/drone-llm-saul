@@ -151,8 +151,7 @@ def manual_control(key_ctrl):
     return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
 def get_cmd_vel(img, query, topology, mission_phase, mission_description, target_description, 
-                # prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
-                prev_movement, mov_history, agent_memory="", addr = "http://localhost:5001"):
+                current_room, prev_movement, mov_history, agent_memory="", addr = "http://localhost:5001"):
     """
     Send image and mission context to server, get movement command.
     
@@ -163,6 +162,7 @@ def get_cmd_vel(img, query, topology, mission_phase, mission_description, target
         mission_phase: Current mission phase (e.g., "BÚSQUEDA GLOBAL")
         mission_description: Detailed mission description
         target_description: Target object/location
+        current_room: Current room (ground truth from simulator)
         prev_movement: Previous movement command
         mov_history: History of recent movements
         agent_memory: Episodic memory from previous step
@@ -181,6 +181,7 @@ def get_cmd_vel(img, query, topology, mission_phase, mission_description, target
         'mission_phase': mission_phase,
         'mission_description': mission_description,
         'target_description': target_description,
+        'current_room': current_room,
         'prev_movement': prev_movement,
         'mov_history': json.dumps(mov_history),
         'agent_memory': agent_memory
@@ -461,6 +462,7 @@ def run_simulation(args, topology, json_data=None):
                 mission_phase=mission_ctx["phase"],
                 mission_description=mission_ctx["description"],
                 target_description=mission_ctx["target"],
+                current_room=room,  # Ground truth room from simulator
                 prev_movement=prev_movement,
                 mov_history=mov_history,
                 agent_memory=agent_memory,

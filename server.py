@@ -64,6 +64,7 @@ def cmd_vel():
     mission_phase = request.form.get('mission_phase', 'GENERAL')
     mission_description = request.form.get('mission_description', 'Navigate freely')
     target_description = request.form.get('target_description', 'Unknown')
+    current_room = request.form.get('current_room', 'desconocida')
 
     try:
         topology = json.loads(topology_json)
@@ -82,6 +83,7 @@ def cmd_vel():
         mission_phase=mission_phase,
         mission_description=mission_description,
         target_description=target_description,
+        current_room=current_room,
         previous_movement=previous_movement,
         mov_history=mov_history,
         agent_memory=agent_memory

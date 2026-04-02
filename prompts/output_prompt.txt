@@ -82,27 +82,36 @@ FIELD DEFINITIONS
 **"memory_update"** (string):
   Notas breves (máximo 200 caracteres) para tu futuro yo en el próximo step.
   
+  ⚠️ CRÍTICO - SIEMPRE INCLUYE TU DIRECCIÓN DE GIRO:
+  - Si estás escaneando, incluye "Girando DERECHA" o "Girando IZQUIERDA"
+  - En el próximo paso, DEBES continuar en la MISMA dirección
+  - NUNCA cambies de dirección sin haber completado el barrido (~6-12 giros)
+  
   Información útil a recordar:
   - Obstáculos detectados ("Pared a la izquierda, evitar")
   - Progreso de orientación ("Puerta ahora centrada")
-  - Decisiones tomadas ("Girando izquierda para centrar puerta")
+  - Dirección de escaneo ("Girando DERECHA, 3/6 comandos")
+  - Contador de giros si estás escaneando
   
-  NO repitas información obvia de la imagen - solo contexto útil.
+  Ejemplos:
+  - "Girando DERECHA para escanear. 2 giros completados, no hay puerta aún."
+  - "Girando IZQUIERDA. Puerta cerrada a las 3h, continúo buscando."
+  - "Puerta ABIERTA detectada adelante. Dejando de rotar, avanzando."
 
 ═══════════════════════════════════════════════════════════
 EXAMPLE OUTPUTS
 ═══════════════════════════════════════════════════════════
 
-**Example 1 - Searching for door:**
+**Example 1 - Searching for door (scanning):**
 ```json
 {
-  "reasoning": "No veo puertas abiertas en la vista actual. Necesito explorar más la habitación. Señalo hacia la derecha para rotar y escanear nueva área.",
-  "target_point": [0.85, 0.50],
+  "reasoning": "No veo puertas abiertas en la vista actual. Mi memoria dice 'Girando DERECHA', así que CONTINÚO girando derecha para completar el escaneo.",
+  "target_point": [0.90, 0.50],
   "distance": "DESCONOCIDO",
   "confidence": "BAJA",
   "room": "living room & kitchen",
   "mission_progress": "Searching for door",
-  "memory_update": "Explorando sala. Ya revisé frente y izquierda, ahora girando derecha."
+  "memory_update": "Girando DERECHA. 3 giros completados. Sin puerta abierta visible aún."
 }
 ```
 

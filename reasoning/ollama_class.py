@@ -24,6 +24,7 @@ class OllamaDescriptor(VLMBaseModel):
 
     def generate_trajectory(self, image, user_query, topology=None,
                             mission_phase=None, mission_description=None, target_description=None,
+                            current_room=None,
                             previous_movement=None, mov_history=None, agent_memory=None, test=False):
         
         if test:
@@ -40,8 +41,14 @@ class OllamaDescriptor(VLMBaseModel):
         # 1. Encode image to Base64
         img_b64_str = self.encode_image_base64(image)
         
-        # 2. Build user context
-        user_text_parts = [user_query]
+        # 2. Build user context with anchored mission info
+        user_text_parts = []
+        
+        # CRITICAL: Always remind the model of its objective at the start
+        user_text_parts.append(f"🎯 RECUERDA TU OBJETIVO: {target_description or 'Unknown'}")
+        user_text_parts.append(f"📍 UBICACIÓN ACTUAL: {current_room or 'desconocida'}")
+        user_text_parts.append("")
+        user_text_parts.append(user_query)
         
         if topology: 
             user_text_parts.append("Topology: " + json.dumps(topology))
@@ -50,9 +57,9 @@ class OllamaDescriptor(VLMBaseModel):
         if mov_history: 
             user_text_parts.append("Movement history (last commands): " + str(mov_history))
         
-        # Episodic memory injection
+        # Episodic memory injection - CRITICAL for consistent rotation direction
         if agent_memory: 
-            user_text_parts.append("Agent internal memory (Notes from previous step): " + str(agent_memory))
+            user_text_parts.append("⚠️ TU MEMORIA ANTERIOR (SIGUE LA MISMA DIRECCIÓN DE GIRO): " + str(agent_memory))
             
         user_text = "\n\n".join(user_text_parts)
 
@@ -61,7 +68,8 @@ class OllamaDescriptor(VLMBaseModel):
             path_dir="prompts",
             mission_phase=mission_phase or "GENERAL",
             mission_description=mission_description or "Navigate freely",
-            target_description=target_description or "Unknown"
+            target_description=target_description or "Unknown",
+            current_room=current_room or "desconocida"
         )
 
         # 4. Build Ollama messages
