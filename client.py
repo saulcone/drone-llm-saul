@@ -4,7 +4,8 @@ from io import BytesIO
 import json
 
     
-def get_cmd_vel(img, query, topology, state, addr = "http://172.18.33.110:5001"):
+# def get_cmd_vel(img, query, topology, state, addr = "http://172.18.33.110:5001"):
+def get_cmd_vel(img, query, topology, state, addr = "http://localhost:5001"):
     url = addr + '/cmd_vel'
 
     # Encode image to memory

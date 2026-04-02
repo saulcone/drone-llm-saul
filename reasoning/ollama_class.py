@@ -2,7 +2,12 @@ import os
 import json
 import logging
 import cv2
+from pathlib import Path
+from dotenv import load_dotenv
 import ollama
+
+# Load .env from reasoning folder
+load_dotenv(Path(__file__).parent / ".env", override=True)
 
 from reasoning.load_prompts import load_system_prompt
 from reasoning.VLMModel import VLMBaseModel

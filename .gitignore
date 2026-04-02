@@ -11,7 +11,7 @@ __pycache__/
 gpt_class.cpython-311.pyc
 *.mp4
 experiment
-
+.env
 
 experiment_default_experiment_spawn_-1.json
 experiment_default_experiment_spawn_-1_back.json

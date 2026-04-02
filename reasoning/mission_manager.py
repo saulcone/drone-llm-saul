@@ -2,6 +2,7 @@
 Mission Manager for Drone Navigation System
 
 Manages mission phases and transitions between them:
+- ESCANEO: Initial 360° scan of the room to identify points of interest
 - BÚSQUEDA_GLOBAL: Locate door or object
 - TRAVESÍA: Cross door to target room
 - APROXIMACIÓN: Navigate to final object
@@ -12,6 +13,7 @@ from enum import Enum
 
 class MissionPhase(Enum):
     """Enum for different mission phases"""
+    ESCANEO = "ESCANEO INICIAL"
     BUSQUEDA_GLOBAL = "BÚSQUEDA GLOBAL"
     TRAVESIA = "TRAVESÍA"
     APROXIMACION = "APROXIMACIÓN"
@@ -23,6 +25,7 @@ class MissionManager:
     Manages mission state and phase transitions.
     
     The manager tracks progress and decides when to transition between phases:
+    0. Scan room 360° to find open doors and points of interest
     1. Search for door/object
     2. Cross door (if needed)
     3. Approach final object
@@ -38,9 +41,12 @@ class MissionManager:
         """
         self.target_object = target_object
         self.target_room = target_room
-        self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
+        self.current_phase = MissionPhase.ESCANEO  # Start with scanning
         
         # Internal state flags
+        self.scan_complete = False
+        self.scan_rotations = 0  # Count rotations during scan
+        self.open_door_found = False
         self.door_detected = False
         self.door_close = False
         self.crossed_door = False
@@ -55,18 +61,34 @@ class MissionManager:
             Dict with "phase", "description", and "target" for prompt injection
         """
         
-        if self.current_phase == MissionPhase.BUSQUEDA_GLOBAL:
+        if self.current_phase == MissionPhase.ESCANEO:
+            return {
+                "phase": "ESCANEO INICIAL - Explorar habitación",
+                "description": (
+                    f"IMPORTANTE: Antes de moverte, debes ESCANEAR la habitación.\n"
+                    f"1. Gira 360° para identificar TODAS las puertas ABIERTAS.\n"
+                    f"2. Las puertas CERRADAS (se ve la hoja de madera) son OBSTÁCULOS - ignóralas.\n"
+                    f"3. Las puertas ABIERTAS (se ve el interior de otra habitación) son transitables.\n"
+                    f"4. Busca una puerta ABIERTA que conecte con '{self.target_room}'.\n\n"
+                    f"Para escanear: señala hacia los bordes (x=0.1 o x=0.9) para girar.\n"
+                    f"Una vez encuentres una puerta ABIERTA, señálala para comenzar la aproximación."
+                ),
+                "target": f"Puerta ABIERTA hacia {self.target_room}"
+            }
+        
+        elif self.current_phase == MissionPhase.BUSQUEDA_GLOBAL:
             if not self.in_target_room:
                 # Searching for door to target room
                 return {
-                    "phase": "BÚSQUEDA GLOBAL - Localizar Puerta",
+                    "phase": "BÚSQUEDA GLOBAL - Localizar Puerta ABIERTA",
                     "description": (
-                        f"Busca visualmente una puerta abierta que conecte con '{self.target_room}'.\n"
-                        f"Rota y explora la habitación hasta encontrar la puerta objetivo.\n"
-                        f"Una vez detectada, comienza a acercarte progresivamente usando avances (A2/A3).\n"
-                        f"NO te obsesiones con centrar desde lejos - acércate primero."
+                        f"Busca una puerta ABIERTA que conecte con '{self.target_room}'.\n"
+                        f"RECUERDA:\n"
+                        f"- Puerta ABIERTA = se ve el interior de otra habitación\n"
+                        f"- Puerta CERRADA = se ve hoja de madera/metal = OBSTÁCULO, IGNORAR\n"
+                        f"Una vez encontrada, acércate progresivamente señalando su centro."
                     ),
-                    "target": f"Puerta hacia {self.target_room}"
+                    "target": f"Puerta ABIERTA hacia {self.target_room}"
                 }
             else:
                 # Already in target room, searching for object
@@ -74,8 +96,8 @@ class MissionManager:
                     "phase": "BÚSQUEDA GLOBAL - Localizar Objeto",
                     "description": (
                         f"Ya estás en '{self.target_room}'. Busca visualmente '{self.target_object}'.\n"
-                        f"Rota y escanea la habitación sistemáticamente hasta localizarlo.\n"
-                        f"Una vez detectado, comienza a acercarte progresivamente."
+                        f"Gira y escanea la habitación sistemáticamente hasta localizarlo.\n"
+                        f"Una vez detectado, señala su centro para comenzar la aproximación."
                     ),
                     "target": self.target_object
                 }
@@ -83,17 +105,17 @@ class MissionManager:
         elif self.current_phase == MissionPhase.TRAVESIA:
             # Crossing door
             return {
-                "phase": "TRAVESÍA - Cruzar Puerta",
+                "phase": "TRAVESÍA - Cruzar Puerta ABIERTA",
                 "description": (
-                    f"Cruza la puerta hacia '{self.target_room}' de forma segura.\n"
+                    f"Cruza la puerta ABIERTA hacia '{self.target_room}' de forma segura.\n"
                     f"ESTRATEGIA:\n"
-                    f"1. Si estás lejos (puerta <30% del frame) → AVANZA con A2 o A3\n"
-                    f"2. Si estás cerca (puerta >30%) → Verifica márgenes laterales\n"
-                    f"3. Si márgenes >20% en ambos lados → AVANZA con A1 o A2\n"
-                    f"4. Si un lado está muy pegado → STRAFE hacia el lado con más espacio\n"
-                    f"NO te obsesiones con centrar perfectamente - 20% de margen es suficiente."
+                    f"1. Señala el CENTRO EXACTO del hueco de la puerta\n"
+                    f"2. Si la puerta ocupa <40% del frame → avanza hacia ella\n"
+                    f"3. Si la puerta ocupa >40% del frame → verifica que hay espacio a los lados\n"
+                    f"4. Asegúrate de que hay ≥15% de margen a cada lado antes de cruzar\n"
+                    f"NO intentes cruzar si ves que chocas - ajusta posición lateral primero."
                 ),
-                "target": "Centro del marco de la puerta"
+                "target": "Centro del hueco de la puerta"
             }
             
         elif self.current_phase == MissionPhase.APROXIMACION:
@@ -101,12 +123,11 @@ class MissionManager:
             return {
                 "phase": "APROXIMACIÓN - Alcanzar Objeto",
                 "description": (
-                    f"Acércate a '{self.target_object}' lo máximo posible sin colisionar.\n"
+                    f"Acércate a '{self.target_object}' señalando directamente su centro.\n"
                     f"ESTRATEGIA:\n"
-                    f"1. Mientras esté lejos → Avanza con A2\n"
-                    f"2. Cuando esté cerca (<1m) → Usa A1 para pasos pequeños\n"
-                    f"3. Si necesitas alineación lateral final → Usa D1/D2 para strafe fino\n"
-                    f"Avanza progresivamente hasta estar muy cerca del objeto."
+                    f"1. Señala el centro del objeto para aproximarte\n"
+                    f"2. Cuando estés muy cerca, señala con precisión\n"
+                    f"3. No colisiones con el objeto - detente cuando estés cerca"
                 ),
                 "target": self.target_object
             }
@@ -128,6 +149,21 @@ class MissionManager:
         """
         reasoning = vlm_response.get("reasoning", "").lower()
         progress = vlm_response.get("mission_progress", "").lower()
+        target_point = vlm_response.get("target_point", [0.5, 0.5])
+        confidence = vlm_response.get("confidence", "BAJA").upper()
+        
+        # Count scan rotations (looking at edges = scanning)
+        if self.current_phase == MissionPhase.ESCANEO:
+            x = target_point[0] if isinstance(target_point, (list, tuple)) else 0.5
+            if x < 0.2 or x > 0.8:  # Looking at edges = scanning
+                self.scan_rotations += 1
+        
+        # Check for open door detection
+        if ("abierta" in reasoning or "open door" in reasoning or 
+            "se ve el interior" in reasoning or "habitación" in reasoning):
+            if not self.open_door_found:
+                self.open_door_found = True
+                print(f"[MISSION] Open door found!")
         
         # Update internal flags based on VLM reasoning
         if "door" in reasoning or "puerta" in reasoning:
@@ -137,10 +173,10 @@ class MissionManager:
                     print(f"[MISSION] Door detected!")
                     
             if ("close" in reasoning or "cerca" in reasoning or 
-                "30%" in reasoning or "40%" in reasoning):
+                "cruzar" in reasoning or "crossing" in reasoning):
                 if not self.door_close:
                     self.door_close = True
-                    print(f"[MISSION] Door is close!")
+                    print(f"[MISSION] Door is close, ready to cross!")
                 
         # Check if we crossed into target room
         if current_room == self.target_room and not self.in_target_room:
@@ -156,7 +192,25 @@ class MissionManager:
         
         # ==================== PHASE TRANSITIONS ====================
         
-        if self.current_phase == MissionPhase.BUSQUEDA_GLOBAL:
+        if self.current_phase == MissionPhase.ESCANEO:
+            # Transition from scan when open door found with high confidence
+            if self.open_door_found and confidence in ["ALTA", "MEDIA"]:
+                self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
+                self.scan_complete = True
+                print(f"\n{'='*60}")
+                print(f"[MISSION] PHASE TRANSITION: ESCANEO → BÚSQUEDA GLOBAL")
+                print(f"[MISSION] Open door found, beginning approach")
+                print(f"{'='*60}\n")
+            # Also transition if we've scanned enough (4+ rotations)
+            elif self.scan_rotations >= 6:
+                self.current_phase = MissionPhase.BUSQUEDA_GLOBAL
+                self.scan_complete = True
+                print(f"\n{'='*60}")
+                print(f"[MISSION] PHASE TRANSITION: ESCANEO → BÚSQUEDA GLOBAL")
+                print(f"[MISSION] Scan complete after {self.scan_rotations} rotations")
+                print(f"{'='*60}\n")
+        
+        elif self.current_phase == MissionPhase.BUSQUEDA_GLOBAL:
             if not self.in_target_room and self.door_detected and self.door_close:
                 # Door found and close → transition to crossing
                 self.current_phase = MissionPhase.TRAVESIA
@@ -178,6 +232,7 @@ class MissionManager:
                 # Reset door flags for potential future doors
                 self.door_detected = False
                 self.door_close = False
+                self.open_door_found = False
                 print(f"\n{'='*60}")
                 print(f"[MISSION] PHASE TRANSITION: TRAVESÍA → BÚSQUEDA (object)")
                 print(f"{'='*60}\n")

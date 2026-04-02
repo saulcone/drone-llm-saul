@@ -149,7 +149,8 @@ def manual_control(key_ctrl):
     return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
 def get_cmd_vel(img, query, topology, mission_phase, mission_description, target_description, 
-                prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
+                # prev_movement, mov_history, agent_memory="", addr = "http://172.18.33.110:5001"):
+                prev_movement, mov_history, agent_memory="", addr = "http://localhost:5001"):
     """
     Send image and mission context to server, get movement command.
     
@@ -646,7 +647,8 @@ if __name__ == "__main__":
     parser.add_argument('--manual', '-m', action='store_true', help='Enable manual control mode')
     parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone (1-10)')
     parser.add_argument('--num_repeats', '-r', type=int, default=1, help='Number of repeats for each spawn point')
-    parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
+    # parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
+    parser.add_argument('--addr', '-a', type=str, default="http://localhost:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
     parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')

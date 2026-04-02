@@ -45,7 +45,7 @@ Argument	Alias	Type	Description
 --manual	-m	flag	Enables manual control mode.
 --spawn_id	-i	int	Drone spawn point (1–10). Default is -1 for random.
 --num_repeats	-r	int	Number of repetitions for each spawn point (default: 1).
---addr	-a	string	Address of the server controlling the simulation (default: http://172.18.33.110:5001).
+--addr	-a	string	Address of the server controlling the simulation (default: http://localhost:5001). <!-- Previously: http://172.18.33.110:5001 -->
 --query	-q	int	Drone query ID (0–9). Default: -1.
 --save_video	-v	flag	Saves a video of the simulation.
 --max_steps	-s	int	Maximum number of steps to avoid infinite loops (default: 100).
