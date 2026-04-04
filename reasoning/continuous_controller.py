@@ -32,13 +32,26 @@ class ControlMode(Enum):
 class VelocityCommand:
     """Continuous velocity command for the drone"""
     vx: float      # Forward velocity (m/s), positive = forward
-    vy: float      # Lateral velocity (m/s), positive = right
-    vz: float      # Vertical velocity (m/s), positive = up
+    vy: float      # Lateral velocity (m/s), positive = right (strafe)
+    vz: float      # Vertical velocity (m/s), positive = up (NOT USED)
     vyaw: float    # Yaw rate (rad/s), positive = clockwise (right)
     
     def to_move_vector(self) -> list:
-        """Convert to Unity move vector format [vx, vz, vy, vyaw]"""
-        return [self.vx, self.vz, self.vy, self.vyaw]
+        """
+        Convert to Unity move vector format.
+        
+        Unity expects: [strafe_X, forward_Y, yaw, unused]
+        - Index 0: Strafe (lateral) - positive = right
+        - Index 1: Forward - positive = forward
+        - Index 2: Yaw (rotation) - positive = right (clockwise)
+        - Index 3: Not used (was height in some versions)
+        
+        Our VelocityCommand:
+        - vx = forward velocity
+        - vy = lateral (strafe) velocity  
+        - vyaw = yaw rate
+        """
+        return [self.vy, self.vx, self.vyaw, 0.0]  # [strafe, forward, yaw, unused]
     
     def magnitude(self) -> float:
         """Total velocity magnitude"""
@@ -56,18 +69,21 @@ class ContinuousController:
     - X deviation (target_x - 0.5) maps to lateral velocity AND yaw
     - Y position maps to forward velocity
     - Distance estimate scales all velocities
+    
+    CRITICAL: Lateral movements must be MUCH smaller than forward movements
+    to prevent "slingshot" overshooting when centering doors.
     """
     
     # === VELOCITY LIMITS (m/s and rad/s) ===
-    MAX_FORWARD_VEL = 0.5      # Max forward speed
-    MAX_LATERAL_VEL = 0.3      # Max strafe speed
-    MAX_YAW_RATE = 0.8         # Max rotation rate (rad/s, ~45°/s)
+    MAX_FORWARD_VEL = 0.3      # Max forward speed (reduced)
+    MAX_LATERAL_VEL = 0.1      # Max strafe speed - small but not zero
+    MAX_YAW_RATE = 0.5         # Max rotation rate (rad/s, ~30°/s)
     
     # === PROPORTIONAL GAINS ===
-    # How strongly the drone reacts to deviations
-    KP_LATERAL = 0.6    # Lateral velocity gain (vy per unit X deviation)
-    KP_YAW = 1.2        # Yaw rate gain (vyaw per unit X deviation)
-    KP_FORWARD = 0.8    # Forward velocity gain
+    # Balance: Not so high that we overshoot, not so low that we freeze
+    KP_LATERAL = 0.2    # Lateral velocity gain - balanced
+    KP_YAW = 0.6        # Yaw rate gain
+    KP_FORWARD = 0.4    # Forward velocity gain
     
     # === MODE-SPECIFIC PARAMETERS ===
     MODE_PARAMS = {
@@ -78,29 +94,35 @@ class ContinuousController:
         },
         ControlMode.APPROACHING: {
             "forward_scale": 1.0,    # Normal forward
-            "lateral_scale": 0.8,    # Good lateral correction
-            "yaw_scale": 0.5,        # Moderate yaw correction
+            "lateral_scale": 0.4,    # Moderate lateral correction
+            "yaw_scale": 0.3,        # Moderate yaw correction
         },
         ControlMode.CROSSING: {
             "forward_scale": 0.3,    # Slow forward
-            "lateral_scale": 1.2,    # Strong lateral correction (critical!)
-            "yaw_scale": 0.2,        # Minimal yaw (avoid rotation while crossing)
+            "lateral_scale": 0.6,    # Good lateral correction for door alignment
+            "yaw_scale": 0.1,        # Minimal yaw (avoid rotation while crossing)
         },
         ControlMode.CENTERING: {
             "forward_scale": 0.0,    # Don't advance until centered
-            "lateral_scale": 1.5,    # Maximum lateral correction
-            "yaw_scale": 0.3,        # Minimal yaw
+            "lateral_scale": 0.8,    # Strong lateral correction
+            "yaw_scale": 0.15,       # Minimal yaw
         }
     }
     
     # === DISTANCE SCALING ===
+    # IMPORTANT: Lateral movements should NOT scale much with distance
+    # because we want small, incremental corrections regardless of distance
     DISTANCE_SCALES = {
-        "MUY_LEJOS": 1.0,     # Full speed
-        "LEJOS": 0.7,         # 70% speed
-        "CERCA": 0.4,         # 40% speed
-        "MUY_CERCA": 0.15,    # Very slow, precise
-        "DESCONOCIDO": 0.5    # Conservative default
+        "MUY_LEJOS": 0.8,     # Slightly reduced
+        "LEJOS": 0.5,         # 50% speed (was 70%)
+        "CERCA": 0.3,         # 30% speed (was 40%)
+        "MUY_CERCA": 0.1,     # Very slow, precise
+        "DESCONOCIDO": 0.4    # Conservative default
     }
+    
+    # === LATERAL MOVEMENT LIMITS ===
+    # Maximum lateral movement per step in meters
+    MAX_LATERAL_STEP_M = 0.15  # 15cm max per step - prevents overshooting
     
     def __init__(self):
         self.mode = ControlMode.APPROACHING
@@ -210,6 +232,10 @@ class ContinuousController:
         """
         Convert velocity command to discrete steps for Unity.
         
+        CRITICAL: Lateral movements are capped to prevent overshooting.
+        The drone should make many small lateral corrections, not
+        one giant jump that overshoots the target.
+        
         Args:
             cmd: Velocity command
             dt: Time step (affects how far we move)
@@ -217,28 +243,55 @@ class ContinuousController:
         Returns:
             (steps, move_vector) for move_drone function
         """
-        # Calculate movement magnitude
-        total_vel = cmd.magnitude() + abs(cmd.vyaw) * 0.3
-        
-        # Map to steps (more velocity = more steps)
-        if total_vel < 0.05:
-            steps = 0
-        elif total_vel < 0.15:
-            steps = 5
-        elif total_vel < 0.3:
-            steps = 10
-        elif total_vel < 0.5:
-            steps = 20
-        else:
-            steps = 30
-        
-        # Create move vector [vx, vz, vy, vyaw]
-        # Normalize to unit vector and let steps control magnitude
+        # Create move vector [strafe, forward, yaw, unused]
         move_vec = cmd.to_move_vector()
         
-        # Normalize (but keep sign)
+        # Get individual components
+        strafe = move_vec[0]  # lateral
+        forward = move_vec[1]  # forward
+        yaw = move_vec[2]  # rotation
+        
+        # === CRITICAL: Cap lateral movement to prevent overshooting ===
+        # Lateral movements should be small and incremental
+        max_strafe_component = 0.05  # Very small strafe per step
+        if abs(strafe) > max_strafe_component:
+            strafe = max_strafe_component if strafe > 0 else -max_strafe_component
+        
+        # Rebuild move vector with capped strafe
+        move_vec = [strafe, forward, yaw, 0.0]
+        
+        # Calculate movement magnitude for steps
+        # Weight lateral less to encourage more steps with smaller lateral
+        total_vel = abs(forward) * 1.0 + abs(strafe) * 0.5 + abs(yaw) * 0.3
+        
+        # Map to steps - but limit for lateral-dominant movements
+        is_lateral_dominant = abs(strafe) > abs(forward) * 0.5
+        
+        # === FIX: Always have minimum movement if there's any intention ===
+        # Previous bug: steps=0 when velocity was too low, causing drone to freeze
+        has_movement_intent = abs(strafe) > 0.001 or abs(forward) > 0.001 or abs(yaw) > 0.001
+        
+        if total_vel < 0.005:
+            steps = 3 if has_movement_intent else 0  # Minimum 3 steps if any intent
+        elif total_vel < 0.02:
+            steps = 5
+        elif total_vel < 0.05:
+            steps = 8 if is_lateral_dominant else 10
+        elif total_vel < 0.1:
+            steps = 10 if is_lateral_dominant else 15
+        elif total_vel < 0.2:
+            steps = 12 if is_lateral_dominant else 18
+        else:
+            steps = 15 if is_lateral_dominant else 25
+        
+        # Normalize vector for direction - scale to reasonable movement magnitude
         max_val = max(abs(v) for v in move_vec) or 1.0
-        move_vec = [v / max_val for v in move_vec]
+        if max_val > 0.01:
+            # Scale to 0.1 for consistent movement
+            move_vec = [v / max_val * 0.1 for v in move_vec]
+        else:
+            # Very small values - give them minimum magnitude
+            move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
         
         return steps, move_vec
     
@@ -347,6 +400,20 @@ class SafetyEnvelopeV2:
             safe_cmd.vy = correction  # Force LEFT instead
             self.intervention_count += 1
             override_reason = f"BLOCKED RIGHT: Wall detected (density={right_density:.2f}). Forcing LEFT."
+        
+        # === RULE 2.5: FRONTAL OBSTACLE DETECTION ===
+        # If center density is high AND trying to go forward, STOP
+        center_density = analysis.get("center_density", 0.0)
+        if center_density > self.DANGER_THRESHOLD and velocity_cmd.vx > 0.05:
+            # Obstacle directly in front - STOP forward movement
+            safe_cmd.vx = 0.0
+            # Maybe rotate slightly to scan for better path
+            if left_density < right_density:
+                safe_cmd.vyaw = -0.3  # Rotate LEFT (away from right obstacle)
+            else:
+                safe_cmd.vyaw = 0.3   # Rotate RIGHT (away from left obstacle)
+            self.intervention_count += 1
+            override_reason = f"FRONTAL OBSTACLE: center_density={center_density:.2f}. Stopping forward, rotating to find path."
         
         # === RULE 3: Proportional correction for imbalance ===
         # Even if not trying to move toward wall, correct if imbalanced

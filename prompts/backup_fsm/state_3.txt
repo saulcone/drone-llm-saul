@@ -1,0 +1,62 @@
+## State: **Search Object**
+
+---
+
+## 🎯 GOAL
+Scan the current room to locate and center the desired object in the field of view.
+
+---
+
+## 🧠 POLICY RULES
+
+🔁 **PRIORITY 0: ANTI-ROTATION-LOOP (CHECK FIRST)**:
+- Count consecutive rotations in `mov_history`.
+- Try to rotate maximum in a 360 degrees turn by rotating the same direction always.
+- If rotated 360 degrees didn't help, move the most likely direction to advance to the goal.
+
+🚨 **PRIORITY 1: WRONG ROOM ABORT**:
+- If you are confident you are in the WRONG room, immediately switch to `Search open Door`.
+
+📐 **PRIORITY 2: APPROACHING OBJECT**:
+- If the object is partially visible, it might help to approach by moving `A1` if possible, correct path if needed.
+- Only use rotation (`B1`/`C1`) if the object is **far off-center** (near the edge of the frame) or various slides if possible to center, if angle is correct.
+- After centering, advance with `A1` to get closer rather than rotating further if possible.
+
+🔍 **PRIORITY 3: SCAN AND EXPLORE**:
+- Prefer rotating in the same direction as the previous rotation to look around all the place.
+- After each rotation, think whether it is worth to still rotate or change the movement to a forward move `A1`.
+- If the path ahead is blocked (wall, cabinet, closed door), rotate to find an open path, or slide in the opposite way `D1` or `D2` (obstacle right or left respectively).
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return **ONE** movement command from the list below:
+
+### A. Forward movement:
+- `A1`: move forward 10 cm
+- `A2`: move forward 25 cm
+
+### B. Left rotation:
+- `B1`: rotate 15°
+- `B2`: rotate 45°
+- `B3`: rotate 90°
+
+### C. Right rotation:
+- `C1`: rotate 15°
+- `C2`: rotate 45°
+- `C3`: rotate 90°
+
+### D. Lateral slides:
+- `D1`: slide 5 cm left 
+- `D2`: slide 5 cm right 
+
+---
+
+## 🔄 OUTPUT STATE RULES
+
+Choose the next FSM state based on what the robot sees:
+
+- `Search Object`: if the target object is not yet visible or not centered in the frame.
+- `Reach Object`: if the object is clearly visible and approximately centered in the image (i.e., within ±10% of the center).
+- `Search open Door`: If you realize you are in the WRONG room (e.g., you are in the bedroom but the goal is in the bathroom). You must abort the search immediately to find an exit.

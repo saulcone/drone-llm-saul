@@ -1,0 +1,195 @@
+## State: **Oriented Towards Door**
+
+---
+
+## 🎯 GOAL: GET TO THE DOOR AND CROSS IT
+
+**SIMPLE PRIORITY:**
+1. **ADVANCE if you can** (open space ahead)
+2. **Only strafe when close to the door AND need to align to cross**
+
+---
+
+## 📋 DECISION TREE
+
+### **STEP 1: CAN YOU ADVANCE?**
+
+**Look STRAIGHT AHEAD. Is there open floor/space in front of you?**
+
+| What's ahead? | Action |
+|---------------|--------|
+| **OPEN SPACE / FLOOR** | `A2` — ADVANCE! Don't worry about the door position yet. |
+| **WALL / OBSTACLE** | → Go to Step 2 |
+
+**⚠️ If you can advance, ADVANCE. Don't strafe unnecessarily!**
+
+---
+
+### **STEP 2: WALL BLOCKING — WHICH WAY CAN YOU GO?**
+
+**You can't go forward. Look LEFT and RIGHT. Where is there space?**
+
+| Left side | Right side | Action |
+|-----------|------------|--------|
+| WALL | OPEN | `D2` — strafe RIGHT (away from wall!) |
+| OPEN | WALL | `D1` — strafe LEFT (away from wall!) |
+| OPEN | OPEN | Rotate towards door (`B1` if door left, `C1` if door right) |
+| WALL | WALL | You're stuck — back up with small rotation |
+
+**⚠️ NEVER strafe TOWARDS a wall! Always strafe AWAY from obstacles!**
+
+---
+
+### **STEP 3: DOOR CROSSING (when door is CLOSE, >30% of frame)**
+
+**Only when the door is close and you need to pass through it:**
+
+| door_position | Action |
+|---------------|--------|
+| `left` + space on left | `D1` — strafe to align with opening |
+| `right` + space on right | `D2` — strafe to align with opening |
+| `center` | `A2` — go through! |
+
+---
+
+### **TRANSITION**
+- When door occupies >40% of frame → Change state to `Go Through Door`
+
+---
+
+## 🔑 CRITICAL RULES
+
+1. **ADVANCE whenever possible** — don't obsess over centering the door
+2. **NEVER strafe towards a wall** — if wall is on left, DON'T go left!
+3. **Strafe for crossing, not for centering** — only strafe when close to door
+
+---
+
+## 🕹️ COMMAND SUMMARY
+
+| Situation | Command |
+|-----------|---------|
+| Open space ahead | `A2` (ADVANCE!) |
+| Wall ahead + wall on LEFT + space on RIGHT | `D2` (strafe right, away from wall) |
+| Wall ahead + wall on RIGHT + space on LEFT | `D1` (strafe left, away from wall) |
+| Door close + need to align left | `D1` (only if left side is clear!) |
+| Door close + need to align right | `D2` (only if right side is clear!) |
+| Door centered | `A2` (advance through) |
+| Door >40% frame | Transition to `Go Through Door` |
+
+---
+OLD CONTENT TO DELETE:
+
+                    [DOOR - BAÑO]
+                         │
+                         │ PHASE 2: ADVANCE STRAIGHT
+                         │ (only when door is CENTERED!)
+                         │
+    ◄────────────────────┤
+    PHASE 1: STRAFE      │
+    (until door centered)│
+                         │
+                      [START]
+
+WRONG (diagonal):        CORRECT (L-shape):
+        ╲                      │
+         ╲                     │
+          ╲  ← CRASH!          └────
+           ╲                        
+```
+
+---
+
+## 📋 SIMPLE RULES (NO EXCEPTIONS!)
+
+### **PHASE 0: ROTATE IF DOOR FRAME IS FULLY VISIBLE AND OFF-CENTER**
+
+**Check BOTH conditions:**
+1. ✅ Can you see the ENTIRE door frame (both vertical edges visible)?
+2. ✅ Is the door NOT centered (on left or right side)?
+
+**If BOTH are true → ROTATE to center it (faster than strafe)**
+
+```
+FULLY VISIBLE + OFF-CENTER:       PARTIAL (cut by edge):
+┌─────────────────────────┐       ┌─────────────────────────┐
+│    │▓▓▓▓▓▓▓▓│           │       │▓▓▓▓│                    │
+│    │  DOOR  │           │       │▓▓▓▓│  (edge cut off)    │
+│    │▓▓▓▓▓▓▓▓│           │       │▓▓▓▓│                    │
+└─────────────────────────┘       └─────────────────────────┘
+ Both edges visible + on right     Left edge cut by screen
+ → ROTATE (C1)                     → STRAFE (D1) instead
+```
+
+**If door frame is FULLY VISIBLE + NOT centered:**
+| door_position | Action |
+|---------------|--------|
+| `left` | `B1` (rotate LEFT to center it) |
+| `right` | `C1` (rotate RIGHT to center it) |
+| `center` | → GO TO PHASE 2 |
+
+**If door frame is PARTIALLY VISIBLE (edge cut off) → Skip to PHASE 1 (strafe)**
+
+---
+
+### **PHASE 1: STRAFE UNTIL DOOR IS CENTERED**
+
+| door_position | Action | Keep doing until... |
+|---------------|--------|---------------------|
+| `left` | `D1` (strafe LEFT) | door becomes `center` |
+| `right` | `D2` (strafe RIGHT) | door becomes `center` |
+| `center` | → GO TO PHASE 2 | |
+
+**⚠️ DO NOT ADVANCE while door is left or right! Only strafe!**
+
+---
+
+### **PHASE 2: ADVANCE STRAIGHT (only when door is centered!)**
+
+| door_position | Action |
+|---------------|--------|
+| `center` | `A2` (advance straight) |
+| Not center anymore? | → GO BACK TO PHASE 1 |
+
+**⚠️ DO NOT STRAFE while door is centered! Only advance!**
+
+---
+
+### **PHASE 3: TRANSITION**
+- When door occupies >40% of frame → Change state to `Go Through Door`
+
+---
+
+## 🔍 HOW TO KNOW IF DOOR IS "CENTERED"
+
+```
+DOOR ON LEFT:                  DOOR CENTERED:                 DOOR ON RIGHT:
+┌─────────────────────────┐    ┌─────────────────────────┐    ┌─────────────────────────┐
+│▓▓▓▓│                    │    │        │▓▓▓▓▓▓│        │    │                    │▓▓▓▓│
+│▓▓▓▓│      wall          │    │  wall  │ DOOR │  wall  │    │        wall        │▓▓▓▓│
+│▓▓▓▓│                    │    │        │▓▓▓▓▓▓│        │    │                    │▓▓▓▓│
+└─────────────────────────┘    └─────────────────────────┘    └─────────────────────────┘
+ → D1 (strafe left)             → A2 (advance!)                → D2 (strafe right)
+```
+
+**CENTERED = The door opening is in the MIDDLE of your view, with wall/space on BOTH sides.**
+
+---
+
+## ⚠️ RECOVERY
+
+- If door disappears from view → small rotation (B1 or C1) to find it, then resume L-pattern
+
+---
+
+## 🕹️ COMMAND SUMMARY
+
+| Condition | door_position | Command |
+|-----------|---------------|---------|
+| Door frame FULLY visible | `left` | `B1` (rotate left) |
+| Door frame FULLY visible | `right` | `C1` (rotate right) |
+| Door frame PARTIAL (cut by edge) | `left` | `D1` (strafe left) |
+| Door frame PARTIAL (cut by edge) | `right` | `D2` (strafe right) |
+| Door centered | `center` | `A2` (advance straight) |
+| Door centered + >40% frame | `center` | Transition to `Go Through Door` |
+| Door not visible | - | `B1` or `C1` (rotate to find) |

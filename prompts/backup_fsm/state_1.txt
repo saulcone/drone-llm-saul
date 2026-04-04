@@ -1,0 +1,30 @@
+## State: **Position in the center of room**:
+
+## 🎯 GOAL
+   - Move to the center of the room.
+
+
+## 🧠 Policy Rules
+
+- If the robot is facing a door or opening, check if it is the way it is asked to go, or it might be an approaching.
+- Once the path ahead is centered and clear, advance forward to reach the center of the room.
+
+
+## 🕹️ MOVEMENT COMMANDS
+
+Only return:
+- `A1`: forward 10 cm, `A2`: forward 30 cm or `A3`: forward 50 cm
+- `B1`: rotate 15° left, `C1`: rotate 15° right
+- `D1`: slide left by 5cm
+- `D2`: slide right by 5cm
+
+
+---
+
+## 🔄 OUTPUT STATE Rules
+
+- `Recognize Room`: If you just entered a room, transition here to verify which room it is before searching.
+
+- `Search Object`: ONLY if you have verified and are absolutely sure you are in the correct target room.
+
+- `Search open Door`: If you immediately realize you entered the wrong room.

@@ -30,6 +30,20 @@ from reasoning.mpc_controller import MPCController, create_mpc_controller
 # Phase 4+5 Enhanced: Continuous proportional control with safety envelope v2
 from reasoning.continuous_controller import ContinuousController, SafetyEnvelopeV2, ControlMode, VelocityCommand
 
+
+class NumpyEncoder(json.JSONEncoder):
+    """Custom JSON encoder that handles numpy types."""
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        if isinstance(obj, np.floating):
+            return float(obj)
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        if isinstance(obj, np.bool_):
+            return bool(obj)
+        return super().default(obj)
+
 # --- Teclado (pynput) ---
 class KeyController:
     def __init__(self):
@@ -192,9 +206,12 @@ def get_cmd_vel(img, query, topology, mission_phase, mission_description, target
     }
 
     try:
-        response = requests.post(url, files=files, data=data)
+        response = requests.post(url, files=files, data=data, timeout=120)
         print(response.json())
         return response.json()
+    except requests.exceptions.Timeout:
+        print("[ERROR] VLM request timed out after 120s")
+        return {"movement": "E", "reasoning": "Timeout", "mission_progress": "Error"}
     except Exception as e:
         print("Error decoding response:", e)
         return {"movement": "E", "reasoning": "Error", "mission_progress": "Error"}
@@ -471,6 +488,13 @@ def run_simulation(args, topology, json_data=None):
             # Get mission context from mission manager
             mission_ctx = mission_manager.get_mission_context()
             
+            # === STATE LATCH: Inject recovery context if needed ===
+            recovery_context = mission_manager.get_recovery_context()
+            if recovery_context:
+                # Prepend recovery context to agent memory
+                print(f"[STATE LATCH] Injecting recovery context into agent memory")
+                agent_memory = recovery_context + "\n\n" + agent_memory
+            
             # Get command velocity from the server with mission context
             start_time = time.time()
             response = get_cmd_vel(
@@ -500,6 +524,16 @@ def run_simulation(args, topology, json_data=None):
             pred_room = response.get("room", "")
             reasoning = response.get("reasoning", "")
             mission_progress = response.get("mission_progress", "")
+            
+            # === STATE LATCH: Apply room correction ===
+            # If latch is active, override VLM's room prediction
+            if mission_manager.room_latch_active:
+                corrected_room = mission_manager.apply_state_latch(pred_room)
+                if corrected_room != pred_room:
+                    pred_room = corrected_room
+                    # Also update response for logging
+                    response["room"] = corrected_room
+            
             agent_memory = response.get("memory_update", agent_memory)
             oscillation_override = response.get("_oscillation_override", False)
             
@@ -580,38 +614,53 @@ def run_simulation(args, topology, json_data=None):
 
             # === CONTINUOUS CONTROLLER (Phase 4+5 Enhanced) ===
             # Proportional velocity control with integrated safety envelope
+            # HYBRID MODE: Use discrete commands for scanning, continuous for approach/crossing
             if use_continuous and command != "E":
-                # Compute proportional velocity from target_point
-                velocity_cmd = continuous_controller.compute_velocity(
-                    target_point=tuple(target_point),
-                    distance=distance,
-                    confidence=confidence
-                )
+                # Determine mode first
+                ctrl_mode = continuous_controller.determine_mode(tuple(target_point), distance)
                 
-                # Apply safety envelope v2 (ABSOLUTE AUTHORITY)
-                safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
-                    image_cv2=real_img,
-                    velocity_cmd=velocity_cmd,
-                    distance=distance
-                )
-                
-                if safety_reason:
-                    # Safety envelope intervened
-                    print(f"[SAFETY-V2] ⚠️ {safety_reason}")
-                    velocity_cmd = safe_velocity
-                    safety_override = safety_reason
+                # For SCANNING mode, use discrete commands (faster rotation)
+                if ctrl_mode == ControlMode.SCANNING:
+                    # Fall through to adaptive scaler for fast discrete rotation
+                    print(f"[CONTINUOUS] Mode: scanning -> using discrete commands for speed")
+                    move_steps, move_vec = adaptive_scaler.get_adaptive_move(command, distance, confidence)
+                    scaling_phase = "HYBRID-scanning"
+                    # More descriptive output based on command type
+                    if command.startswith("B") or command.startswith("C"):
+                        direction = "LEFT" if command.startswith("B") else "RIGHT"
+                        print(f"[HYBRID] Discrete ROTATE {direction} ~{move_steps}°")
                 else:
-                    imbalance = safety_analysis.get("imbalance", 0) if safety_analysis else 0
-                    print(f"[SAFETY-V2] ✓ Clear (imbalance={imbalance:.2f})")
-                
-                # Convert velocity to movement parameters
-                move_steps, move_vec = continuous_controller.velocity_to_steps(velocity_cmd)
-                
-                # Log continuous controller status
-                mode = continuous_controller.mode.value
-                print(f"[CONTINUOUS] Mode: {mode}, Velocity: vx={velocity_cmd.vx:.3f} vy={velocity_cmd.vy:.3f} vyaw={velocity_cmd.vyaw:.3f}")
-                print(f"[CONTINUOUS] Output: steps={move_steps}, vec={[f'{v:.2f}' for v in move_vec]}")
-                scaling_phase = f"CONTINUOUS-{mode}"
+                    # For APPROACHING, CROSSING, CENTERING - use continuous control
+                    velocity_cmd = continuous_controller.compute_velocity(
+                        target_point=tuple(target_point),
+                        distance=distance,
+                        confidence=confidence
+                    )
+                    
+                    # Apply safety envelope v2 (ABSOLUTE AUTHORITY)
+                    safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
+                        image_cv2=real_img,
+                        velocity_cmd=velocity_cmd,
+                        distance=distance
+                    )
+                    
+                    if safety_reason:
+                        # Safety envelope intervened
+                        print(f"[SAFETY-V2] ⚠️ {safety_reason}")
+                        velocity_cmd = safe_velocity
+                        safety_override = safety_reason
+                    else:
+                        imbalance = safety_analysis.get("imbalance", 0) if safety_analysis else 0
+                        print(f"[SAFETY-V2] ✓ Clear (imbalance={imbalance:.2f})")
+                    
+                    # Convert velocity to movement parameters
+                    move_steps, move_vec = continuous_controller.velocity_to_steps(velocity_cmd)
+                    
+                    # Log continuous controller status
+                    mode = continuous_controller.mode.value
+                    print(f"[CONTINUOUS] Mode: {mode}, Velocity: vx={velocity_cmd.vx:.3f} vy={velocity_cmd.vy:.3f} vyaw={velocity_cmd.vyaw:.3f}")
+                    print(f"[CONTINUOUS] Output: steps={move_steps}, vec={[f'{v:.2f}' for v in move_vec]}")
+                    scaling_phase = f"CONTINUOUS-{mode}"
             
             # === MPC CONTROLLER (Phase 4) ===
             # Smooth continuous trajectory planning from waypoints
@@ -709,7 +758,7 @@ def run_simulation(args, topology, json_data=None):
             json_data["Step_" + str(total_steps)] = log_data
 
             with open(args.output_file, "w") as info_file:
-                json.dump(json_data, info_file, indent=2)
+                json.dump(json_data, info_file, indent=2, cls=NumpyEncoder)
 
         if total_steps >= max_steps and not args.manual:
             print(f"Reached maximum steps: {max_steps}. Ending simulation.")
@@ -738,7 +787,7 @@ def run_simulation(args, topology, json_data=None):
         json_data["End_Info"] = end_info
 
         with open(args.output_file, "w") as info_file:
-                json.dump(json_data, info_file, indent=2)
+                json.dump(json_data, info_file, indent=2, cls=NumpyEncoder)
         print(f"Logs saved to {args.output_file}")
 
     if args.save_video:

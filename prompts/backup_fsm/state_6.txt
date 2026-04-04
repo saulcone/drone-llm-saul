@@ -1,0 +1,46 @@
+## State: **Search open Door**
+
+---
+
+## 🎯 GOAL  
+Systematically sweep the environment to detect an open door. Follow a structured **rotate → advance → rotate** cycle. Never spin in place indefinitely.
+
+---
+
+## 🧠 POLICY RULES (Priority Ordered)
+
+✅ **RULE 0: ALREADY IN TARGET ROOM (CHECK FIRST)**:
+- Compare the current room against the user query target room.
+- If visual cues confirm you are **already inside the correct target room**, do **NOT** search for a door.
+- **Immediately transition to `Search Object`** with movement `E`.
+
+🚨 **RULE 1: ABSOLUTE SAFETY & SWEEPING**:
+- Search ONLY for **OPEN DOORS**. Ignore closed doors, cabinets, and walls.
+- Rotate in the same direction to sweep effectively.
+- If you complete a large rotation without finding anything, use `A1` or `A2` to move to a new vantage point before resuming rotations.
+- **WRONG ROOM ESCAPE**: If you just realized you are in the wrong room, execute a large rotation (`B3` or `C3`) to quickly turn around and locate the exit.
+
+🚪 **RULE 2: OPEN DOOR DETECTED (TRIGGER)**:
+- If you see an open door or open void leading to another room that could plausibly lead to your objective:
+- **ACTION**: You MUST immediately return movement command `E` and change the state to `Oriented Towards Door`.
+- **CRITICAL**: Do NOT attempt to align, rotate, or slide towards the door in this state. Just emit `E`. Alignment happens in the next state.
+
+🚶 **RULE 3: CLEAR OPEN SPACE**:
+- If no door is visible but the path ahead is a large open space with no obstacles, use `A1` to move efficiently.
+
+---
+
+## 🕹️ MOVEMENT COMMANDS
+Only return ONE command:
+- `A1`: move forward 10 cm
+- `A2`: move forward 30 cm
+- `B2`/`B3`: rotate left
+- `C2`/`C3`: rotate right
+- `E`: transition command — to `Oriented Towards Door` (open door found) OR to `Search Object` (already in target room)
+
+---
+
+## 🔄 OUTPUT STATE RULES
+- `Search Object`: Already in the target room.
+- `Oriented Towards Door`: An open door is detected.
+- `Search open Door`: Still looking, sweeping, or moving.

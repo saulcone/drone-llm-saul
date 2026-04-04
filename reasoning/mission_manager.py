@@ -29,6 +29,10 @@ class MissionManager:
     1. Search for door/object
     2. Cross door (if needed)
     3. Approach final object
+    
+    IMPORTANT: Implements STATE LATCH to prevent VLM "amnesia":
+    - Once in target room, NEVER allow regression to previous room
+    - If object lost from view, inject recovery context
     """
     
     def __init__(self, target_object, target_room):
@@ -52,6 +56,64 @@ class MissionManager:
         self.crossed_door = False
         self.object_detected = False
         self.in_target_room = False
+        
+        # === STATE LATCH (Cerrojo de Estado) ===
+        # Prevents VLM "amnesia" - once we enter target room, we STAY there
+        self.room_latch_active = False  # True once we enter target room
+        self.latched_room = None  # The room we're locked into
+        self.object_was_visible = False  # True if we ever saw the object
+        self.steps_since_object_visible = 0  # Counter for recovery injection
+        
+    def apply_state_latch(self, vlm_room_prediction):
+        """
+        Apply state latch to prevent VLM room regression.
+        
+        Args:
+            vlm_room_prediction: Room predicted by VLM
+            
+        Returns:
+            Corrected room (may override VLM prediction)
+        """
+        # If latch is active, NEVER allow regression
+        if self.room_latch_active and self.latched_room:
+            if vlm_room_prediction != self.latched_room:
+                print(f"[STATE LATCH] ⚠️ BLOCKED room regression: {vlm_room_prediction} → {self.latched_room}")
+                print(f"[STATE LATCH] VLM tried to forget it's in {self.latched_room}!")
+                return self.latched_room
+        
+        return vlm_room_prediction
+    
+    def get_recovery_context(self):
+        """
+        Generate recovery context when object is lost from view.
+        
+        Returns:
+            String with recovery instructions, or None if not needed
+        """
+        if not self.room_latch_active:
+            return None
+            
+        # Object was visible but now lost
+        if self.object_was_visible and self.steps_since_object_visible > 0:
+            return (
+                f"[SISTEMA - CONTEXTO DE RECUPERACIÓN]\n"
+                f"⚠️ Ya estás DENTRO del {self.latched_room}. NO busques puertas.\n"
+                f"Has perdido de vista el {self.target_object} que viste hace {self.steps_since_object_visible} pasos.\n"
+                f"ACCIÓN REQUERIDA: Rota LENTAMENTE sobre tu eje para volver a centrar el {self.target_object}.\n"
+                f"NO salgas del {self.latched_room}. NO busques otras habitaciones.\n"
+                f"Señala hacia donde crees que está el {self.target_object} (izquierda=0.3, derecha=0.7)."
+            )
+        
+        # In target room but never saw object
+        if self.in_target_room and not self.object_detected:
+            return (
+                f"[SISTEMA - CONTEXTO DE BÚSQUEDA LOCAL]\n"
+                f"Ya estás DENTRO del {self.latched_room}. Busca el {self.target_object}.\n"
+                f"ACCIÓN: Escanea la habitación rotando lentamente.\n"
+                f"NO busques puertas de salida. El objetivo está en esta habitación."
+            )
+        
+        return None
         
     def get_mission_context(self):
         """
@@ -151,6 +213,30 @@ class MissionManager:
         progress = vlm_response.get("mission_progress", "").lower()
         target_point = vlm_response.get("target_point", [0.5, 0.5])
         confidence = vlm_response.get("confidence", "BAJA").upper()
+        vlm_room = vlm_response.get("room", "").lower()
+        
+        # === STATE LATCH: Apply room correction ===
+        # If latch is active, override any VLM room regression
+        if self.room_latch_active:
+            corrected_room = self.apply_state_latch(vlm_room)
+            if corrected_room != vlm_room:
+                # VLM tried to regress - we blocked it
+                vlm_response["room"] = corrected_room  # Override in response
+        
+        # === OBJECT VISIBILITY TRACKING ===
+        object_visible_now = self.target_object.lower() in reasoning
+        
+        if object_visible_now:
+            self.object_was_visible = True
+            self.steps_since_object_visible = 0
+            if not self.object_detected:
+                self.object_detected = True
+                print(f"[MISSION] Target object detected: {self.target_object}")
+        elif self.object_was_visible:
+            # Object was visible before but not now
+            self.steps_since_object_visible += 1
+            if self.steps_since_object_visible == 1:
+                print(f"[STATE LATCH] ⚠️ Lost sight of {self.target_object}! Entering recovery mode.")
         
         # Count scan rotations (looking at edges = scanning)
         if self.current_phase == MissionPhase.ESCANEO:
@@ -196,17 +282,15 @@ class MissionManager:
                     self.door_close = True
                     print(f"[MISSION] Door is close, ready to cross!")
                 
-        # Check if we crossed into target room
+        # === STATE LATCH: Activate when entering target room ===
         if current_room == self.target_room and not self.in_target_room:
             self.crossed_door = True
             self.in_target_room = True
+            # ACTIVATE THE LATCH - no going back!
+            self.room_latch_active = True
+            self.latched_room = self.target_room
             print(f"[MISSION] Entered target room: {self.target_room}")
-            
-        # Check if object detected
-        if self.target_object.lower() in reasoning:
-            if not self.object_detected:
-                self.object_detected = True
-                print(f"[MISSION] Target object detected: {self.target_object}")
+            print(f"[STATE LATCH] 🔒 Room latch ACTIVATED - locked to {self.target_room}")
         
         # ==================== PHASE TRANSITIONS ====================
         
