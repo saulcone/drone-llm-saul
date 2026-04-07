@@ -141,19 +141,40 @@ class ContinuousController:
         x, y = target_point
         x_dev = abs(x - 0.5)
         
-        # Scanning mode: looking for target (extreme X values)
-        if distance == "DESCONOCIDO" or x < 0.15 or x > 0.85:
+        # --- MEMORIA A CORTO PLAZO (Anti-Amnesia) ---
+        if not hasattr(self, 'was_recently_close'):
+            self.was_recently_close = False
+            self.lost_frames = 0
+            
+        if distance in ["CERCA", "MUY_CERCA"]:
+            self.was_recently_close = True
+            self.lost_frames = 0
+        elif distance != "DESCONOCIDO":
+            self.was_recently_close = False
+            self.lost_frames = 0
+        else:
+            self.lost_frames += 1
+            
+        # 1. PÉRDIDA DE OBJETIVO (DESCONOCIDO)
+        if distance == "DESCONOCIDO":
+            # Veto a giro brusco de 60º si estábamos a punto de cruzar
+            if self.was_recently_close and self.lost_frames < 5:
+                return ControlMode.CENTERING 
             return ControlMode.SCANNING
-        
-        # Crossing mode: very close and reasonably centered
-        if distance == "MUY_CERCA" and x_dev < 0.15:
-            return ControlMode.CROSSING
-        
-        # Centering mode: close but not centered enough
-        if distance in ["MUY_CERCA", "CERCA"] and x_dev >= 0.15:
+            
+        # 2. OBJETIVO EN LOS EXTREMOS (Casi fuera de cámara)
+        if x < 0.15 or x > 0.85:
+            return ControlMode.SCANNING
+            
+        # 3. CENTRADO FORZOSO (Prioridad absoluta para alinear huecos)
+        if x_dev > 0.10: 
             return ControlMode.CENTERING
-        
-        # Default: approaching
+            
+        # 4. CRUCE (Perfectamente centrado y MUY CERCA)
+        if distance == "MUY_CERCA":
+            return ControlMode.CROSSING
+            
+        # 5. APROXIMACIÓN SEGURA
         return ControlMode.APPROACHING
     
     def compute_velocity(self, target_point: Tuple[float, float],
@@ -189,27 +210,19 @@ class ContinuousController:
         # Confidence scaling
         conf_scale = {"ALTA": 1.0, "MEDIA": 0.7, "BAJA": 0.4}.get(confidence, 0.7)
         
-        # === COMPUTE RAW VELOCITIES ===
-        
-        # Forward velocity: based on Y position and mode
-        # Y < 0.5 = target above center = more forward impulse
-        if self.mode == ControlMode.SCANNING:
-            vx_raw = 0.0
+       # === RAW VELOCITIES ===
+        if self.mode == ControlMode.SCANNING or self.mode == ControlMode.CENTERING:
+            vx_raw = 0.0  # Anula el avance desde la base
         else:
             vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"]
         
-        # Lateral velocity: proportional to X deviation
-        # Negative x_deviation (target left) → negative vy (strafe left)
         vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-        
-        # Yaw rate: also proportional to X deviation
-        # But in CROSSING mode, minimize yaw to avoid disorientation
         vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
         
         # === APPLY SCALING ===
         vx = vx_raw * dist_scale * conf_scale
         vy = vy_raw * dist_scale * conf_scale
-        vyaw = vyaw_raw * dist_scale  # Yaw not scaled by confidence
+        vyaw = vyaw_raw * dist_scale
         
         # === CLAMP TO LIMITS ===
         vx = np.clip(vx, -self.MAX_FORWARD_VEL * 0.2, self.MAX_FORWARD_VEL)
@@ -217,8 +230,34 @@ class ContinuousController:
         vyaw = np.clip(vyaw, -self.MAX_YAW_RATE, self.MAX_YAW_RATE)
         
         # === SMOOTH VELOCITY CHANGES ===
-        # Prevents jerky motion by blending with previous command
-        vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx
+        # Freno estricto: Elimina inercia en modos de rotación o centrado puro
+        if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
+            vx = 0.0
+            self.last_cmd.vx = 0.0
+        else:
+            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx
+            
+        vy = self.smoothing_factor * vy + (1 - self.smoothing_factor) * self.last_cmd.vy
+        vyaw = self.smoothing_factor * vyaw + (1 - self.smoothing_factor) * self.last_cmd.vyaw
+        
+        # === APPLY SCALING ===
+        vx = vx_raw * dist_scale * conf_scale
+        vy = vy_raw * dist_scale * conf_scale
+        vyaw = vyaw_raw * dist_scale
+        
+        # === CLAMP TO LIMITS ===
+        vx = np.clip(vx, -self.MAX_FORWARD_VEL * 0.2, self.MAX_FORWARD_VEL)
+        vy = np.clip(vy, -self.MAX_LATERAL_VEL, self.MAX_LATERAL_VEL)
+        vyaw = np.clip(vyaw, -self.MAX_YAW_RATE, self.MAX_YAW_RATE)
+        
+        # === SMOOTH VELOCITY CHANGES ===
+        # Freno estricto: Elimina inercia en modos de rotación o centrado puro
+        if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
+            vx = 0.0
+            self.last_cmd.vx = 0.0
+        else:
+            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx
+            
         vy = self.smoothing_factor * vy + (1 - self.smoothing_factor) * self.last_cmd.vy
         vyaw = self.smoothing_factor * vyaw + (1 - self.smoothing_factor) * self.last_cmd.vyaw
         
@@ -292,6 +331,17 @@ class ContinuousController:
         else:
             # Very small values - give them minimum magnitude
             move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
+        
+        # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
+        # Cuando estamos centrando o cruzando, el VLM debe ver fotos más a menudo
+        if self.mode in [ControlMode.CENTERING, ControlMode.CROSSING]:
+            steps = min(steps, 4)  # Ventana corta para recalibrar milimétricamente
+        elif self.mode == ControlMode.APPROACHING:
+            steps = min(steps, 6)  # Ventana media
+            
+        # === SOLUCIÓN 2: Prevenir el Tiempo Congelado de Unity ===
+        # Nunca devolver 0 pasos, de lo contrario la API del VLM se colapsará
+        steps = max(steps, 3)
         
         return steps, move_vec
     
@@ -416,21 +466,19 @@ class SafetyEnvelopeV2:
             override_reason = f"FRONTAL OBSTACLE: center_density={center_density:.2f}. Stopping forward, rotating to find path."
         
         # === RULE 3: Proportional correction for imbalance ===
-        # Even if not trying to move toward wall, correct if imbalanced
         elif abs(imbalance) > 0.3 and distance in ["MUY_CERCA", "CERCA"]:
             if imbalance < 0:
-                # More edges on left = closer to left wall = drift right
-                correction = 0.15 * abs(imbalance)
+                correction = 0.08 * abs(imbalance)  # REDUCIDO de 0.15 a 0.08
                 safe_cmd.vy = max(safe_cmd.vy, correction)
                 if correction > 0.1:
+                    safe_cmd.vx = 0.0
                     override_reason = f"DRIFT CORRECTION: Wall LEFT (imbalance={imbalance:.2f}). Adding RIGHT drift."
             else:
-                # More edges on right = closer to right wall = drift left
-                correction = -0.15 * abs(imbalance)
+                correction = -0.08 * abs(imbalance)  # REDUCIDO de 0.15 a 0.08
                 safe_cmd.vy = min(safe_cmd.vy, correction)
                 if abs(correction) > 0.1:
+                    safe_cmd.vx = 0.0
                     override_reason = f"DRIFT CORRECTION: Wall RIGHT (imbalance={imbalance:.2f}). Adding LEFT drift."
-        
         # === RULE 4: Reduce forward speed if any danger ===
         max_danger = max(left_density, right_density)
         if max_danger > self.DANGER_THRESHOLD and velocity_cmd.vx > 0.1:

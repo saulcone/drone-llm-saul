@@ -701,13 +701,18 @@ def run_simulation(args, topology, json_data=None):
             else:
                 move_steps, move_vec = move_map.get(command, (10, [0, 0, 0, 0]))
                 scaling_phase = "Static"
-            # === END MOVEMENT SCALING ===
 
             if command != "E":  # Don't move on wait command
                 if args.fast:
                     move_drone_fast(move_steps, move_vec, env, action, behavior_drone)
                 else:
                     move_drone(move_steps, move_vec, env, action, behavior_drone)
+            else:
+                # === SOLUCIÓN TIMEOUT: Forzar a Unity a avanzar en el tiempo ===
+                # Si el comando es "E" (espera) y no ejecutamos move_drone,
+                # Unity se congela y Python satura la red pidiendo inferencias sin parar.
+                # Al enviar un vector de [0,0,0,0], el dron hace 'hover' y el tiempo corre.
+                move_drone(10, [0.0, 0.0, 0.0, 0.0], env, action, behavior_drone)
 
             prev_movement = command
 
