@@ -304,21 +304,27 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
     # Diccionario de objetivos con coordenadas
     goals = {
-        3: ("tv", (2.5, 1.2), "living room & kitchen"),             # "Find the TV in the living room"
-        4: ("refrigerator", (-4.5, 3.65), "living room & kitchen"), # "Find the refrigerator in the living room"
-        5: ("tap", (-5.2, -1.1), "living room & kitchen"),          # "Find the faucet in the living room"
-        6: ("mirror", (3.75, -5.65), "bedroom"),      # "Find the mirror in the bedroom"
-        7: ("cabinet", (3.25, -4.0), "bedroom"),      # "Find the cabinet in the bedroom"
-        8: ("sink", (-3.95, -5.25), "bathroom"),       # "Find the sink in the bathroom"
-        9: ("toilet", (-5.25, -6.85), "bathroom"),     # "Find the toilet in the bathroom"
+        3: ("tv", (2.5, 1.2), "living room & kitchen"),             
+        4: ("refrigerator", (-4.5, 3.65), "living room & kitchen"), 
+        5: ("tap", (-5.2, -1.1), "living room & kitchen"),          
+        6: ("mirror", (3.75, -5.65), "bedroom"),      
+        7: ("cabinet", (3.25, -4.0), "bedroom"),      
+        8: ("sink", (-3.95, -5.25), "bathroom"),       
+        9: ("toilet", (-5.25, -6.85), "bathroom"),     
     }
 
     if goal_id not in goals:
         return False  # ID inválido
 
-    _, (gx, gz), _ = goals[goal_id]  # Ajuste de índice para el diccionario
-    x, y, z = pos
+    # NUEVO: Extraemos también la habitación objetivo de la tupla
+    _, (gx, gz), target_room = goals[goal_id]  
+    
+    # CRÍTICO: Si el dron no está físicamente en la misma habitación que el objeto, 
+    # es imposible que lo haya alcanzado (evita ganar a través de paredes)
+    if room != target_room:
+        return False
 
+    x, y, z = pos
     close, facing = is_close_and_facing(x, z, gx, gz, yaw, dist=dist_threshold, angle=angle_threshold)
 
     return close and facing
@@ -582,10 +588,11 @@ def run_simulation(args, topology, json_data=None):
                     
                     if override_reason:
                         # Safety envelope intervened
-                        command = safe_command
+                        # BLOQUEADO: Ya no dejamos que la Fase 4 cambie el comando discreto
+                        # command = safe_command 
                         safety_override = override_reason
-                        print(f"[SAFETY] ⚠️ {override_reason}")
-                        print(f"[SAFETY] Command changed: {original_command} -> {command}")
+                        print(f"[SAFETY-ANTIGUO] ⚠️ {override_reason} (Ignorado por FSM, delego a V2)")
+                        # print(f"[SAFETY] Command changed: {original_command} -> {command}")
                         
                         # Send feedback to VLM via memory update
                         agent_memory += f" [SAFETY ALERT: {override_reason}]"
@@ -604,10 +611,11 @@ def run_simulation(args, topology, json_data=None):
                 
                 if depth_reason:
                     # Depth safety intervened
-                    command = depth_cmd
+                    # BLOQUEADO: Tampoco dejamos que secuestre el comando
+                    # command = depth_cmd
                     safety_override = depth_reason
-                    print(f"[DEPTH] ⚠️ {depth_reason}")
-                    print(f"[DEPTH] Command changed: {original_command} -> {command}")
+                    print(f"[DEPTH-ANTIGUO] ⚠️ {depth_reason} (Ignorado por FSM)")
+                    # print(f"[DEPTH] Command changed: {original_command} -> {command}")
                 elif depth_analysis and depth_analysis.get("path_clear"):
                     print(f"[DEPTH] ✓ Path clear")
             # === END SAFETY GUARDS ===
@@ -637,21 +645,33 @@ def run_simulation(args, topology, json_data=None):
                         confidence=confidence
                     )
                     
-                    # Apply safety envelope v2 (ABSOLUTE AUTHORITY)
-                    safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
-                        image_cv2=real_img,
-                        velocity_cmd=velocity_cmd,
-                        distance=distance
-                    )
-                    
-                    if safety_reason:
-                        # Safety envelope intervened
-                        print(f"[SAFETY-V2] ⚠️ {safety_reason}")
-                        velocity_cmd = safe_velocity
-                        safety_override = safety_reason
+                    # === CROSSING LOCK: Mute Safety-V2 during door sprint ===
+                    if ctrl_mode == ControlMode.CROSSING:
+                        print("[CROSSING LOCK] Safety Envelope V2 MUTED for blind sprint!")
+                        # Sobrescribimos forzosamente las velocidades para el avance balístico
+                        velocity_cmd.vx = 0.30  # Avance balístico
+                        velocity_cmd.vy = 0.0   # Prohibido torcerse
+                        velocity_cmd.vyaw = 0.0 # Prohibido rotar
+                        
+                        # NO aplicamos el safety_envelope_v2
+                        safety_analysis = None
                     else:
-                        imbalance = safety_analysis.get("imbalance", 0) if safety_analysis else 0
-                        print(f"[SAFETY-V2] ✓ Clear (imbalance={imbalance:.2f})")
+                        # Apply safety envelope v2 (ABSOLUTE AUTHORITY for other modes)
+                        # Para TODO lo demás (Scanning, Approaching, Centering), la seguridad ACTÚA
+                        safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
+                            image_cv2=real_img,
+                            velocity_cmd=velocity_cmd,
+                            distance=distance
+                        )
+                        
+                        if safety_reason:
+                            # Safety envelope intervened
+                            print(f"[SAFETY-V2] ⚠️ {safety_reason}")
+                            velocity_cmd = safe_velocity
+                            safety_override = safety_reason
+                        else:
+                            imbalance = safety_analysis.get("imbalance", 0) if safety_analysis else 0
+                            print(f"[SAFETY-V2] ✓ Clear (imbalance={imbalance:.2f})")
                     
                     # Convert velocity to movement parameters
                     move_steps, move_vec = continuous_controller.velocity_to_steps(velocity_cmd)

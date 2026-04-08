@@ -36,6 +36,9 @@ FIELD DEFINITIONS
   Señalo hacia la puerta (0.35, 0.45) para que el dron se desplace 
   lateralmente hacia ella y la centre."
 
+  Ejemplo: "Cruzar puerta muy cerca: Imagen: Puerta abierta muy cerca, marcos visibles a ambos lados target_point: [0.50, 0.15] distance: "MUY_CERCA" confidence: "ALTA" mission_progress: "Crossing door" Razonamiento: "Perfectamente centrado a punto de cruzar. Los márgenes son estrechos por el Efecto Túnel. Aplico la Excepción del 30% y señalo arriba [0.50, 0.15] para dar el empujón final.
+  En resumen: Con el prompt permitiendo al VLM señalar Y=0.15 y el controlador Python forzando vyaw=0.0 y vy=0.0 durante el cruce, el dron se centrará perfectamente de lado sin torcerse y saldrá disparado."
+
 **"target_point"** (array [x, y]):
   Coordenadas normalizadas del punto objetivo en la imagen.
   - x: 0.0 (borde izquierdo) a 1.0 (borde derecho)

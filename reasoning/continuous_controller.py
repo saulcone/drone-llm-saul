@@ -81,7 +81,7 @@ class ContinuousController:
     
     # === PROPORTIONAL GAINS ===
     # Balance: Not so high that we overshoot, not so low that we freeze
-    KP_LATERAL = 0.2    # Lateral velocity gain - balanced
+    KP_LATERAL = 0.3    # Lateral velocity gain - balanced
     KP_YAW = 0.6        # Yaw rate gain
     KP_FORWARD = 0.4    # Forward velocity gain
     
@@ -94,7 +94,7 @@ class ContinuousController:
         },
         ControlMode.APPROACHING: {
             "forward_scale": 1.0,    # Normal forward
-            "lateral_scale": 0.4,    # Moderate lateral correction
+            "lateral_scale": 1.0,    # Moderate lateral correction
             "yaw_scale": 0.3,        # Moderate yaw correction
         },
         ControlMode.CROSSING: {
@@ -103,9 +103,9 @@ class ContinuousController:
             "yaw_scale": 0.1,        # Minimal yaw (avoid rotation while crossing)
         },
         ControlMode.CENTERING: {
-            "forward_scale": 0.0,    # Don't advance until centered
-            "lateral_scale": 0.8,    # Strong lateral correction
-            "yaw_scale": 0.15,       # Minimal yaw
+            "forward_scale": 0.0,    # No avanza hasta estar centrado
+            "lateral_scale": 1.0,    # Fuerte corrección lateral (strafe puro)
+            "yaw_scale": 0.0,        # ⛔ YAW KILL-SWITCH: Cero rotación para no torcerse
         }
     }
     
@@ -141,152 +141,166 @@ class ContinuousController:
         
     def determine_mode(self, target_point: Tuple[float, float], 
                        distance: str, mission_progress: str = "") -> ControlMode:
-        """
-        Automatically determine the best control mode based on context.
-        """
+        """Automatically determine the best control mode based on context."""
         x, y = target_point
         x_dev = abs(x - 0.5)
         
-        # --- MEMORIA A CORTO PLAZO DIVIDIDA ---
+        # --- MEMORIA DIVIDIDA ---
         if not hasattr(self, 'blind_cross_memory'):
-            self.blind_cross_memory = 0  # Batería para el sprint ciego
-            self.anti_spin_memory = 0    # Batería para evitar giros locos
+            self.blind_cross_memory = 0  
+            self.anti_spin_memory = 0    
             
-        # 1. Cargar baterías lógicas
+        # CRÍTICO: Compensar la "doble-llamada" de Simulator.py
         if distance == "MUY_CERCA" and x_dev <= 0.15:
-            # Solo cargamos el sprint ciego si estamos PEGADOS y CENTRADOS
-            # Reducimos a 4 frames. Si con 4 no entra, es que ha chocado.
-            self.blind_cross_memory = 4
-            self.anti_spin_memory = 5
+            self.blind_cross_memory = 10  # 10 llamadas = 5 frames reales de flotación
+            self.anti_spin_memory = 10
         elif distance in ["CERCA", "MUY_CERCA"]:
-            self.anti_spin_memory = 5
+            self.anti_spin_memory = 10
         else:
             self.blind_cross_memory = max(0, self.blind_cross_memory - 1)
             self.anti_spin_memory = max(0, self.anti_spin_memory - 1)
             
-        # 2. PÉRDIDA DE OBJETIVO (DESCONOCIDO)
-        if distance == "DESCONOCIDO":
-            # CRÍTICO: Si el VLM quiere hacer un giro brusco (x < 0.15 o x > 0.85),
-            # CANCELAMOS el Sprint Ciego inmediatamente. Ha pasado algo raro y debe poder girar.
-            if x < 0.15 or x > 0.85:
-                self.blind_cross_memory = 0
-                return ControlMode.SCANNING
-                
-            if self.blind_cross_memory > 0:
-                return ControlMode.CROSSING   # Terminamos de atravesar el umbral
-            if self.anti_spin_memory > 0:
-                return ControlMode.CENTERING  # Clava los frenos y espera
+        # 1. PÉRDIDA DE OBJETIVO o BÚSQUEDA EN EXTREMOS
+        if distance == "DESCONOCIDO" or x < 0.20 or x > 0.80:
+            if getattr(self, 'blind_cross_memory', 0) > 0:
+                return ControlMode.CROSSING 
+            if getattr(self, 'anti_spin_memory', 0) > 0:
+                return ControlMode.CENTERING
+            
+            # Si no hay memoria de cruce, es obligatoriamente SCANNING
             return ControlMode.SCANNING
             
-        # 3. OBJETIVO EN LOS EXTREMOS (Casi fuera de cámara)
+        # 2. OBJETIVO EN LOS EXTREMOS
         if x < 0.15 or x > 0.85:
             return ControlMode.SCANNING
             
-        # 4. CENTRADO FORZOSO
+        # 3. CENTRADO FORZOSO
         is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
         dynamic_threshold = 0.20 if distance in ["CERCA", "MUY_CERCA"] else 0.10
-        
         if x_dev > dynamic_threshold and not is_object: 
             return ControlMode.CENTERING
             
-        # 5. CRUCE
+        # 4. CRUCE
         if distance == "MUY_CERCA":
             return ControlMode.CROSSING
             
-        # 6. APROXIMACIÓN SEGURA
         return ControlMode.APPROACHING
     
-    def compute_velocity(self, target_point: Tuple[float, float],
-                         distance: str, confidence: str = "MEDIA") -> VelocityCommand:
+    def compute_velocity(self, target_point: Tuple[float, float], 
+                         distance: str, confidence: str) -> VelocityCommand:
         """
-        Compute continuous velocity from target_point.
-        
-        Args:
-            target_point: [x, y] normalized coordinates (0-1)
-            distance: "MUY_LEJOS", "LEJOS", "CERCA", "MUY_CERCA", "DESCONOCIDO"
-            confidence: "ALTA", "MEDIA", "BAJA"
-            
-        Returns:
-            VelocityCommand with continuous velocities
+        Compute continuous velocity vector based on target point and mode.
         """
         x, y = target_point
         
-        # Clamp to valid range
-        x = max(0.0, min(1.0, x))
-        y = max(0.0, min(1.0, y))
+        # --- DICCIONARIOS DE ESCALA (Blindados) ---
+        DISTANCE_SCALES = {
+            "MUY_CERCA": 0.4,
+            "CERCA": 0.8,
+            "LEJOS": 1.0,
+            "DESCONOCIDO": 0.5
+        }
         
-        # Calculate deviations from center
-        x_deviation = x - 0.5  # Negative = left, Positive = right
-        y_factor = 1.0 - y     # Higher Y = closer to bottom = less forward
+        CONFIDENCE_SCALES = {
+            "ALTA": 1.0,
+            "MEDIA": 0.7,
+            "BAJA": 0.4
+        }
         
-        # Get mode parameters
-        self.mode = self.determine_mode(target_point, distance)
+        # Desviaciones desde el centro
+        x_deviation = x - 0.5  # Positivo = objetivo a la derecha
+        y_factor = 1.0 - y     # Positivo = objetivo arriba (más rápido)
+        
         params = self.MODE_PARAMS[self.mode]
         
-        # Get distance scaling
-        dist_scale = self.DISTANCE_SCALES.get(distance, 0.5)
+        # Usamos los diccionarios locales
+        dist_scale = DISTANCE_SCALES.get(distance, 0.5)
+        conf_scale = CONFIDENCE_SCALES.get(confidence, 0.5)
         
-        # Confidence scaling
-        conf_scale = {"ALTA": 1.0, "MEDIA": 0.7, "BAJA": 0.4}.get(confidence, 0.7)
+        # --- GANANCIAS ---
+        ganancia_yaw = 1.0  # Ganancia explícita para los giros en estático
         
-       # === RAW VELOCITIES ===
-        if self.mode == ControlMode.SCANNING:
-            vx_raw = 0.0  # Anula el avance
-            vy_raw = 0.0  # CRÍTICO: Anula el strafe lateral (patinazo) al girar
-            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
-        elif self.mode == ControlMode.CENTERING:
-            vx_raw = 0.0  # Anula el avance
+        # Variables crudas inicializadas
+        vx_raw = 0.0
+        vy_raw = 0.0
+        vyaw_raw = 0.0
+
+        # === ESTRUCTURA ESTRICTA DE MODOS (Mutuamente excluyentes) ===
+        if self.mode == ControlMode.CENTERING:
+            vx_raw = 0.0      # FRENO FRONTAL ABSOLUTO: No avanzar mientras se centra
+            vyaw_raw = 0.0    # ⛔ YAW KILL-SWITCH: Prohibido rotar para no torcerse
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
-        else:
-            vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"]
-            vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
-        
-        # === APPLY SCALING ===
-        vx = vx_raw * dist_scale * conf_scale
-        vy = vy_raw * dist_scale * conf_scale
-        vyaw = vyaw_raw * dist_scale
-        
-        # === REGLA DE SPRINT (Cruce Decisivo y Agresivo) ===
+
+        elif self.mode == ControlMode.CROSSING:
+            vy_raw = 0.0      # BLOQUEO LATERAL: Prohibido esquivar los marcos
+            vyaw_raw = 0.0    # BLOQUEO ROTACIONAL
+            if distance == "MUY_CERCA":
+                vx_raw = 0.30 # Empujón final potente balístico
+            else:
+                vx_raw = 0.15 # Velocidad de remolque a ciegas
+
+        elif self.mode == ControlMode.SCANNING:
+            vx_raw = 0.0      # FRENO FRONTAL ABSOLUTO
+            vy_raw = 0.0      # NO strafe
+            # Solo rotación pura (Pivot Turn de escaneo)
+            vyaw_raw = x_deviation * ganancia_yaw * 1.5  
+
+        elif self.mode == ControlMode.APPROACHING:
+            # --- GIRO EN ESTÁTICO (Pivot Turn) EN ESPACIOS REDUCIDOS ---
+            if abs(x_deviation) > 0.15:
+                # El objeto está muy a un lado: Frena el avance y rota como una torreta
+                vx_raw = 0.0
+                vy_raw = 0.0
+                vyaw_raw = x_deviation * ganancia_yaw
+            else:
+                # El objeto ya está casi en el centro: Avanza recto con micro-correcciones
+                alignment_brake = max(0.2, 1.0 - (abs(x_deviation) * 2.0))
+                vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"] * alignment_brake
+                vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
+                vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"] * 0.2
+                
+                # Premio de velocidad por estar muy centrado
+                if abs(x_deviation) <= 0.05:
+                    vx_raw = vx_raw * 1.5
+
+
+        # === ESCALADO DE VELOCIDADES ===
         if self.mode == ControlMode.CROSSING:
-            # 1. Bloqueo total de titubeos (cero bamboleo en el umbral)
-            # Anular cualquier intento de giro para no rozar los marcos
-            vy = 0.0
-            vyaw = 0.0
+            # CROSSING es balístico, ignora escalas de confianza
+            vx = vx_raw
+            vy = vy_raw
+            vyaw = vyaw_raw
+        else:
+            # Resto de modos se escalan por seguridad y visión
+            vx = vx_raw * dist_scale * conf_scale
+            vy = vy_raw * dist_scale * conf_scale
+            vyaw = vyaw_raw * dist_scale
             
-            # 2. El empujón final (Sprint Ciego)
-            # Sobrescribir la velocidad frontal con un valor balístico fijo
-            # que garantice el cruce independientemente del valor Y o el dist_scale.
-            vx = 0.40  # Velocidad suficiente para atravesar la puerta sin detenerse
-            
-       # Regla "Good Enough" para la aproximación (Visión de túnel suave)
-        elif abs(x_deviation) <= 0.15 and self.mode == ControlMode.APPROACHING:
-            # ELIMINADO vy = 0.0. Dejamos que el dron fluya en diagonal (strafe + avance)
-            vyaw = vyaw * 0.2   
-            vx = vx * 1.5
-        
-        # === CLAMP TO LIMITS ===
-        vx = np.clip(vx, -self.MAX_FORWARD_VEL * 0.2, self.MAX_FORWARD_VEL)
-        vy = np.clip(vy, -self.MAX_LATERAL_VEL, self.MAX_LATERAL_VEL)
-        vyaw = np.clip(vyaw, -self.MAX_YAW_RATE, self.MAX_YAW_RATE)
-        
-        # === SMOOTH VELOCITY CHANGES ===
-        # Freno estricto: Elimina inercia en modos de rotación o centrado puro
+
+        # === SUAVIZADO Y RETENCIÓN (SMOOTHING) ===
+        smoothing_factor = getattr(self, 'SMOOTHING', 0.8)
+
         if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
-            vx = 0.0
             self.last_cmd.vx = 0.0
-        # CRÍTICO: El sprint de cruce debe ser instantáneo, sin suavizado que lo retrase
-        elif self.mode != ControlMode.CROSSING:
-            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx      
-            
-        vy = self.smoothing_factor * vy + (1 - self.smoothing_factor) * self.last_cmd.vy
-        vyaw = self.smoothing_factor * vyaw + (1 - self.smoothing_factor) * self.last_cmd.vyaw
+            if self.mode == ControlMode.CENTERING:
+                self.last_cmd.vy = 0.0  # Matar inercia lateral para no patinar
+
+        vx = smoothing_factor * self.last_cmd.vx + (1 - smoothing_factor) * vx
+        vy = smoothing_factor * self.last_cmd.vy + (1 - smoothing_factor) * vy
+        vyaw = smoothing_factor * self.last_cmd.vyaw + (1 - smoothing_factor) * vyaw
+
+
+        # === CLIPPING LÍMITES ===
+        max_fwd = getattr(self, 'MAX_FORWARD_VEL', 0.5)
+        max_lat = getattr(self, 'MAX_LATERAL_VEL', 0.3)
+        max_yaw = getattr(self, 'MAX_YAW_VEL', 0.8)
         
-        cmd = VelocityCommand(vx=vx, vy=vy, vz=0.0, vyaw=vyaw)
-        self.last_cmd = cmd
-        
-        return cmd
+        vx = np.clip(vx, -max_fwd * 0.2, max_fwd)
+        vy = np.clip(vy, -max_lat, max_lat)
+        vyaw = np.clip(vyaw, -max_yaw, max_yaw)
+
+        self.last_cmd = VelocityCommand(vx, vy, 0.0, vyaw)
+        return self.last_cmd
     
     def velocity_to_steps(self, cmd: VelocityCommand, 
                           dt: float = 1.0) -> Tuple[int, list]:
@@ -497,18 +511,20 @@ class SafetyEnvelopeV2:
         
         # === RULE 3: Proportional correction for imbalance ===
         elif abs(imbalance) > 0.3 and distance in ["MUY_CERCA", "CERCA"]:
+            
+            # NUEVO FRENO PARA ESQUINAS: Si roza la pared, ahogamos el acelerador al 20%
+            # Esto da tiempo a que el dron se deslice lateralmente sin clavarse.
+            if abs(imbalance) > 0.7:
+                safe_cmd.vx = velocity_cmd.vx * 0.2
+                override_reason = f"SEVERE IMBALANCE ({imbalance:.2f}). Throttling forward speed."
+                
             if imbalance < 0:
-                correction = 0.08 * abs(imbalance)  # REDUCIDO de 0.15 a 0.08
+                correction = 0.08 * abs(imbalance)
                 safe_cmd.vy = max(safe_cmd.vy, correction)
-                if correction > 0.1:
-                    safe_cmd.vx = 0.0
-                    override_reason = f"DRIFT CORRECTION: Wall LEFT (imbalance={imbalance:.2f}). Adding RIGHT drift."
             else:
-                correction = -0.08 * abs(imbalance)  # REDUCIDO de 0.15 a 0.08
+                correction = -0.08 * abs(imbalance)
                 safe_cmd.vy = min(safe_cmd.vy, correction)
-                if abs(correction) > 0.1:
-                    safe_cmd.vx = 0.0
-                    override_reason = f"DRIFT CORRECTION: Wall RIGHT (imbalance={imbalance:.2f}). Adding LEFT drift."
+
         # === RULE 4: Reduce forward speed if any danger ===
         max_danger = max(left_density, right_density)
         if max_danger > self.DANGER_THRESHOLD and velocity_cmd.vx > 0.1:

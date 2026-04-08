@@ -127,15 +127,15 @@ Tu cuerpo físico (hélices) es MUCHO MÁS ANCHO que tu cámara.
    - ¿Mi target_point es exactamente [0.50, Y]? ✓
    - Si alguna condición falla → STRAFE/ROTA primero
 
-   5. SÍNDROME DE DISTRACCIÓN (CRÍTICO):
-   - Si estás en medio de un cruce (marco de puerta visible) y ves tu OBJETIVO FINAL de reojo a un lado (ej. X=0.85 o X=0.15), ¡NO LE APUNTES AÚN!
-   - Si le apuntas, el dron se moverá de lado y chocará contra el marco de la puerta.
-   - IGNORA EL OBJETO temporalmente. Sigue apuntando al CENTRO DE LA PUERTA (X=0.50) hasta que hayas cruzado por completo y el marco ya no sea visible.
+5. SÍNDROME DE DISTRACCIÓN (CRÍTICO):
+- Si estás en medio de un cruce (marco de puerta visible) y ves tu OBJETIVO FINAL de reojo a un lado (ej. X=0.85 o X=0.15), ¡NO LE APUNTES AÚN!
+- Si le apuntas, el dron se moverá de lado y chocará contra el marco de la puerta.
+- IGNORA EL OBJETO temporalmente. Sigue apuntando al CENTRO DE LA PUERTA (X=0.50) hasta que hayas cruzado por completo y el marco ya no sea visible.
 
-   6. EL EMPUJÓN FINAL (EXCEPCIÓN AL 30%):
-   - Cuando el estado sea "Crossing door", tu distancia sea "MUY_CERCA" y ya estés perfectamente centrado (X=0.50), los marcos de la puerta invadirán toda tu cámara (Efecto Túnel).
-   - En este ÚNICO caso, IGNORA la regla de "NO AVANCES si los márgenes son < 30%". Tienes permiso para cruzar.
-   - Para dar el "empujón final", debes pisar el acelerador señalando muy arriba en la imagen. Obligatoriamente, tu target_point debe tener un valor Y muy bajo, por ejemplo [0.50, 0.15] o [0.50, 0.20].
+6. EL EMPUJÓN FINAL (EXCEPCIÓN AL 30%):
+- Cuando el estado sea "Crossing door", tu distancia sea "MUY_CERCA" y ya estés perfectamente centrado (X=0.50), los marcos de la puerta invadirán toda tu cámara (Efecto Túnel).
+- En este ÚNICO caso, IGNORA la regla de "NO AVANCES si los márgenes son < 30%". Tienes permiso para cruzar.
+- Para dar el "empujón final", debes pisar el acelerador señalando muy arriba en la imagen. Obligatoriamente, tu target_point debe tener un valor Y muy bajo, por ejemplo [0.50, 0.15] o [0.50, 0.20].
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA FUNDAMENTAL: SOLO PUERTAS ABIERTAS SON TRANSITABLES
 ═══════════════════════════════════════════════════════════
