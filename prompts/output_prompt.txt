@@ -115,7 +115,6 @@ EXAMPLE OUTPUTS
 ═══════════════════════════════════════════════════════════
 
 **Example 1 - Searching for door (scanning):**
-```json
 {
   "reasoning": "No veo puertas abiertas en la vista actual. Mi memoria dice 'Girando DERECHA', así que CONTINÚO girando derecha para completar el escaneo.",
   "target_point": [0.90, 0.50],
@@ -125,10 +124,9 @@ EXAMPLE OUTPUTS
   "mission_progress": "Searching for door",
   "memory_update": "Girando DERECHA. 3 giros completados. Sin puerta abierta visible aún."
 }
-```
 
-**Example 2 - Door visible, approaching:**
-```json
+Example 2 - Door visible, approaching:
+
 {
   "reasoning": "Puerta abierta visible adelante a ~3m, bien centrada con marco visible. Señalo el centro de la puerta para avanzar directamente hacia ella.",
   "target_point": [0.50, 0.42],
@@ -138,10 +136,9 @@ EXAMPLE OUTPUTS
   "mission_progress": "Door visible far",
   "memory_update": "Puerta bathroom centrada. Continuar avances hacia ella."
 }
-```
 
-**Example 3 - Door on the left, turning:**
-```json
+Example 3 - Door on the left, turning:
+
 {
   "reasoning": "Puerta visible a la izquierda a ~2m. El centro de la puerta está en el tercio izquierdo de la imagen. Señalo su posición para que el dron gire hacia ella.",
   "target_point": [0.22, 0.48],
@@ -151,10 +148,9 @@ EXAMPLE OUTPUTS
   "mission_progress": "Door visible far",
   "memory_update": "Puerta bathroom detectada a la izquierda. Girando hacia ella."
 }
-```
 
-**Example 4 - Door close but NOT centered (X=0.65), MUST strafe first:**
-```json
+Example 4 - Door close but NOT centered (X=0.65), MUST strafe first:
+
 {
   "reasoning": "Puerta cerca (~1m) pero está desplazada a la derecha (X~0.65). El dron tiene 60cm de ancho. Si avanzo ahora, mi ala derecha chocará con el marco. DEBO hacer STRAFE DERECHA para centrar la puerta ANTES de cruzar. NO puedo cambiar a 'Crossing door' hasta que X≈0.50.",
   "target_point": [0.65, 0.50],
@@ -164,23 +160,21 @@ EXAMPLE OUTPUTS
   "mission_progress": "Door close",
   "memory_update": "Puerta descentrada DERECHA (X=0.65). STRAFE derecha para centrar. NO avanzar hasta X≈0.50."
 }
-```
 
-**Example 5 - Door perfectly centered (X≈0.50), NOW safe to cross:**
-```json
+Example 5 - Cruzar puerta muy cerca (EL EMPUJÓN FINAL):
+
 {
-  "reasoning": "Puerta CENTRADA perfectamente (X=0.50). Marco izquierdo en X~0.20, marco derecho en X~0.80. Márgenes >35% a ambos lados. Ahora SÍ es SEGURO cambiar a 'Crossing door' y avanzar.",
-  "target_point": [0.50, 0.40],
+  "reasoning": "Perfectamente alineado a punto de cruzar. Los marcos invaden la cámara por la cercanía (efecto túnel), pero como estoy centrado en X=0.50, ignoro la regla de los márgenes. Señalo el centro-arriba [0.50, 0.15] para dar el empujón final, acelerar y atravesar el umbral.",
+  "target_point": [0.50, 0.15],
   "distance": "MUY_CERCA",
   "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Crossing door",
-  "memory_update": "Puerta centrada (X=0.50). Márgenes seguros (izq 35%, der 35%). Avanzando."
+  "memory_update": "Puerta centrada (X=0.50). Aplicando empujón final [0.50, 0.15] para cruzar umbral."
 }
-```
 
-**Example 6 - Avoiding obstacle:**
-```json
+Example 6 - Avoiding obstacle:
+
 {
   "reasoning": "Veo pared/obstáculo bloqueando el camino directo. Hay espacio libre a la izquierda. Señalo hacia la izquierda para esquivar el obstáculo.",
   "target_point": [0.15, 0.50],
@@ -190,10 +184,9 @@ EXAMPLE OUTPUTS
   "mission_progress": "Door visible far",
   "memory_update": "Esquivando obstáculo. Puerta debería estar a la izquierda."
 }
-```
 
-**Example 7 - Object detected, approaching:**
-```json
+Example 7 - Object detected, approaching:
+
 {
   "reasoning": "Sink visible adelante a ~1.5m, ligeramente a la derecha. Es el objetivo de la misión. Señalo su centro para acercarme.",
   "target_point": [0.58, 0.45],
@@ -203,7 +196,6 @@ EXAMPLE OUTPUTS
   "mission_progress": "Approaching object",
   "memory_update": "Sink detectado. Aproximación en progreso."
 }
-```
 
 ═══════════════════════════════════════════════════════════
 VALIDATION RULES

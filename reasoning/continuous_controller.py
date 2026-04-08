@@ -98,8 +98,8 @@ class ContinuousController:
             "yaw_scale": 0.3,        # Moderate yaw correction
         },
         ControlMode.CROSSING: {
-            "forward_scale": 0.3,    # Slow forward
-            "lateral_scale": 0.6,    # Good lateral correction for door alignment
+            "forward_scale": 0.8,    # Slow forward
+            "lateral_scale": 0.4,    # Good lateral correction for door alignment
             "yaw_scale": 0.1,        # Minimal yaw (avoid rotation while crossing)
         },
         ControlMode.CENTERING: {
@@ -112,12 +112,13 @@ class ContinuousController:
     # === DISTANCE SCALING ===
     # IMPORTANT: Lateral movements should NOT scale much with distance
     # because we want small, incremental corrections regardless of distance
+    # === DISTANCE SCALING ===
     DISTANCE_SCALES = {
-        "MUY_LEJOS": 0.8,     # Slightly reduced
-        "LEJOS": 0.5,         # 50% speed (was 70%)
-        "CERCA": 0.3,         # 30% speed (was 40%)
-        "MUY_CERCA": 0.1,     # Very slow, precise
-        "DESCONOCIDO": 0.4    # Conservative default
+        "MUY_LEJOS": 0.8,     
+        "LEJOS": 0.6,         
+        "CERCA": 0.5,        
+        "MUY_CERCA": 0.4,     
+        "DESCONOCIDO": 0.4    
     }
     
     # === LATERAL MOVEMENT LIMITS ===
@@ -128,6 +129,11 @@ class ContinuousController:
         self.mode = ControlMode.APPROACHING
         self.last_cmd = VelocityCommand(0, 0, 0, 0)
         self.smoothing_factor = 0.3  # For velocity smoothing (0-1)
+        
+        # --- Estado de Memoria Anti-Amnesia ---
+        self.close_memory = 0
+        self.was_recently_close = False  
+        self.lost_frames = 0            
         
     def set_mode(self, mode: ControlMode):
         """Set operating mode"""
@@ -141,40 +147,53 @@ class ContinuousController:
         x, y = target_point
         x_dev = abs(x - 0.5)
         
-        # --- MEMORIA A CORTO PLAZO (Anti-Amnesia) ---
-        if not hasattr(self, 'was_recently_close'):
-            self.was_recently_close = False
-            self.lost_frames = 0
+        # --- MEMORIA A CORTO PLAZO DIVIDIDA ---
+        if not hasattr(self, 'blind_cross_memory'):
+            self.blind_cross_memory = 0  # Batería para el sprint ciego
+            self.anti_spin_memory = 0    # Batería para evitar giros locos
             
-        if distance in ["CERCA", "MUY_CERCA"]:
-            self.was_recently_close = True
-            self.lost_frames = 0
-        elif distance != "DESCONOCIDO":
-            self.was_recently_close = False
-            self.lost_frames = 0
+        # 1. Cargar baterías lógicas
+        if distance == "MUY_CERCA" and x_dev <= 0.15:
+            # Solo cargamos el sprint ciego si estamos PEGADOS y CENTRADOS
+            # Reducimos a 4 frames. Si con 4 no entra, es que ha chocado.
+            self.blind_cross_memory = 4
+            self.anti_spin_memory = 5
+        elif distance in ["CERCA", "MUY_CERCA"]:
+            self.anti_spin_memory = 5
         else:
-            self.lost_frames += 1
+            self.blind_cross_memory = max(0, self.blind_cross_memory - 1)
+            self.anti_spin_memory = max(0, self.anti_spin_memory - 1)
             
-        # 1. PÉRDIDA DE OBJETIVO (DESCONOCIDO)
+        # 2. PÉRDIDA DE OBJETIVO (DESCONOCIDO)
         if distance == "DESCONOCIDO":
-            # Veto a giro brusco de 60º si estábamos a punto de cruzar
-            if self.was_recently_close and self.lost_frames < 5:
-                return ControlMode.CENTERING 
+            # CRÍTICO: Si el VLM quiere hacer un giro brusco (x < 0.15 o x > 0.85),
+            # CANCELAMOS el Sprint Ciego inmediatamente. Ha pasado algo raro y debe poder girar.
+            if x < 0.15 or x > 0.85:
+                self.blind_cross_memory = 0
+                return ControlMode.SCANNING
+                
+            if self.blind_cross_memory > 0:
+                return ControlMode.CROSSING   # Terminamos de atravesar el umbral
+            if self.anti_spin_memory > 0:
+                return ControlMode.CENTERING  # Clava los frenos y espera
             return ControlMode.SCANNING
             
-        # 2. OBJETIVO EN LOS EXTREMOS (Casi fuera de cámara)
+        # 3. OBJETIVO EN LOS EXTREMOS (Casi fuera de cámara)
         if x < 0.15 or x > 0.85:
             return ControlMode.SCANNING
             
-        # 3. CENTRADO FORZOSO (Prioridad absoluta para alinear huecos)
-        if x_dev > 0.10: 
+        # 4. CENTRADO FORZOSO
+        is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
+        dynamic_threshold = 0.20 if distance in ["CERCA", "MUY_CERCA"] else 0.10
+        
+        if x_dev > dynamic_threshold and not is_object: 
             return ControlMode.CENTERING
             
-        # 4. CRUCE (Perfectamente centrado y MUY CERCA)
+        # 5. CRUCE
         if distance == "MUY_CERCA":
             return ControlMode.CROSSING
             
-        # 5. APROXIMACIÓN SEGURA
+        # 6. APROXIMACIÓN SEGURA
         return ControlMode.APPROACHING
     
     def compute_velocity(self, target_point: Tuple[float, float],
@@ -211,39 +230,41 @@ class ContinuousController:
         conf_scale = {"ALTA": 1.0, "MEDIA": 0.7, "BAJA": 0.4}.get(confidence, 0.7)
         
        # === RAW VELOCITIES ===
-        if self.mode == ControlMode.SCANNING or self.mode == ControlMode.CENTERING:
-            vx_raw = 0.0  # Anula el avance desde la base
+        if self.mode == ControlMode.SCANNING:
+            vx_raw = 0.0  # Anula el avance
+            vy_raw = 0.0  # CRÍTICO: Anula el strafe lateral (patinazo) al girar
+            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
+        elif self.mode == ControlMode.CENTERING:
+            vx_raw = 0.0  # Anula el avance
+            vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
+            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
         else:
             vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"]
-        
-        vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-        vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
+            vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
+            vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"]
         
         # === APPLY SCALING ===
         vx = vx_raw * dist_scale * conf_scale
         vy = vy_raw * dist_scale * conf_scale
         vyaw = vyaw_raw * dist_scale
         
-        # === CLAMP TO LIMITS ===
-        vx = np.clip(vx, -self.MAX_FORWARD_VEL * 0.2, self.MAX_FORWARD_VEL)
-        vy = np.clip(vy, -self.MAX_LATERAL_VEL, self.MAX_LATERAL_VEL)
-        vyaw = np.clip(vyaw, -self.MAX_YAW_RATE, self.MAX_YAW_RATE)
-        
-        # === SMOOTH VELOCITY CHANGES ===
-        # Freno estricto: Elimina inercia en modos de rotación o centrado puro
-        if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
-            vx = 0.0
-            self.last_cmd.vx = 0.0
-        else:
-            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx
+        # === REGLA DE SPRINT (Cruce Decisivo y Agresivo) ===
+        if self.mode == ControlMode.CROSSING:
+            # 1. Bloqueo total de titubeos (cero bamboleo en el umbral)
+            # Anular cualquier intento de giro para no rozar los marcos
+            vy = 0.0
+            vyaw = 0.0
             
-        vy = self.smoothing_factor * vy + (1 - self.smoothing_factor) * self.last_cmd.vy
-        vyaw = self.smoothing_factor * vyaw + (1 - self.smoothing_factor) * self.last_cmd.vyaw
-        
-        # === APPLY SCALING ===
-        vx = vx_raw * dist_scale * conf_scale
-        vy = vy_raw * dist_scale * conf_scale
-        vyaw = vyaw_raw * dist_scale
+            # 2. El empujón final (Sprint Ciego)
+            # Sobrescribir la velocidad frontal con un valor balístico fijo
+            # que garantice el cruce independientemente del valor Y o el dist_scale.
+            vx = 0.40  # Velocidad suficiente para atravesar la puerta sin detenerse
+            
+       # Regla "Good Enough" para la aproximación (Visión de túnel suave)
+        elif abs(x_deviation) <= 0.15 and self.mode == ControlMode.APPROACHING:
+            # ELIMINADO vy = 0.0. Dejamos que el dron fluya en diagonal (strafe + avance)
+            vyaw = vyaw * 0.2   
+            vx = vx * 1.5
         
         # === CLAMP TO LIMITS ===
         vx = np.clip(vx, -self.MAX_FORWARD_VEL * 0.2, self.MAX_FORWARD_VEL)
@@ -255,8 +276,9 @@ class ContinuousController:
         if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
             vx = 0.0
             self.last_cmd.vx = 0.0
-        else:
-            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx
+        # CRÍTICO: El sprint de cruce debe ser instantáneo, sin suavizado que lo retrase
+        elif self.mode != ControlMode.CROSSING:
+            vx = self.smoothing_factor * vx + (1 - self.smoothing_factor) * self.last_cmd.vx      
             
         vy = self.smoothing_factor * vy + (1 - self.smoothing_factor) * self.last_cmd.vy
         vyaw = self.smoothing_factor * vyaw + (1 - self.smoothing_factor) * self.last_cmd.vyaw
@@ -333,11 +355,19 @@ class ContinuousController:
             move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
         
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
-        # Cuando estamos centrando o cruzando, el VLM debe ver fotos más a menudo
-        if self.mode in [ControlMode.CENTERING, ControlMode.CROSSING]:
-            steps = min(steps, 4)  # Ventana corta para recalibrar milimétricamente
+        # Micromanage (pocos pasos) SOLO cuando está descentrado
+        # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
+        # Micromanage (pocos pasos) SOLO cuando está descentrado
+        if self.mode == ControlMode.CENTERING:
+            steps = min(steps, 4)  
+        elif self.mode == ControlMode.CROSSING:
+           
+            steps = 8  
         elif self.mode == ControlMode.APPROACHING:
-            steps = min(steps, 6)  # Ventana media
+            steps = min(steps, 10)
+
+        # === SOLUCIÓN 2: Prevenir el Tiempo Congelado de Unity ===
+        steps = max(steps, 3)
             
         # === SOLUCIÓN 2: Prevenir el Tiempo Congelado de Unity ===
         # Nunca devolver 0 pasos, de lo contrario la API del VLM se colapsará

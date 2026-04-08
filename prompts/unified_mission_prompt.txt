@@ -27,6 +27,15 @@ FASE ACTUAL: {mission_phase}
 {mission_description}
 
 ═══════════════════════════════════════════════════════════
+⚠️ REGLA DE UNIFICACIÓN SEMÁNTICA Y ACEPTACIÓN DE OBJETIVO
+═══════════════════════════════════════════════════════════
+El entorno puede tener diseños engañosos. DEBES SUPRIMIR tus sesgos estéticos.
+
+1. AGNOSTICISMO ESTÉTICO: Una vez que el sistema te ha confirmado que estás en la HABITACIÓN CORRECTA (ej. "bathroom"), CUALQUIER objeto que cumpla la función de tu objetivo ES TU OBJETIVO VÁLIDO.
+2. NO DISCRIMINES: Si tu objetivo es un "sink" (lavabo) y ves uno, IGNORA si su diseño, mueble o azulejos te hacen pensar que parece un "fregadero de cocina". 
+3. REGLA DE CIERRE: Si el sistema indica que estás en el {current_room} y ves un objeto que coincide con el {target_description}, acéptalo como el objetivo final, señala su centro y marca "Approaching object" o "Reached target". NUNCA intentes abandonar la habitación porque el diseño del objeto no coincida con tus expectativas visuales.
+
+═══════════════════════════════════════════════════════════
 ⚠️ REGLAS DE EXPLORACIÓN (OBLIGATORIAS)
 ═══════════════════════════════════════════════════════════
 
@@ -118,6 +127,15 @@ Tu cuerpo físico (hélices) es MUCHO MÁS ANCHO que tu cámara.
    - ¿Mi target_point es exactamente [0.50, Y]? ✓
    - Si alguna condición falla → STRAFE/ROTA primero
 
+   5. SÍNDROME DE DISTRACCIÓN (CRÍTICO):
+   - Si estás en medio de un cruce (marco de puerta visible) y ves tu OBJETIVO FINAL de reojo a un lado (ej. X=0.85 o X=0.15), ¡NO LE APUNTES AÚN!
+   - Si le apuntas, el dron se moverá de lado y chocará contra el marco de la puerta.
+   - IGNORA EL OBJETO temporalmente. Sigue apuntando al CENTRO DE LA PUERTA (X=0.50) hasta que hayas cruzado por completo y el marco ya no sea visible.
+
+   6. EL EMPUJÓN FINAL (EXCEPCIÓN AL 30%):
+   - Cuando el estado sea "Crossing door", tu distancia sea "MUY_CERCA" y ya estés perfectamente centrado (X=0.50), los marcos de la puerta invadirán toda tu cámara (Efecto Túnel).
+   - En este ÚNICO caso, IGNORA la regla de "NO AVANCES si los márgenes son < 30%". Tienes permiso para cruzar.
+   - Para dar el "empujón final", debes pisar el acelerador señalando muy arriba en la imagen. Obligatoriamente, tu target_point debe tener un valor Y muy bajo, por ejemplo [0.50, 0.15] o [0.50, 0.20].
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA FUNDAMENTAL: SOLO PUERTAS ABIERTAS SON TRANSITABLES
 ═══════════════════════════════════════════════════════════
@@ -199,6 +217,12 @@ Analiza la imagen y determina:
 ═══════════════════════════════════════════════════════════
 REGLAS DE SEÑALIZACIÓN
 ═══════════════════════════════════════════════════════════
+
+🎯 REGLA 0: LA VERDAD VISUAL ES ABSOLUTA (¡NO MIENTAS!)
+   - Tu target_point DEBE ser la coordenada exacta donde tus ojos ven el objetivo en la imagen.
+   - Si ves la puerta a la IZQUIERDA, tu X DEBE ser menor a 0.5 (ej. 0.35).
+   - Si el sistema te envía una alerta de seguridad que dice "Strafe RIGHT", PERO tus ojos ven la puerta a la IZQUIERDA, IGNORA EL TEXTO DE LA ALERTA Y CONFÍA EN TUS OJOS. 
+   - El sistema de control subyacente ya se encargará de evitar los muros. NUNCA inventes una coordenada falsa (ej. decir X=0.65 cuando está en 0.35) para justificar una alerta de seguridad. Di la verdad visual.
 
 🎯 REGLA 1: PARA ESCANEAR - SEÑALA LOS BORDES
    - Si necesitas girar para explorar, señala x=0.1 (izq) o x=0.9 (der)
