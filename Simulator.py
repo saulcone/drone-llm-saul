@@ -374,12 +374,34 @@ def run_simulation(args, topology, json_data=None):
     # Mission setup
     from reasoning.mission_manager import MissionManager, MissionPhase
     
-    # Parse target from query (e.g., query 8 = sink in bathroom)
-    target_object = args.target_object if hasattr(args, 'target_object') else "sink"
-    target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
+    # 1. Sacamos la query actual primero
+    query_id = args.query
+    query = get_query(query_id)
+
+    # 2. Mapeamos cada query a su habitación y objeto de destino
+    query_mapping = {
+        0: ("bathroom", None),
+        1: ("bedroom", None),
+        2: ("living room & kitchen", None),
+        3: ("living room & kitchen", "tv"),
+        4: ("living room & kitchen", "refrigerator"),
+        5: ("living room & kitchen", "tap"),
+        6: ("bedroom", "mirror"),
+        7: ("bedroom", "cabinet"),
+        8: ("bathroom", "sink"),
+        9: ("bathroom", "toilet")
+    }
+
+    # Asignamos dinámicamente según el experimento en curso
+    if query_id in query_mapping:
+        target_room, target_object = query_mapping[query_id]
+    else:
+        target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
+        target_object = args.target_object if hasattr(args, 'target_object') else "sink"
     
     mission_manager = MissionManager(target_object=target_object, target_room=target_room)
     print(f"\n{'='*60}")
+    print(f"[MISSION] Query ID: {query_id} -> {query}")
     print(f"[MISSION] Initialized: {target_object} in {target_room}")
     print(f"[MISSION] Starting phase: {mission_manager.get_phase_name()}")
     print(f"{'='*60}\n")
@@ -586,19 +608,7 @@ def run_simulation(args, topology, json_data=None):
                         intended_command=command
                     )
                     
-                    if override_reason:
-                        # Safety envelope intervened
-                        # BLOQUEADO: Ya no dejamos que la Fase 4 cambie el comando discreto
-                        # command = safe_command 
-                        safety_override = override_reason
-                        print(f"[SAFETY-ANTIGUO] ⚠️ {override_reason} (Ignorado por FSM, delego a V2)")
-                        # print(f"[SAFETY] Command changed: {original_command} -> {command}")
-                        
-                        # Send feedback to VLM via memory update
-                        agent_memory += f" [SAFETY ALERT: {override_reason}]"
-                    elif analysis and "imbalance" in analysis:
-                        # Log safety status even when not intervening
-                        print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
+
             
             # === DEPTH SAFETY GUARD (Phase 5) ===
             # Reactive safety using depth estimation - runs AFTER envelope
