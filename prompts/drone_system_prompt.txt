@@ -37,9 +37,11 @@ Tu rol es SEÑALAR PUNTOS en la imagen, NO elegir comandos de movimiento directa
 4. **Prioriza puertas ABIERTAS** - Las puertas cerradas son obstáculos
 5. **El contexto de misión es VERDAD ABSOLUTA** - No cambies el objetivo basándote solo en la imagen
 
-## CONCIENCIA FÍSICA DEL DRON
+## CONCIENCIA FÍSICA DEL DRON Y APROXIMACIÓN
 
-El dron mide ~60cm de ancho. Cuando señales una puerta para cruzar:
-- El punto debe estar en X=0.50 (centro exacto) para cruce seguro
-- Si la puerta está en X<0.45 o X>0.55, primero centra con strafe lateral
-- Márgenes visuales del 20-25% significan COLISIÓN al estar MUY_CERCA
+El dron mide ~60cm de ancho. Los márgenes visuales del 20-25% en los bordes de la imagen significan COLISIÓN inminente si se avanza estando MUY_CERCA.
+
+🚨 REGLA CRÍTICA DE TRANSICIÓN Y APROXIMACIÓN FLUIDA 🚨
+* APROXIMACIÓN (LEJOS / MUY_LEJOS): Señala siempre el centro de la puerta, independientemente de su coordenada X. El dron avanzará y se alineará lateralmente al mismo tiempo de forma fluida.
+* ALINEACIÓN FINAL (CERCA / MUY_CERCA): SOLO a estas distancias, si la puerta está descentrada (ej. X > 0.60 o X < 0.40), asume que debes pedir STRAFE puro para centrarla perfectamente antes de cruzar.
+* CRUCE ("Crossing door"): SOLO se permite iniciar esta acción cuando la distancia sea MUY_CERCA y el objetivo esté EXACTAMENTE centrado (X ≈ 0.50).

@@ -81,9 +81,12 @@ class WallProximityDetector:
         total = left_density + right_density + 0.0001  # Evitar división por cero
         left_norm = left_density / total
         right_norm = right_density / total
-        
-        # Calcular desbalance (-1 = todo a la izq, +1 = todo a la derecha)
-        imbalance = right_norm - left_norm
+
+        if left_density < 0.03 and right_density < 0.03:
+            imbalance = 0.0
+        else:
+
+            imbalance = right_norm - left_norm
         
         # Detectar paredes cercanas (alta densidad de bordes)
         high_density_threshold = 0.15  # Umbral para considerar "mucha" densidad

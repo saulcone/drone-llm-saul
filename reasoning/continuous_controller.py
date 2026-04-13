@@ -173,18 +173,26 @@ class ContinuousController:
         # 2. OBJETIVO EN LOS EXTREMOS
         if x < 0.15 or x > 0.85:
             return ControlMode.SCANNING
-            
-        # 3. CENTRADO FORZOSO
+        
+        # === 3. ALINEACIÓN TARDÍA (Solo cuando está cerca) ===
         is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
-        dynamic_threshold = 0.20 if distance in ["CERCA", "MUY_CERCA"] else 0.10
-        if x_dev > dynamic_threshold and not is_object: 
+        
+        if distance in ["CERCA", "MUY_CERCA"] and x_dev > 0.08 and not is_object: 
+            return ControlMode.CENTERING
+        
+        # === 3. ALINEACIÓN TARDÍA (Solo cuando está cerca) ===
+        is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
+        
+        if distance in ["CERCA", "MUY_CERCA"] and x_dev > 0.08 and not is_object: 
             return ControlMode.CENTERING
             
-        # 4. CRUCE
-        if distance == "MUY_CERCA":
+        # === AÑADIR ESTE BLOQUE: 4. GATILLO EXPLÍCITO DE CRUCE ===
+        is_crossing = any(word in mission_progress.lower() for word in ["crossing", "cruzando", "atraves", "travesía", "entering"])
+        if is_crossing and distance in ["MUY_CERCA", "CERCA"]:
             return ControlMode.CROSSING
             
         return ControlMode.APPROACHING
+        
     
     def compute_velocity(self, target_point: Tuple[float, float], 
                          distance: str, confidence: str) -> VelocityCommand:
@@ -219,62 +227,55 @@ class ContinuousController:
         
         # --- GANANCIAS ---
         ganancia_yaw = 1.0  # Ganancia explícita para los giros en estático
+
+        # === CÁLCULO Y ESCALADO UNIFICADO (Framework SPF) ===
         
-        # Variables crudas inicializadas
-        vx_raw = 0.0
-        vy_raw = 0.0
-        vyaw_raw = 0.0
+        if self.mode == ControlMode.CROSSING:
+            # SPRINT BALÍSTICO: Atraviesa la puerta como un láser
+            vx = 0.30
+            vy = 0.0
+            vyaw = 0.0
+            
+            # 🚨 NUEVO: INMUNIDAD DE SEGURIDAD
+            # Durante el cruce del umbral, silenciamos cualquier override de seguridad
+            # para evitar que el estrangulamiento (throttling) frene al dron.
+            if hasattr(self, 'safety_override'):
+                self.safety_override = None 
+    
 
-        # === ESTRUCTURA ESTRICTA DE MODOS (Mutuamente excluyentes) ===
-        if self.mode == ControlMode.CENTERING:
-            vx_raw = 0.0      # FRENO FRONTAL ABSOLUTO: No avanzar mientras se centra
-            vyaw_raw = 0.0    # ⛔ YAW KILL-SWITCH: Prohibido rotar para no torcerse
+        elif self.mode == ControlMode.CENTERING:
+            # 2. ALINEACIÓN ESTRICTA DEL ÚLTIMO MILÍMETRO (Modo Cangrejo)
+            # Freno frontal absoluto. El dron se desliza lateralmente sin torcer el morro.
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-
-        elif self.mode == ControlMode.CROSSING:
-            vy_raw = 0.0      # BLOQUEO LATERAL: Prohibido esquivar los marcos
-            vyaw_raw = 0.0    # BLOQUEO ROTACIONAL
-            if distance == "MUY_CERCA":
-                vx_raw = 0.30 # Empujón final potente balístico
-            else:
-                vx_raw = 0.15 # Velocidad de remolque a ciegas
+            
+            vx = 0.0
+            vy = vy_raw * conf_scale * 1.5  # Potenciado x1.5 para ajuste rápido
+            vyaw = 0.0
 
         elif self.mode == ControlMode.SCANNING:
-            vx_raw = 0.0      # FRENO FRONTAL ABSOLUTO
-            vy_raw = 0.0      # NO strafe
-            # Solo rotación pura (Pivot Turn de escaneo)
-            vyaw_raw = x_deviation * ganancia_yaw * 1.5  
+            # 3. ESCANEO (Búsqueda o pérdida de visión)
+            # Freno total de traslación. Solo rotación pura sobre su eje.
+            vx = 0.0
+            vy = 0.0
+            vyaw = x_deviation * ganancia_yaw * 1.5
 
-        elif self.mode == ControlMode.APPROACHING:
-            # --- GIRO EN ESTÁTICO (Pivot Turn) EN ESPACIOS REDUCIDOS ---
-            if abs(x_deviation) > 0.15:
-                # El objeto está muy a un lado: Frena el avance y rota como una torreta
-                vx_raw = 0.0
-                vy_raw = 0.0
-                vyaw_raw = x_deviation * ganancia_yaw
-            else:
-                # El objeto ya está casi en el centro: Avanza recto con micro-correcciones
-                alignment_brake = max(0.2, 1.0 - (abs(x_deviation) * 2.0))
-                vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"] * alignment_brake
-                vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-                vyaw_raw = self.KP_YAW * x_deviation * params["yaw_scale"] * 0.2
-                
-                # Premio de velocidad por estar muy centrado
-                if abs(x_deviation) <= 0.05:
-                    vx_raw = vx_raw * 1.5
-
-
-        # === ESCALADO DE VELOCIDADES ===
-        if self.mode == ControlMode.CROSSING:
-            # CROSSING es balístico, ignora escalas de confianza
-            vx = vx_raw
-            vy = vy_raw
-            vyaw = vyaw_raw
         else:
-            # Resto de modos se escalan por seguridad y visión
+            # 4. APROXIMACIÓN FLUIDA UNIFICADA (APPROACHING)
+            # El dron avanza (vx) MIENTRAS se alinea lateralmente (vy) en diagonal.
+            
+            # A. Cálculo lateral (Proporcional a lo descentrado que esté)
+            vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
+            vy = vy_raw * dist_scale * conf_scale * 1.2
+            
+            alignment_brake = max(0.2, 1.0 - (abs(x_deviation) * 2.0))
+            vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"] * alignment_brake
+            
+            if abs(x_deviation) <= 0.05:
+                vx_raw *= 1.5
+                
             vx = vx_raw * dist_scale * conf_scale
-            vy = vy_raw * dist_scale * conf_scale
-            vyaw = vyaw_raw * dist_scale
+
+            vyaw = 0.0
             
 
         # === SUAVIZADO Y RETENCIÓN (SMOOTHING) ===
@@ -457,6 +458,9 @@ class SafetyEnvelopeV2:
         left_density = analysis["left_density"]
         right_density = analysis["right_density"]
         imbalance = analysis["imbalance"]
+
+        if max(left_density, right_density) < 0.08:
+            imbalance = 0.0
         
         # Create a copy of the velocity command
         safe_cmd = VelocityCommand(

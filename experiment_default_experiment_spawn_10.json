@@ -1,0 +1,512 @@
+{
+  "Experiment_Info": {
+    "experiment_name": "default_experiment",
+    "query": "Find the refrigerator in the living room or kitchen",
+    "query_id": 4,
+    "topology": {
+      "living room & kitchen": [
+        "bedroom",
+        "bathroom"
+      ],
+      "bedroom": [
+        "living room & kitchen"
+      ],
+      "bathroom": [
+        "living room & kitchen"
+      ]
+    },
+    "spawn_id": 10
+  },
+  "Step_1": {
+    "step": "1",
+    "position": "[-2.   1.5 -8.5]",
+    "yaw": "270.0",
+    "collision_state": "1.0",
+    "command": "C1",
+    "original_command": "C1",
+    "safety_override": null,
+    "target_point": [
+      0.9,
+      0.5
+    ],
+    "distance": "DESCONOCIDO",
+    "confidence": "BAJA",
+    "oscillation_override": false,
+    "scaling_phase": "HYBRID-scanning",
+    "move_steps": 60,
+    "move_vec": [
+      0.0,
+      0.0,
+      0.1,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0,
+        "vy": 0,
+        "vyaw": 0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 0,
+      "last_analysis": null
+    },
+    "mission_phase": "ESCANEO INICIAL",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "No se observa ninguna puerta abierta en la vista actual del ba\u00f1o. El espacio visible muestra paredes de azulejos y una ventana/abertura oscura a la derecha, pero no es una puerta transitable. Debo continuar escaneando girando en la misma direcci\u00f3n para localizar la puerta hacia living room & kitchen.",
+    "mission_progress": "Searching for door",
+    "agent_memory": "Girando DERECHA para escanear. 1 giro completado, sin puerta abierta visible a\u00fan.",
+    "goal_state": false,
+    "elapsed_time": 15.490387201309204
+  },
+  "Step_2": {
+    "step": "2",
+    "position": "[-2.   1.5 -8.5]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D4",
+    "original_command": "D4",
+    "safety_override": null,
+    "target_point": [
+      0.75,
+      0.5
+    ],
+    "distance": "LEJOS",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 8,
+    "move_vec": [
+      0.09,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.019999999999999997,
+        "vy": 0.017999999999999995,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 0,
+      "last_analysis": {
+        "left_density": 0.04128086419753087,
+        "right_density": 0.07374614197530864,
+        "center_density": 0.057291666666666664,
+        "imbalance": 0.2819953272218148,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "B\u00daSQUEDA GLOBAL",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "Veo una puerta ABIERTA a la derecha de la imagen que conduce al living room & kitchen (se observa suelo de madera y estructura interior). El objetivo es alcanzar la cocina para encontrar el refrigerador, por lo que debo dirigirme a esta puerta visible.",
+    "mission_progress": "Door visible far",
+    "agent_memory": "Puerta ABIERTA detectada a la derecha (X=0.75). Dejando de escanear, avanzando hacia ella.",
+    "goal_state": false,
+    "elapsed_time": 17.600754499435425
+  },
+  "Step_3": {
+    "step": "3",
+    "position": "[-1.8882307  1.5       -7.973591 ]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D4",
+    "original_command": "D4",
+    "safety_override": null,
+    "target_point": [
+      0.75,
+      0.45
+    ],
+    "distance": "LEJOS",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 10,
+    "move_vec": [
+      0.08526315789473685,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.03799999999999999,
+        "vy": 0.03239999999999999,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 0,
+      "last_analysis": {
+        "left_density": 0.04346064814814815,
+        "right_density": 0.06066743827160494,
+        "center_density": 0.06280381944444445,
+        "imbalance": 0.1650878445005759,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "Veo una puerta ABIERTA a la derecha (X=0.75) que conduce al living room & kitchen, visible por la mesa y sillas al otro lado. El sistema ya confirm\u00f3 esta puerta como candidata v\u00e1lida en la memoria anterior. Se\u00f1alo su centro para acercarme progresivamente.",
+    "mission_progress": "Door visible far",
+    "agent_memory": "Avanzando hacia puerta ABIERTA a la derecha (X=0.75). Manteniendo trayectoria diagonal para alineaci\u00f3n lateral durante aproximaci\u00f3n.",
+    "goal_state": false,
+    "elapsed_time": 16.952261686325073
+  },
+  "Step_4": {
+    "step": "4",
+    "position": "[-1.7690321  1.5       -7.3274193]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D4",
+    "original_command": "D4",
+    "safety_override": null,
+    "target_point": [
+      0.75,
+      0.5
+    ],
+    "distance": "CERCA",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 10,
+    "move_vec": [
+      0.08689655172413793,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.0464,
+        "vy": 0.040319999999999995,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 0,
+      "last_analysis": {
+        "left_density": 0.03256172839506173,
+        "right_density": 0.09157021604938272,
+        "center_density": 0.05703125,
+        "imbalance": 0.47498642895917254,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "Veo la puerta abierta hacia el living room & kitchen a la derecha (X=0.75), con el interior visible. La puerta est\u00e1 cerca pero descentrada. Debo se\u00f1alar su centro exacto para que el dron realice STRAFE DERECHA y se alinee antes de cruzar, evitando choques con el marco derecho.",
+    "mission_progress": "Door close",
+    "agent_memory": "Strafing DERECHA hacia centro de puerta (X=0.75). Manteniendo trayectoria para alineaci\u00f3n perfecta antes de cruce.",
+    "goal_state": false,
+    "elapsed_time": 17.66024136543274
+  },
+  "Step_5": {
+    "step": "5",
+    "position": "[-1.6427597  1.5       -6.677166 ]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D2",
+    "original_command": "D2",
+    "safety_override": null,
+    "target_point": [
+      0.6,
+      0.5
+    ],
+    "distance": "CERCA",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 10,
+    "move_vec": [
+      0.06061224489795918,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.06272,
+        "vy": 0.038015999999999994,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 0,
+      "last_analysis": {
+        "left_density": 0.018055555555555554,
+        "right_density": 0.1023533950617284,
+        "center_density": 0.038078703703703705,
+        "imbalance": 0.6995151735565976,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "Veo el hueco de la puerta abierta hacia el living room & kitchen, con el refrigerador visible al fondo. La puerta est\u00e1 descentrada a la derecha (X\u22480.60) a distancia cercana (~1m). Debo continuar el STRAFE DERECHA para centrar el hueco antes de cruzar, evitando colisi\u00f3n con el marco izquierdo.",
+    "mission_progress": "Door close",
+    "agent_memory": "Continuando STRAFE DERECHA. Puerta en X=0.60, necesito centrar a X=0.50 antes de cruzar. Manteniendo direcci\u00f3n de alineaci\u00f3n.",
+    "goal_state": false,
+    "elapsed_time": 66.35005474090576
+  },
+  "Step_6": {
+    "step": "6",
+    "position": "[-1.6303023  1.5       -6.0926256]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D2",
+    "original_command": "D2",
+    "safety_override": "SEVERE IMBALANCE (1.00). Throttling forward speed.",
+    "target_point": [
+      0.55,
+      0.45
+    ],
+    "distance": "CERCA",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 8,
+    "move_vec": [
+      -0.1,
+      0.0327424,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.08185599999999998,
+        "vy": 0.0332928,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 1,
+      "last_analysis": {
+        "left_density": 0.0,
+        "right_density": 0.1044945987654321,
+        "center_density": 0.08012152777777778,
+        "imbalance": 0.9990439276867034,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "La puerta abierta hacia el living room & kitchen est\u00e1 visible y centrada en X=0.55, a aproximadamente 1.5m de distancia. Contin\u00fao el STRAFE DERECHA para alinear el cuerpo del dron con el centro exacto de la puerta (X=0.50) antes de cruzar, siguiendo la direcci\u00f3n de alineaci\u00f3n indicada en la memoria anterior.",
+    "mission_progress": "Door close",
+    "agent_memory": "Continuando STRAFE DERECHA. Puerta en X=0.55, ajustando a X=0.50. Preparando cruce tras alineaci\u00f3n.",
+    "goal_state": false,
+    "elapsed_time": 52.11553692817688
+  },
+  "Step_7": {
+    "step": "7",
+    "position": "[-2.0421977  1.5       -6.1792   ]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "D2",
+    "original_command": "D2",
+    "safety_override": "SEVERE IMBALANCE (0.96). Throttling forward speed.",
+    "target_point": [
+      0.55,
+      0.48
+    ],
+    "distance": "CERCA",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 8,
+    "move_vec": [
+      -0.1,
+      0.038174719999999995,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.09543679999999999,
+        "vy": 0.02951424,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 2,
+      "last_analysis": {
+        "left_density": 0.002488425925925926,
+        "right_density": 0.11140046296296297,
+        "center_density": 0.0,
+        "imbalance": 0.9554618708776035,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "left"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "Veo el hueco de la puerta hacia el living room & kitchen a la derecha de la imagen, con el centro aproximado en X=0.55. La puerta est\u00e1 cerca (~1m) y a\u00fan no centrada perfectamente. Debo continuar el STRAFE DERECHA para alinear el cuerpo del dron con el hueco antes de cruzar, manteniendo la distancia segura de los marcos.",
+    "mission_progress": "Door close",
+    "agent_memory": "Continuando STRAFE DERECHA. Puerta en X=0.55, ajustando a X=0.50. Manteniendo m\u00e1rgenes >30% para evitar colisi\u00f3n.",
+    "goal_state": false,
+    "elapsed_time": 52.247201919555664
+  },
+  "Step_8": {
+    "step": "8",
+    "position": "[-2.4649568  1.5       -6.2469587]",
+    "yaw": "329.99994",
+    "collision_state": "1.0",
+    "command": "A1",
+    "original_command": "A1",
+    "safety_override": null,
+    "target_point": [
+      0.5,
+      0.15
+    ],
+    "distance": "MUY_CERCA",
+    "confidence": "ALTA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 10,
+    "move_vec": [
+      0.020154933732504404,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.11714944,
+        "vy": 0.023611392000000002,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 2,
+      "last_analysis": {
+        "left_density": 0.0,
+        "right_density": 0.0,
+        "center_density": 0.00047743055555555554,
+        "imbalance": 0.0,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "none"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "bathroom",
+    "reasoning": "La imagen est\u00e1 sobreexpuesta, pero seg\u00fan la memoria anterior, el dron ha ajustado la puerta a X=0.50 mediante STRAFE DERECHA. La proximidad extrema (sobreexposici\u00f3n) indica MUY_CERCA. Se\u00f1alo el centro-arriba [0.50, 0.15] para el empuj\u00f3n final de cruce, ignorando la regla de m\u00e1rgenes por el Efecto T\u00fanel.",
+    "mission_progress": "Crossing door",
+    "agent_memory": "Puerta centrada (X=0.50). Empuj\u00f3n final [0.50, 0.15] para cruzar a living room & kitchen.",
+    "goal_state": false,
+    "elapsed_time": 41.780357837677
+  },
+  "Step_9": {
+    "step": "9",
+    "position": "[-2.513775  1.5      -6.101939]",
+    "yaw": "329.99994",
+    "collision_state": "0.0",
+    "command": "C1",
+    "original_command": "C1",
+    "safety_override": null,
+    "target_point": [
+      0.9,
+      0.5
+    ],
+    "distance": "DESCONOCIDO",
+    "confidence": "BAJA",
+    "oscillation_override": false,
+    "scaling_phase": "CONTINUOUS-approaching",
+    "move_steps": 10,
+    "move_vec": [
+      0.0,
+      0.1,
+      0.0,
+      0.0
+    ],
+    "mpc_enabled": false,
+    "mpc_status": null,
+    "continuous_enabled": true,
+    "continuous_status": {
+      "mode": "approaching",
+      "last_cmd": {
+        "vx": 0.3,
+        "vy": 0.0,
+        "vyaw": 0.0
+      }
+    },
+    "safety_v2_status": {
+      "interventions": 2,
+      "last_analysis": {
+        "left_density": 0.0,
+        "right_density": 0.0,
+        "center_density": 0.00047743055555555554,
+        "imbalance": 0.0,
+        "wall_left": false,
+        "wall_right": false,
+        "correction": "none"
+      }
+    },
+    "mission_phase": "TRAVES\u00cdA",
+    "room": "bathroom",
+    "pred_room": "living room & kitchen",
+    "reasoning": "La imagen est\u00e1 sobreexpuesta, probablemente por estar muy cerca de una pared o superficie brillante tras cruzar la puerta. Seg\u00fan la memoria anterior, acabo de cruzar al 'living room & kitchen'. Debo escanear el nuevo entorno para localizar el refrigerador, girando a la derecha para iniciar el barrido.",
+    "mission_progress": "Searching object",
+    "agent_memory": "Girando DERECHA para escanear la habitaci\u00f3n tras cruzar. Buscando refrigerador en living room & kitchen.",
+    "goal_state": false,
+    "elapsed_time": 19.89710760116577
+  },
+  "End_Info": {
+    "total_steps": 9,
+    "total_time": 300.0939037799835,
+    "result": "collision_detected"
+  }
+}

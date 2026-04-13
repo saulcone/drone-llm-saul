@@ -86,11 +86,11 @@ FIELD DEFINITIONS
   - "Approaching object" - Objeto detectado, acercándose
   - "Reached target" - Objetivo alcanzado
   
-  🚨 REGLA CRÍTICA DE TRANSICIÓN 🚨
-  - "Door close" → SOLO usar si la puerta está CENTRADA (X entre 0.45-0.55)
-  - "Crossing door" → SOLO usar si X está EXACTAMENTE cerca de 0.50
-  - Si la puerta está en X=0.65, NO cambies a "Crossing" ni "Door close"
-  - PRIMERO señala el centro de la puerta para STRAFE hasta que X≈0.50
+  🚨 REGLA CRÍTICA DE TRANSICIÓN Y APROXIMACIÓN FLUIDA 🚨
+  * Si la puerta está LEJOS o CERCA y descentrada, señala su centro. El dron avanzará y se alineará lateralmente AL MISMO TIEMPO en una trayectoria diagonal.
+  * ALINEACIÓN FORZOSA: SOLO cuando la distancia sea MUY_CERCA y la puerta siga descentrada, debes pedir STRAFE puro para evitar chocar con los marcos.
+  * "Door close" -> Usar cuando la distancia sea CERCA o MUY_CERCA.
+  * "Crossing door" -> SOLO usar cuando la distancia sea MUY_CERCA y X esté EXACTAMENTE cerca de 0.50.
   
   Este campo ayuda al sistema a determinar transiciones de fase.
 

@@ -392,14 +392,18 @@ def run_simulation(args, topology, json_data=None):
         9: ("bathroom", "toilet")
     }
 
-    # Asignamos dinámicamente según el experimento en curso
     if query_id in query_mapping:
         target_room, target_object = query_mapping[query_id]
     else:
         target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
         target_object = args.target_object if hasattr(args, 'target_object') else "sink"
     
+    # Previene inyectar NoneTypes en el módulo reasoning
+    if target_object is None:
+        target_object = ""
+
     mission_manager = MissionManager(target_object=target_object, target_room=target_room)
+
     print(f"\n{'='*60}")
     print(f"[MISSION] Query ID: {query_id} -> {query}")
     print(f"[MISSION] Initialized: {target_object} in {target_room}")
@@ -563,8 +567,7 @@ def run_simulation(args, topology, json_data=None):
                     response["room"] = corrected_room
             
             agent_memory = response.get("memory_update", agent_memory)
-            oscillation_override = response.get("_oscillation_override", False)
-            
+            oscillation_override = False
             # Log SPF decision
             print(f"[SPF] Point: {target_point}, Dist: {distance}, Conf: {confidence} -> {command}")
             if oscillation_override:
@@ -767,7 +770,7 @@ def run_simulation(args, topology, json_data=None):
                 "target_point": target_point if not manual else None,
                 "distance": distance if not manual else None,
                 "confidence": confidence if not manual else None,
-                "oscillation_override": bool(oscillation_override) if not manual else False,
+                "oscillation_override": False,
                 # Adaptive scaling data
                 "scaling_phase": scaling_phase if not manual else "Manual",
                 "move_steps": int(move_steps) if not manual and move_steps is not None else None,
