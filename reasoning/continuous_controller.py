@@ -76,12 +76,12 @@ class ContinuousController:
     
     # === VELOCITY LIMITS (m/s and rad/s) ===
     MAX_FORWARD_VEL = 0.3      # Max forward speed (reduced)
-    MAX_LATERAL_VEL = 0.1      # Max strafe speed - small but not zero
+    MAX_LATERAL_VEL = 0.2
     MAX_YAW_RATE = 0.5         # Max rotation rate (rad/s, ~30°/s)
     
     # === PROPORTIONAL GAINS ===
-    # Balance: Not so high that we overshoot, not so low that we freeze
-    KP_LATERAL = 0.3    # Lateral velocity gain - balanced
+    
+    KP_LATERAL = 0.6
     KP_YAW = 0.6        # Yaw rate gain
     KP_FORWARD = 0.4    # Forward velocity gain
     
@@ -128,9 +128,9 @@ class ContinuousController:
     def __init__(self):
         self.mode = ControlMode.APPROACHING
         self.last_cmd = VelocityCommand(0, 0, 0, 0)
-        self.smoothing_factor = 0.3  # For velocity smoothing (0-1)
+        self.smoothing_factor = 0.0
         
-        # --- Estado de Memoria Anti-Amnesia ---
+
         self.close_memory = 0
         self.was_recently_close = False  
         self.lost_frames = 0            
@@ -152,10 +152,10 @@ class ContinuousController:
             
         # CRÍTICO: Compensar la "doble-llamada" de Simulator.py
         if distance == "MUY_CERCA" and x_dev <= 0.15:
-            self.blind_cross_memory = 10  # 10 llamadas = 5 frames reales de flotación
-            self.anti_spin_memory = 10
+            self.blind_cross_memory = 8
+            self.anti_spin_memory = 8
         elif distance in ["CERCA", "MUY_CERCA"]:
-            self.anti_spin_memory = 10
+            self.anti_spin_memory = 8
         else:
             self.blind_cross_memory = max(0, self.blind_cross_memory - 1)
             self.anti_spin_memory = max(0, self.anti_spin_memory - 1)
@@ -278,13 +278,10 @@ class ContinuousController:
             vyaw = 0.0
             
 
-        # === SUAVIZADO Y RETENCIÓN (SMOOTHING) ===
-        smoothing_factor = getattr(self, 'SMOOTHING', 0.8)
-
-        if self.mode in [ControlMode.SCANNING, ControlMode.CENTERING]:
-            self.last_cmd.vx = 0.0
-            if self.mode == ControlMode.CENTERING:
-                self.last_cmd.vy = 0.0  # Matar inercia lateral para no patinar
+        # === SUAVIZADO Y RETENCIÓN (SMOOTHING) DESACTIVADO ===
+        # Al forzar el factor a 0.0, eliminamos cualquier inercia previa.
+        # El dron responderá al 100% al comando actual sin arrastrar velocidad.
+        smoothing_factor = 0.0
 
         vx = smoothing_factor * self.last_cmd.vx + (1 - smoothing_factor) * vx
         vy = smoothing_factor * self.last_cmd.vy + (1 - smoothing_factor) * vy
@@ -422,8 +419,8 @@ class SafetyEnvelopeV2:
     CRITICAL_MARGIN_CM = 20  # Emergency zone
     
     # Sensor thresholds (based on edge density analysis)
-    DANGER_THRESHOLD = 0.15    # Edge density indicating close obstacle
-    CRITICAL_THRESHOLD = 0.25  # Edge density indicating very close obstacle
+    DANGER_THRESHOLD = 0.60
+    CRITICAL_THRESHOLD = 0.85
     
     def __init__(self):
         from reasoning.wall_proximity_detector import WallProximityDetector
@@ -513,21 +510,26 @@ class SafetyEnvelopeV2:
             self.intervention_count += 1
             override_reason = f"FRONTAL OBSTACLE: center_density={center_density:.2f}. Stopping forward, rotating to find path."
         
-        # === RULE 3: Proportional correction for imbalance ===
+        # === REGLA 3: Corrección proporcional con CONTEXTO ===
         elif abs(imbalance) > 0.3 and distance in ["MUY_CERCA", "CERCA"]:
             
-            # NUEVO FRENO PARA ESQUINAS: Si roza la pared, ahogamos el acelerador al 20%
-            # Esto da tiempo a que el dron se deslice lateralmente sin clavarse.
+            # Throttling (Freno frontal) para dar tiempo a corregir
             if abs(imbalance) > 0.7:
                 safe_cmd.vx = velocity_cmd.vx * 0.2
-                override_reason = f"SEVERE IMBALANCE ({imbalance:.2f}). Throttling forward speed."
+                override_reason = f"PELIGRO ({imbalance:.2f}). Frenando para corregir."
                 
-            if imbalance < 0:
-                correction = 0.08 * abs(imbalance)
-                safe_cmd.vy = max(safe_cmd.vy, correction)
+            # imbalance > 0 significa pared a la IZQUIERDA -> el lado seguro es la DERECHA (vy+)
+            if imbalance > 0:
+                correction = 0.12 * abs(imbalance)
+                # Tomamos el valor máximo entre lo que quería el VLM y la seguridad
+                # Si el VLM ya iba a la derecha con vy=0.15, lo respetamos.
+                safe_cmd.vy = max(velocity_cmd.vy, correction)
+                
+            # imbalance < 0 significa pared a la DERECHA -> el lado seguro es la IZQUIERDA (vy-)
             else:
-                correction = -0.08 * abs(imbalance)
-                safe_cmd.vy = min(safe_cmd.vy, correction)
+                correction = -0.12 * abs(imbalance)
+                # Tomamos el valor mínimo (el más negativo/hacia la izquierda)
+                safe_cmd.vy = min(velocity_cmd.vy, correction)
 
         # === RULE 4: Reduce forward speed if any danger ===
         max_danger = max(left_density, right_density)

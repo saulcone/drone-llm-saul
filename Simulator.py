@@ -374,38 +374,12 @@ def run_simulation(args, topology, json_data=None):
     # Mission setup
     from reasoning.mission_manager import MissionManager, MissionPhase
     
-    # 1. Sacamos la query actual primero
-    query_id = args.query
-    query = get_query(query_id)
-
-    # 2. Mapeamos cada query a su habitación y objeto de destino
-    query_mapping = {
-        0: ("bathroom", None),
-        1: ("bedroom", None),
-        2: ("living room & kitchen", None),
-        3: ("living room & kitchen", "tv"),
-        4: ("living room & kitchen", "refrigerator"),
-        5: ("living room & kitchen", "tap"),
-        6: ("bedroom", "mirror"),
-        7: ("bedroom", "cabinet"),
-        8: ("bathroom", "sink"),
-        9: ("bathroom", "toilet")
-    }
-
-    if query_id in query_mapping:
-        target_room, target_object = query_mapping[query_id]
-    else:
-        target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
-        target_object = args.target_object if hasattr(args, 'target_object') else "sink"
+    # Parse target from query (e.g., query 8 = sink in bathroom)
+    target_object = args.target_object if hasattr(args, 'target_object') else "sink"
+    target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
     
-    # Previene inyectar NoneTypes en el módulo reasoning
-    if target_object is None:
-        target_object = ""
-
     mission_manager = MissionManager(target_object=target_object, target_room=target_room)
-
     print(f"\n{'='*60}")
-    print(f"[MISSION] Query ID: {query_id} -> {query}")
     print(f"[MISSION] Initialized: {target_object} in {target_room}")
     print(f"[MISSION] Starting phase: {mission_manager.get_phase_name()}")
     print(f"{'='*60}\n")
@@ -567,7 +541,8 @@ def run_simulation(args, topology, json_data=None):
                     response["room"] = corrected_room
             
             agent_memory = response.get("memory_update", agent_memory)
-            oscillation_override = False
+            oscillation_override = response.get("_oscillation_override", False)
+            
             # Log SPF decision
             print(f"[SPF] Point: {target_point}, Dist: {distance}, Conf: {confidence} -> {command}")
             if oscillation_override:
@@ -611,7 +586,19 @@ def run_simulation(args, topology, json_data=None):
                         intended_command=command
                     )
                     
-
+                    if override_reason:
+                        # Safety envelope intervened
+                        # BLOQUEADO: Ya no dejamos que la Fase 4 cambie el comando discreto
+                        # command = safe_command 
+                        safety_override = override_reason
+                        print(f"[SAFETY-ANTIGUO] ⚠️ {override_reason} (Ignorado por FSM, delego a V2)")
+                        # print(f"[SAFETY] Command changed: {original_command} -> {command}")
+                        
+                        # Send feedback to VLM via memory update
+                        agent_memory += f" [SAFETY ALERT: {override_reason}]"
+                    elif analysis and "imbalance" in analysis:
+                        # Log safety status even when not intervening
+                        print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
             
             # === DEPTH SAFETY GUARD (Phase 5) ===
             # Reactive safety using depth estimation - runs AFTER envelope
@@ -770,7 +757,7 @@ def run_simulation(args, topology, json_data=None):
                 "target_point": target_point if not manual else None,
                 "distance": distance if not manual else None,
                 "confidence": confidence if not manual else None,
-                "oscillation_override": False,
+                "oscillation_override": bool(oscillation_override) if not manual else False,
                 # Adaptive scaling data
                 "scaling_phase": scaling_phase if not manual else "Manual",
                 "move_steps": int(move_steps) if not manual and move_steps is not None else None,
