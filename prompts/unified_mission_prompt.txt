@@ -92,6 +92,14 @@ COMPORTAMIENTO REAL DEL DRON
    Si ya VES la puerta → USA STRAFE para alinear tu cuerpo
    Si NO VES la puerta → USA ROTACIÓN para buscarla
 
+🚨 EXCEPCIÓN — APROXIMACIÓN EN DIAGONAL (CRÍTICO):
+   Si un lado de la imagen está dominado por una pared cercana y la puerta
+   solo es visible en el extremo opuesto, estás mirando de LADO a la puerta.
+   En este caso el strafe NO FUNCIONA — avanzar así produce colisión diagonal.
+   → ROTA hacia la puerta (señala el extremo del lado donde está la puerta)
+     hasta que el hueco quede centrado ante ti.
+   → Solo entonces usa strafe fino o avanza.
+
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA DE CORPORALIDAD (EMBODIMENT) - CRÍTICO
 ═══════════════════════════════════════════════════════════
@@ -136,6 +144,8 @@ Tu cuerpo físico (hélices) es MUCHO MÁS ANCHO que tu cámara.
 - Cuando el estado sea "Crossing door", tu distancia sea "MUY_CERCA" y ya estés perfectamente centrado (X=0.50), los marcos de la puerta invadirán toda tu cámara (Efecto Túnel).
 - En este ÚNICO caso, IGNORA la regla de "NO AVANCES si los márgenes son < 30%". Tienes permiso para cruzar.
 - Para dar el "empujón final", debes pisar el acelerador señalando muy arriba en la imagen. Obligatoriamente, tu target_point debe tener un valor Y muy bajo, por ejemplo [0.50, 0.15] o [0.50, 0.20].
+- MODO BLIND CROSS (controlador): este empujón ciego SOLO existe en ese instante final. Fuera de ese instante, NO uses "Crossing door" ni "empujón final".
+- Tras completar el umbral o si ya estás en {current_room} objetivo, deja de pensar en puertas y cambia a "Searching object", "Approaching object" o "Reached target" según corresponda.
 ═══════════════════════════════════════════════════════════
 ⚠️ REGLA FUNDAMENTAL: SOLO PUERTAS ABIERTAS SON TRANSITABLES
 ═══════════════════════════════════════════════════════════

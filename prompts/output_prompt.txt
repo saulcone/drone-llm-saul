@@ -91,6 +91,8 @@ FIELD DEFINITIONS
   * ALINEACIÓN FORZOSA: SOLO cuando la distancia sea MUY_CERCA y la puerta siga descentrada, debes pedir STRAFE puro para evitar chocar con los marcos.
   * "Door close" -> Usar cuando la distancia sea CERCA o MUY_CERCA.
   * "Crossing door" -> SOLO usar cuando la distancia sea MUY_CERCA y X esté EXACTAMENTE cerca de 0.50.
+  * MODO BLIND CROSS: el "empujón final" ([0.50, 0.15] / [0.50, 0.20]) SOLO se usa en ese instante de "Crossing door". Fuera de ahí, PROHIBIDO.
+  * Tras cruzar o si ya estás en la habitación objetivo, NO vuelvas a "Door close/Crossing door" para esa puerta; cambia a "Searching object", "Approaching object" o "Reached target".
   
   Este campo ayuda al sistema a determinar transiciones de fase.
 

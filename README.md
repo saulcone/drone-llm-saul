@@ -49,6 +49,7 @@ Argument	Alias	Type	Description
 --query	-q	int	Drone query ID (0–9). Default: -1.
 --save_video	-v	flag	Saves a video of the simulation.
 --max_steps	-s	int	Maximum number of steps to avoid infinite loops (default: 100).
+--blind_cross_steps	-	int	Frames to keep blind crossing lock once triggered (default: 8).
 
 ⚠️ Potential Sources of Errors and Clarifications
 

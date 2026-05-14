@@ -400,6 +400,9 @@ def run_simulation(args, topology, json_data=None):
     result = None
     crossing_lock_streak = 0
     max_crossing_lock_streak = 2
+    crossing_commit_frames = 0
+    CROSSING_COMMIT_FRAMES = 10
+    CROSSING_COMMIT_STEPS = 14
     
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
@@ -667,20 +670,31 @@ def run_simulation(args, topology, json_data=None):
                         (crossing_progress or blind_crossing_hint) and
                         is_centered_crossing
                     )
+                    if crossing_lock_enabled and crossing_commit_frames == 0 and room != target_room:
+                        crossing_commit_frames = CROSSING_COMMIT_FRAMES
+                        print(f"[CROSSING COMMIT] Hard forward commit armed ({crossing_commit_frames} frames)")
+                    
+                    hard_cross_active = crossing_commit_frames > 0
+                    if hard_cross_active:
+                        crossing_lock_enabled = True
+                        crossing_commit_frames -= 1
 
-                    if crossing_lock_enabled and room != target_room:
+                    if crossing_lock_enabled and room != target_room and not hard_cross_active:
                         crossing_lock_streak += 1
                     else:
                         crossing_lock_streak = 0
 
-                    if crossing_lock_enabled and crossing_lock_streak > max_crossing_lock_streak:
+                    if crossing_lock_enabled and not hard_cross_active and crossing_lock_streak > max_crossing_lock_streak:
                         print("[CROSSING LOCK] ⚠️ Crossing budget exceeded without room change. Re-enabling Safety-V2.")
                         crossing_lock_enabled = False
                         # Degrade to cautious forward to avoid repeated blind impacts.
                         velocity_cmd.vx = min(velocity_cmd.vx, 0.12)
 
                     if crossing_lock_enabled:
-                        print("[CROSSING LOCK] Safety Envelope V2 MUTED for blind sprint!")
+                        if hard_cross_active:
+                            print(f"[CROSSING LOCK] Hard commit active: forcing forward ({crossing_commit_frames} frames left)")
+                        else:
+                            print("[CROSSING LOCK] Safety Envelope V2 MUTED for blind sprint!")
                         # Sobrescribimos forzosamente las velocidades para el avance balístico
                         velocity_cmd.vx = 0.30  # Avance balístico
                         velocity_cmd.vy = 0.0   # Prohibido torcerse
@@ -708,6 +722,8 @@ def run_simulation(args, topology, json_data=None):
                     
                     # Convert velocity to movement parameters
                     move_steps, move_vec = continuous_controller.velocity_to_steps(velocity_cmd)
+                    if hard_cross_active and move_steps < CROSSING_COMMIT_STEPS:
+                        move_steps = CROSSING_COMMIT_STEPS
                     
                     # Log continuous controller status
                     mode = continuous_controller.mode.value

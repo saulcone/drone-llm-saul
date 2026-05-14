@@ -103,8 +103,8 @@ class ContinuousController:
             "yaw_scale": 0.1,        # Minimal yaw (avoid rotation while crossing)
         },
         ControlMode.CENTERING: {
-            "forward_scale": 0.0,    # No avanza hasta estar centrado
-            "lateral_scale": 1.0,    # Fuerte corrección lateral (strafe puro)
+            "forward_scale": 0.5,    # Avance diagonal proporcional a la alineación
+            "lateral_scale": 1.0,    # Fuerte corrección lateral
             "yaw_scale": 0.0,        # ⛔ YAW KILL-SWITCH: Cero rotación para no torcerse
         }
     }
@@ -183,6 +183,14 @@ class ContinuousController:
             self.anti_spin_memory = 8
         else:
             self.anti_spin_memory = max(0, self.anti_spin_memory - 1)
+
+        # 0) AUTO-CROSSING: alineación propia confirmada → cruce ciego inmediato.
+        # No espera al VLM: si el error lateral es pequeño y estamos MUY_CERCA, cruzamos.
+        if (is_travesia_phase and
+                x_dev <= 0.07 and
+                distance == "MUY_CERCA" and
+                not is_object_progress):
+            return ControlMode.CROSSING
 
         # 1) CRUCE: en TRAVESÍA + centrado + avance explícito.
         # Permite activar crossing también en CERCA cuando ya está perfectamente
@@ -278,18 +286,16 @@ class ContinuousController:
     
 
         elif self.mode == ControlMode.CENTERING:
-            # 2. ALINEACIÓN ESTRICTA DEL ÚLTIMO MILÍMETRO (Modo Cangrejo)
-            # Strafe prioritario, pero con avance suave cuando ya está razonablemente centrado.
+            # Movimiento diagonal: corrige lateral MIENTRAS avanza hacia la puerta.
+            # El avance es proporcional al nivel de alineación (más centrado = más rápido hacia delante).
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-            
+
             x_abs = abs(x_deviation)
-            vx = 0.0
-            if distance in ["CERCA", "MUY_CERCA"]:
-                if x_abs <= 0.06:
-                    vx = 0.10 * conf_scale * max(0.6, y_factor)
-                elif x_abs <= 0.10:
-                    vx = 0.05 * conf_scale * max(0.6, y_factor)
-            vy = vy_raw * conf_scale * 1.5  # Potenciado x1.5 para ajuste rápido
+            # alignment_factor: 1.0 perfectamente centrado, 0.35 a x_abs=0.16 o más
+            alignment_factor = max(0.35, 1.0 - (x_abs * 4.0))
+            vx = 0.20 * alignment_factor * conf_scale
+
+            vy = vy_raw * conf_scale * 1.5
             vyaw = 0.0
 
         elif self.mode == ControlMode.SCANNING:
@@ -404,24 +410,25 @@ class ContinuousController:
         # Normalize vector for direction - scale to reasonable movement magnitude.
         # IMPORTANT: In pure-centering strafes, keep micro magnitude (don't upscale to 0.1),
         # otherwise each correction becomes too aggressive and reintroduces overshoot.
+        # CENTERING uses a higher scale so the diagonal advance is more noticeable
+        norm_scale = 0.13 if self.mode == ControlMode.CENTERING else 0.10
+
         is_pure_strafe = abs(strafe) > 0.0 and abs(forward) < 0.01 and abs(yaw) < 0.01
         if is_pure_strafe:
             move_vec = [strafe, 0.0, 0.0, 0.0]
         else:
             max_val = max(abs(v) for v in move_vec) or 1.0
             if max_val > 0.01:
-                # Scale to 0.1 for consistent movement
-                move_vec = [v / max_val * 0.1 for v in move_vec]
+                move_vec = [v / max_val * norm_scale for v in move_vec]
             else:
-                # Very small values - give them minimum magnitude
-                move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
+                move_vec = [norm_scale if v > 0 else (-norm_scale if v < 0 else 0) for v in move_vec]
         
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
         # Micromanage (pocos pasos) SOLO cuando está descentrado
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
         # Micromanage (pocos pasos) SOLO cuando está descentrado
         if self.mode == ControlMode.CENTERING:
-            steps = min(steps, 5)
+            steps = min(steps, 10)  # Más pasos para el avance diagonal
         elif self.mode == ControlMode.CROSSING:
            
             steps = 8  
