@@ -398,6 +398,8 @@ def run_simulation(args, topology, json_data=None):
     elapsed_time = 0.0
     max_steps = args.max_steps  # Maximum steps to prevent infinite loop
     result = None
+    crossing_lock_streak = 0
+    max_crossing_lock_streak = 2
     
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
@@ -591,9 +593,7 @@ def run_simulation(args, topology, json_data=None):
                         # BLOQUEADO: Ya no dejamos que la Fase 4 cambie el comando discreto
                         # command = safe_command 
                         safety_override = override_reason
-                        print(f"[SAFETY-ANTIGUO] ⚠️ {override_reason} (Ignorado por FSM, delego a V2)")
-                        # print(f"[SAFETY] Command changed: {original_command} -> {command}")
-                        
+
                         # Send feedback to VLM via memory update
                         agent_memory += f" [SAFETY ALERT: {override_reason}]"
                     elif analysis and "imbalance" in analysis:
@@ -614,7 +614,6 @@ def run_simulation(args, topology, json_data=None):
                     # BLOQUEADO: Tampoco dejamos que secuestre el comando
                     # command = depth_cmd
                     safety_override = depth_reason
-                    print(f"[DEPTH-ANTIGUO] ⚠️ {depth_reason} (Ignorado por FSM)")
                     # print(f"[DEPTH] Command changed: {original_command} -> {command}")
                 elif depth_analysis and depth_analysis.get("path_clear"):
                     print(f"[DEPTH] ✓ Path clear")
@@ -625,7 +624,14 @@ def run_simulation(args, topology, json_data=None):
             # HYBRID MODE: Use discrete commands for scanning, continuous for approach/crossing
             if use_continuous and command != "E":
                 # Determine mode first
-                ctrl_mode = continuous_controller.determine_mode(tuple(target_point), distance)
+                current_phase = mission_manager.current_phase
+                ctrl_mode = continuous_controller.determine_mode(
+                    tuple(target_point), distance, mission_progress, command,
+                    str(current_phase) if current_phase else "",
+                    reasoning,
+                    agent_memory
+                )
+                continuous_controller.set_mode(ctrl_mode)
                 
                 # For SCANNING mode, use discrete commands (faster rotation)
                 if ctrl_mode == ControlMode.SCANNING:
@@ -645,8 +651,35 @@ def run_simulation(args, topology, json_data=None):
                         confidence=confidence
                     )
                     
-                    # === CROSSING LOCK: Mute Safety-V2 during door sprint ===
-                    if ctrl_mode == ControlMode.CROSSING:
+                    # === CROSSING LOCK: Mute Safety-V2 only in strict crossing conditions ===
+                    current_phase = mission_manager.current_phase
+                    is_travesia_phase = current_phase and "TRAVES" in str(current_phase).upper()
+                    crossing_progress = any(word in mission_progress.lower() for word in
+                        ["crossing door", "crossing", "cruzando", "atraves", "travesía", "entering"])
+                    blind_crossing_hint = any(word in f"{mission_progress.lower()} {reasoning.lower()} {agent_memory.lower()}" for word in
+                        ["blind crossing", "blind sprint", "empujón final", "empujon final", "efecto túnel", "efecto tunel", "final push", "excepción del 30%", "excepcion del 30%"])
+                    x = target_point[0] if isinstance(target_point, (list, tuple)) and target_point else 0.5
+                    is_centered_crossing = distance == "MUY_CERCA" and abs(x - 0.5) <= 0.05
+                    crossing_lock_enabled = (
+                        ctrl_mode == ControlMode.CROSSING and
+                        command.startswith("A") and
+                        is_travesia_phase and
+                        (crossing_progress or blind_crossing_hint) and
+                        is_centered_crossing
+                    )
+
+                    if crossing_lock_enabled and room != target_room:
+                        crossing_lock_streak += 1
+                    else:
+                        crossing_lock_streak = 0
+
+                    if crossing_lock_enabled and crossing_lock_streak > max_crossing_lock_streak:
+                        print("[CROSSING LOCK] ⚠️ Crossing budget exceeded without room change. Re-enabling Safety-V2.")
+                        crossing_lock_enabled = False
+                        # Degrade to cautious forward to avoid repeated blind impacts.
+                        velocity_cmd.vx = min(velocity_cmd.vx, 0.12)
+
+                    if crossing_lock_enabled:
                         print("[CROSSING LOCK] Safety Envelope V2 MUTED for blind sprint!")
                         # Sobrescribimos forzosamente las velocidades para el avance balístico
                         velocity_cmd.vx = 0.30  # Avance balístico

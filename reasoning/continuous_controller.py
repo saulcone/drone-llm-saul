@@ -140,57 +140,91 @@ class ContinuousController:
         self.mode = mode
         
     def determine_mode(self, target_point: Tuple[float, float], 
-                       distance: str, mission_progress: str = "") -> ControlMode:
+                       distance: str, mission_progress: str = "",
+                       intended_command: str = "",
+                       mission_phase: str = "",
+                       reasoning_text: str = "",
+                       memory_text: str = "") -> ControlMode:
         """Automatically determine the best control mode based on context."""
         x, y = target_point
         x_dev = abs(x - 0.5)
-        
-        # --- MEMORIA DIVIDIDA ---
-        if not hasattr(self, 'blind_cross_memory'):
-            self.blind_cross_memory = 0  
-            self.anti_spin_memory = 0    
-            
-        # CRÍTICO: Compensar la "doble-llamada" de Simulator.py
-        if distance == "MUY_CERCA" and x_dev <= 0.15:
-            self.blind_cross_memory = 8
-            self.anti_spin_memory = 8
-        elif distance in ["CERCA", "MUY_CERCA"]:
+        intended = (intended_command or "").upper()
+        phase = (mission_phase or "").upper()
+        is_travesia_phase = "TRAVES" in phase
+
+        progress = (mission_progress or "").lower()
+        is_object_progress = any(word in progress for word in [
+            "searching object", "approaching object", "reached target", "object", "sink"
+        ])
+        is_crossing_progress = any(word in progress for word in [
+            "crossing door", "crossing", "cruzando", "atraves", "travesía", "entering"
+        ])
+        is_door_close_progress = any(word in progress for word in [
+            "door close", "puerta cerca", "close door"
+        ])
+        crossing_text = f"{progress} {(reasoning_text or '').lower()} {(memory_text or '').lower()}"
+        has_blind_crossing_hint = any(word in crossing_text for word in [
+            "blind crossing",
+            "blind sprint",
+            "empujón final",
+            "empujon final",
+            "efecto túnel",
+            "efecto tunel",
+            "final push",
+            "excepción del 30%",
+            "excepcion del 30%"
+        ])
+
+        # Memoria anti-spin: permite mantener centering corto cuando estamos cerca.
+        if not hasattr(self, 'anti_spin_memory'):
+            self.anti_spin_memory = 0
+
+        if distance in ["CERCA", "MUY_CERCA"]:
             self.anti_spin_memory = 8
         else:
-            self.blind_cross_memory = max(0, self.blind_cross_memory - 1)
             self.anti_spin_memory = max(0, self.anti_spin_memory - 1)
-            
-        # 1. PÉRDIDA DE OBJETIVO o BÚSQUEDA EN EXTREMOS
+
+        # 1) CRUCE: en TRAVESÍA + centrado + avance explícito.
+        # Permite activar crossing también en CERCA cuando ya está perfectamente
+        # alineado, evitando bucles de "door close" sin disparar el cruce.
+        crossing_ready = (
+            is_travesia_phase and
+            intended.startswith("A") and
+            x_dev <= 0.05 and
+            distance in ["CERCA", "MUY_CERCA"] and
+            (is_crossing_progress or has_blind_crossing_hint or is_door_close_progress) and
+            not is_object_progress
+        )
+        if crossing_ready:
+            return ControlMode.CROSSING
+
+        # En puerta MUY_CERCA, no avances en APPROACHING hasta que el cruce sea explícito.
+        if distance == "MUY_CERCA" and not crossing_ready and not is_object_progress:
+            return ControlMode.CENTERING
+
+        # 2) Si se pierde visión (DESCONOCIDO/extremos), NO hacer crossing "fantasma".
         if distance == "DESCONOCIDO" or x < 0.20 or x > 0.80:
-            if getattr(self, 'blind_cross_memory', 0) > 0:
-                return ControlMode.CROSSING 
-            if getattr(self, 'anti_spin_memory', 0) > 0:
+            if self.anti_spin_memory > 0 and distance in ["CERCA", "MUY_CERCA"] and not is_object_progress:
                 return ControlMode.CENTERING
-            
-            # Si no hay memoria de cruce, es obligatoriamente SCANNING
             return ControlMode.SCANNING
-            
-        # 2. OBJETIVO EN LOS EXTREMOS
+
+        # 3) Objetivo en extremos: escaneo.
         if x < 0.15 or x > 0.85:
             return ControlMode.SCANNING
-        
-        # === 3. ALINEACIÓN TARDÍA (Solo cuando está cerca) ===
-        is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
-        
-        if distance in ["CERCA", "MUY_CERCA"] and x_dev > 0.08 and not is_object: 
+
+        # 4) Alineación final antes de cruzar puerta.
+        # Histeresis: evita flip-flop centering/approaching cerca del umbral.
+        if (
+            self.mode == ControlMode.CENTERING and
+            distance in ["CERCA", "MUY_CERCA"] and
+            x_dev > 0.04 and
+            not is_object_progress
+        ):
             return ControlMode.CENTERING
-        
-        # === 3. ALINEACIÓN TARDÍA (Solo cuando está cerca) ===
-        is_object = "object" in mission_progress.lower() or "sink" in mission_progress.lower()
-        
-        if distance in ["CERCA", "MUY_CERCA"] and x_dev > 0.08 and not is_object: 
+
+        if distance in ["CERCA", "MUY_CERCA"] and x_dev > 0.08 and not is_object_progress:
             return ControlMode.CENTERING
-            
-        # === AÑADIR ESTE BLOQUE: 4. GATILLO EXPLÍCITO DE CRUCE ===
-        is_crossing = any(word in mission_progress.lower() for word in ["crossing", "cruzando", "atraves", "travesía", "entering"])
-        if is_crossing and distance in ["MUY_CERCA", "CERCA"]:
-            return ControlMode.CROSSING
-            
+
         return ControlMode.APPROACHING
         
     
@@ -245,10 +279,16 @@ class ContinuousController:
 
         elif self.mode == ControlMode.CENTERING:
             # 2. ALINEACIÓN ESTRICTA DEL ÚLTIMO MILÍMETRO (Modo Cangrejo)
-            # Freno frontal absoluto. El dron se desliza lateralmente sin torcer el morro.
+            # Strafe prioritario, pero con avance suave cuando ya está razonablemente centrado.
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
             
+            x_abs = abs(x_deviation)
             vx = 0.0
+            if distance in ["CERCA", "MUY_CERCA"]:
+                if x_abs <= 0.06:
+                    vx = 0.10 * conf_scale * max(0.6, y_factor)
+                elif x_abs <= 0.10:
+                    vx = 0.05 * conf_scale * max(0.6, y_factor)
             vy = vy_raw * conf_scale * 1.5  # Potenciado x1.5 para ajuste rápido
             vyaw = 0.0
 
@@ -325,8 +365,12 @@ class ContinuousController:
         yaw = move_vec[2]  # rotation
         
         # === CRITICAL: Cap lateral movement to prevent overshooting ===
-        # Lateral movements should be small and incremental
-        max_strafe_component = 0.05  # Very small strafe per step
+        # In centering, allow stronger micro-strafe so we don't get "stuck centering".
+        # For other modes keep conservative cap.
+        if self.mode == ControlMode.CENTERING:
+            max_strafe_component = 0.06
+        else:
+            max_strafe_component = 0.04
         if abs(strafe) > max_strafe_component:
             strafe = max_strafe_component if strafe > 0 else -max_strafe_component
         
@@ -357,21 +401,27 @@ class ContinuousController:
         else:
             steps = 15 if is_lateral_dominant else 25
         
-        # Normalize vector for direction - scale to reasonable movement magnitude
-        max_val = max(abs(v) for v in move_vec) or 1.0
-        if max_val > 0.01:
-            # Scale to 0.1 for consistent movement
-            move_vec = [v / max_val * 0.1 for v in move_vec]
+        # Normalize vector for direction - scale to reasonable movement magnitude.
+        # IMPORTANT: In pure-centering strafes, keep micro magnitude (don't upscale to 0.1),
+        # otherwise each correction becomes too aggressive and reintroduces overshoot.
+        is_pure_strafe = abs(strafe) > 0.0 and abs(forward) < 0.01 and abs(yaw) < 0.01
+        if is_pure_strafe:
+            move_vec = [strafe, 0.0, 0.0, 0.0]
         else:
-            # Very small values - give them minimum magnitude
-            move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
+            max_val = max(abs(v) for v in move_vec) or 1.0
+            if max_val > 0.01:
+                # Scale to 0.1 for consistent movement
+                move_vec = [v / max_val * 0.1 for v in move_vec]
+            else:
+                # Very small values - give them minimum magnitude
+                move_vec = [0.1 if v > 0 else (-0.1 if v < 0 else 0) for v in move_vec]
         
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
         # Micromanage (pocos pasos) SOLO cuando está descentrado
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
         # Micromanage (pocos pasos) SOLO cuando está descentrado
         if self.mode == ControlMode.CENTERING:
-            steps = min(steps, 4)  
+            steps = min(steps, 5)
         elif self.mode == ControlMode.CROSSING:
            
             steps = 8  
