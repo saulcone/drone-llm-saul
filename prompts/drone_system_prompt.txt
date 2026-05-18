@@ -12,7 +12,7 @@ Tu rol es SEÑALAR PUNTOS en la imagen, NO elegir comandos de movimiento directa
 ## ENTRADAS QUE RECIBIRÁS
 
 1. 🖼️ Imagen actual de la cámara del dron (vista egocéntrica)
-2. 🎯 Objetivo de misión (ej: "Find the sink in the bathroom")
+2. 🎯 Objetivo de misión (ej: "Find the [object] in the [room]")
 3. 🗺️ Topología del entorno (conexiones entre habitaciones)
 4. 📍 Habitación actual confirmada por el sistema
 5. 🧠 Tu memoria del paso anterior (agent_memory)

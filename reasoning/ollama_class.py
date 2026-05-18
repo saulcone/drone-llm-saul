@@ -135,13 +135,6 @@ class OllamaDescriptor(VLMBaseModel):
             confidence=confidence
         )
         
-        # Check for oscillation and apply anti-oscillation if needed
-        # Pass is_scanning to be lenient during scanning phase
-        if self.waypoint_controller.check_oscillation(is_scanning=is_scanning):
-            logger.info("[SPF] Oscillation detected, applying anti-oscillation strategy")
-            movement = self.waypoint_controller.get_anti_oscillation_command(target_point, distance, is_scanning=is_scanning)
-            response["_oscillation_override"] = True
-        
         # Add computed movement to response
         response["movement"] = movement
         

@@ -210,14 +210,17 @@ class ContinuousController:
         if distance == "MUY_CERCA" and not crossing_ready and not is_object_progress:
             return ControlMode.CENTERING
 
-        # 2) Si se pierde visión (DESCONOCIDO/extremos), NO hacer crossing "fantasma".
-        if distance == "DESCONOCIDO" or x < 0.20 or x > 0.80:
+        # 2) Si se pierde visión (DESCONOCIDO) → SCANNING.
+        # Si la distancia es conocida el VLM ve algo real, aunque esté en el extremo.
+        if distance == "DESCONOCIDO":
+            return ControlMode.SCANNING
+        if (x < 0.20 or x > 0.80) and distance not in ["LEJOS", "CERCA", "MUY_CERCA", "MUY_LEJOS"]:
             if self.anti_spin_memory > 0 and distance in ["CERCA", "MUY_CERCA"] and not is_object_progress:
                 return ControlMode.CENTERING
             return ControlMode.SCANNING
 
-        # 3) Objetivo en extremos: escaneo.
-        if x < 0.15 or x > 0.85:
+        # 3) Extremos absolutos (VLM apuntando a rotar puro) → escaneo.
+        if x < 0.10 or x > 0.90:
             return ControlMode.SCANNING
 
         # 4) Alineación final antes de cruzar puerta.
@@ -291,8 +294,9 @@ class ContinuousController:
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
 
             x_abs = abs(x_deviation)
-            # alignment_factor: 1.0 perfectamente centrado, 0.35 a x_abs=0.16 o más
-            alignment_factor = max(0.35, 1.0 - (x_abs * 4.0))
+            # alignment_factor: 1.0 perfectamente centrado, 0.0 cuando x_abs>=0.125
+            # Strafe puro cuando la puerta está descentrada; forward crece al centrar
+            alignment_factor = max(0.0, 1.0 - (x_abs * 8.0))
             vx = 0.20 * alignment_factor * conf_scale
 
             vy = vy_raw * conf_scale * 1.5
@@ -428,7 +432,11 @@ class ContinuousController:
         # === SOLUCIÓN 1: Evitar Overshoot acortando el horizonte visual ===
         # Micromanage (pocos pasos) SOLO cuando está descentrado
         if self.mode == ControlMode.CENTERING:
-            steps = min(steps, 10)  # Más pasos para el avance diagonal
+            # Fewer steps when strafe is maxed (large deviation) to avoid overshoot
+            if abs(strafe) >= max_strafe_component:
+                steps = min(steps, 5)
+            else:
+                steps = min(steps, 8)
         elif self.mode == ControlMode.CROSSING:
            
             steps = 8  

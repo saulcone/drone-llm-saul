@@ -139,7 +139,7 @@ Example 2 - Door visible, approaching:
   "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Door visible far",
-  "memory_update": "Puerta bathroom centrada. Continuar avances hacia ella."
+  "memory_update": "Puerta objetivo centrada. Continuar avances hacia ella."
 }
 
 Example 3 - Door on the left, turning:
@@ -151,7 +151,7 @@ Example 3 - Door on the left, turning:
   "confidence": "ALTA",
   "room": "living room & kitchen",
   "mission_progress": "Door visible far",
-  "memory_update": "Puerta bathroom detectada a la izquierda. Girando hacia ella."
+  "memory_update": "Puerta objetivo detectada a la izquierda. Girando hacia ella."
 }
 
 Example 4 - Door close but NOT centered (X=0.65), MUST strafe first:
@@ -193,13 +193,13 @@ Example 6 - Avoiding obstacle:
 Example 7 - Object detected, approaching:
 
 {
-  "reasoning": "Sink visible adelante a ~1.5m, ligeramente a la derecha. Es el objetivo de la misión. Señalo su centro para acercarme.",
+  "reasoning": "Objeto objetivo visible adelante a ~1.5m, ligeramente a la derecha. Es el objetivo de la misión. Señalo su centro para acercarme.",
   "target_point": [0.58, 0.45],
   "distance": "LEJOS",
   "confidence": "ALTA",
-  "room": "bathroom",
+  "room": "habitación objetivo",
   "mission_progress": "Approaching object",
-  "memory_update": "Sink detectado. Aproximación en progreso."
+  "memory_update": "Objeto objetivo detectado. Aproximación en progreso."
 }
 
 ═══════════════════════════════════════════════════════════

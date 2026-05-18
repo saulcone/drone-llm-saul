@@ -56,6 +56,7 @@ class MissionManager:
         self.crossed_door = False
         self.object_detected = False
         self.in_target_room = False
+        self.travesia_door_x = None  # X position of door when TRAVESÍA started
         
         # === STATE LATCH (Cerrojo de Estado) ===
         # Prevents VLM "amnesia" - once we enter target room, we STAY there
@@ -165,17 +166,24 @@ class MissionManager:
                 }
                 
         elif self.current_phase == MissionPhase.TRAVESIA:
-            # Crossing door
+            # Determine door side hint from saved x position
+            dx = self.travesia_door_x
+            if dx is not None and dx < 0.4:
+                door_side = "a tu IZQUIERDA"
+            elif dx is not None and dx > 0.6:
+                door_side = "a tu DERECHA"
+            else:
+                door_side = "aproximadamente centrada"
             return {
                 "phase": "TRAVESÍA - Cruzar Puerta ABIERTA",
                 "description": (
-                    f"Cruza la puerta ABIERTA hacia '{self.target_room}' de forma segura.\n"
+                    f"Ya identificaste la puerta hacia '{self.target_room}' ({door_side}).\n"
+                    f"Tu ÚNICA tarea es cruzar ESA puerta. NO cambies de objetivo.\n"
+                    f"⚠️ Si ves otras puertas en la imagen, IGNÓRALAS completamente.\n"
                     f"ESTRATEGIA:\n"
-                    f"1. Señala el CENTRO EXACTO del hueco de la puerta\n"
-                    f"2. Si la puerta ocupa <40% del frame → avanza hacia ella\n"
-                    f"3. Si la puerta ocupa >40% del frame → verifica que hay espacio a los lados\n"
-                    f"4. Asegúrate de que hay ≥15% de margen a cada lado antes de cruzar\n"
-                    f"NO intentes cruzar si ves que chocas - ajusta posición lateral primero."
+                    f"1. Señala el CENTRO EXACTO del hueco de la puerta que ya encontraste\n"
+                    f"2. Si la puerta no está centrada, usa strafe para alinearla\n"
+                    f"3. Cuando esté centrada y muy cerca, aplica el empujón final"
                 ),
                 "target": "Centro del hueco de la puerta"
             }
@@ -323,6 +331,7 @@ class MissionManager:
         elif self.current_phase == MissionPhase.BUSQUEDA_GLOBAL:
             if not self.in_target_room and self.door_detected and self.door_close:
                 # Door found and close → transition to crossing
+                self.travesia_door_x = target_point[0] if isinstance(target_point, (list, tuple)) else 0.5
                 self.current_phase = MissionPhase.TRAVESIA
                 print(f"\n{'='*60}")
                 print(f"[MISSION] PHASE TRANSITION: BÚSQUEDA → TRAVESÍA")

@@ -373,10 +373,24 @@ def run_simulation(args, topology, json_data=None):
 
     # Mission setup
     from reasoning.mission_manager import MissionManager, MissionPhase
-    
-    # Parse target from query (e.g., query 8 = sink in bathroom)
-    target_object = args.target_object if hasattr(args, 'target_object') else "sink"
-    target_room = args.target_room if hasattr(args, 'target_room') else "bathroom"
+
+    # Derive target from query_id so MissionManager matches the VLM's assigned query
+    _query_to_mission = {
+        0: ("sink", "bathroom"),
+        1: ("bed", "bedroom"),
+        2: ("refrigerator", "living room & kitchen"),
+        3: ("tv", "living room & kitchen"),
+        4: ("refrigerator", "living room & kitchen"),
+        5: ("faucet", "living room & kitchen"),
+        6: ("mirror", "bedroom"),
+        7: ("cabinet", "bedroom"),
+        8: ("sink", "bathroom"),
+        9: ("toilet", "bathroom"),
+    }
+    _qid = getattr(args, 'query', -1)
+    _default_obj = getattr(args, 'target_object', 'sink')
+    _default_room = getattr(args, 'target_room', 'bathroom')
+    target_object, target_room = _query_to_mission.get(_qid, (_default_obj, _default_room))
     
     mission_manager = MissionManager(target_object=target_object, target_room=target_room)
     print(f"\n{'='*60}")
@@ -401,7 +415,7 @@ def run_simulation(args, topology, json_data=None):
     crossing_lock_streak = 0
     max_crossing_lock_streak = 2
     crossing_commit_frames = 0
-    CROSSING_COMMIT_FRAMES = 10
+    CROSSING_COMMIT_FRAMES = 4
     CROSSING_COMMIT_STEPS = 14
     
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
@@ -597,8 +611,10 @@ def run_simulation(args, topology, json_data=None):
                         # command = safe_command 
                         safety_override = override_reason
 
-                        # Send feedback to VLM via memory update
-                        agent_memory += f" [SAFETY ALERT: {override_reason}]"
+                        # Send feedback to VLM via memory update (suppressed during TRAVESIA to avoid confusing door frames with walls)
+                        _phase = mission_manager.current_phase if 'mission_manager' in dir() else None
+                        if not (_phase and "TRAVES" in str(_phase).upper()):
+                            agent_memory += f" [SAFETY ALERT: {override_reason}]"
                     elif analysis and "imbalance" in analysis:
                         # Log safety status even when not intervening
                         print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
@@ -676,8 +692,13 @@ def run_simulation(args, topology, json_data=None):
                     
                     hard_cross_active = crossing_commit_frames > 0
                     if hard_cross_active:
-                        crossing_lock_enabled = True
-                        crossing_commit_frames -= 1
+                        if room == target_room:
+                            print(f"[CROSSING COMMIT] Room reached — cancelling commit early")
+                            crossing_commit_frames = 0
+                            hard_cross_active = False
+                        else:
+                            crossing_lock_enabled = True
+                            crossing_commit_frames -= 1
 
                     if crossing_lock_enabled and room != target_room and not hard_cross_active:
                         crossing_lock_streak += 1
@@ -690,6 +711,10 @@ def run_simulation(args, topology, json_data=None):
                         # Degrade to cautious forward to avoid repeated blind impacts.
                         velocity_cmd.vx = min(velocity_cmd.vx, 0.12)
 
+                    # Also skip Safety-V2 during CENTERING in TRAVESÍA: door frame triggers
+                    # imbalance=1.0 which collapses vx→0.016 and makes strafe dominant → oscillation
+                    centering_travesia_skip = is_travesia_phase and ctrl_mode == ControlMode.CENTERING
+
                     if crossing_lock_enabled:
                         if hard_cross_active:
                             print(f"[CROSSING LOCK] Hard commit active: forcing forward ({crossing_commit_frames} frames left)")
@@ -699,8 +724,12 @@ def run_simulation(args, topology, json_data=None):
                         velocity_cmd.vx = 0.30  # Avance balístico
                         velocity_cmd.vy = 0.0   # Prohibido torcerse
                         velocity_cmd.vyaw = 0.0 # Prohibido rotar
-                        
+
                         # NO aplicamos el safety_envelope_v2
+                        safety_analysis = None
+                    elif centering_travesia_skip:
+                        # CENTERING during TRAVESÍA: Safety-V2 confuses door frame for wall → skip
+                        print(f"[SAFETY-V2] ⏭️ Skipped (CENTERING in TRAVESÍA — door frame false positive)")
                         safety_analysis = None
                     else:
                         # Apply safety envelope v2 (ABSOLUTE AUTHORITY for other modes)
@@ -877,7 +906,6 @@ def run_experiment(args, topology):
     #spawn_range = range(1, 11) if args.spawn_id == -1 else [args.spawn_id]
     spawn_range = [4, 8, 10] if args.spawn_id == -1 else [args.spawn_id]
     query_range = [0, 1, 4] if args.query == -1 else [args.query]
-
 
     for spawn_id in spawn_range:  # Spawn points from 1 to 10
         for query in query_range:  # Queries from 0 to 9
