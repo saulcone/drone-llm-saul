@@ -292,7 +292,7 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
 
     goal_rooms = ["bathroom", "bedroom", "living room & kitchen"]
     # Reach room goals
-    if goal_id < len(goal_rooms):
+    if 0 <= goal_id < len(goal_rooms):
         if room == goal_rooms[goal_id] and pred_room == room:
             return True
         else:
@@ -720,10 +720,16 @@ def run_simulation(args, topology, json_data=None):
                             print(f"[CROSSING LOCK] Hard commit active: forcing forward ({crossing_commit_frames} frames left)")
                         else:
                             print("[CROSSING LOCK] Safety Envelope V2 MUTED for blind sprint!")
-                        # Sobrescribimos forzosamente las velocidades para el avance balístico
-                        velocity_cmd.vx = 0.30  # Avance balístico
-                        velocity_cmd.vy = 0.0   # Prohibido torcerse
-                        velocity_cmd.vyaw = 0.0 # Prohibido rotar
+                        # Avance balístico con pequeña corrección lateral si la puerta aparece off-center.
+                        # vy=0 era la causa de colisiones cuando el commit disparaba con X transitorio de 0.5
+                        # pero el drone estaba físicamente descentrado (puerta real en X=0.65-0.75).
+                        door_x = target_point[0] if isinstance(target_point, (list, tuple)) and len(target_point) > 0 else 0.5
+                        x_err = door_x - 0.5
+                        # Corrección solo cuando error > 0.10 (evita micro-oscilaciones en puertas bien centradas)
+                        lateral_correction = float(np.clip(x_err * 0.4, -0.08, 0.08)) if abs(x_err) > 0.10 else 0.0
+                        velocity_cmd.vx = 0.25
+                        velocity_cmd.vy = lateral_correction
+                        velocity_cmd.vyaw = 0.0
 
                         # NO aplicamos el safety_envelope_v2
                         safety_analysis = None

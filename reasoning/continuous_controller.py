@@ -105,7 +105,7 @@ class ContinuousController:
         ControlMode.CENTERING: {
             "forward_scale": 0.5,    # Avance diagonal proporcional a la alineación
             "lateral_scale": 1.0,    # Fuerte corrección lateral
-            "yaw_scale": 0.0,        # ⛔ YAW KILL-SWITCH: Cero rotación para no torcerse
+            "yaw_scale": 0.2,        # Giro suave para encarar la puerta perpendicularmente
         }
     }
     
@@ -300,7 +300,7 @@ class ContinuousController:
             vx = 0.20 * alignment_factor * conf_scale
 
             vy = vy_raw * conf_scale * 1.5
-            vyaw = 0.0
+            vyaw = x_deviation * ganancia_yaw * params["yaw_scale"]
 
         elif self.mode == ControlMode.SCANNING:
             # 3. ESCANEO (Búsqueda o pérdida de visión)
@@ -378,7 +378,7 @@ class ContinuousController:
         # In centering, allow stronger micro-strafe so we don't get "stuck centering".
         # For other modes keep conservative cap.
         if self.mode == ControlMode.CENTERING:
-            max_strafe_component = 0.06
+            max_strafe_component = 0.07
         else:
             max_strafe_component = 0.04
         if abs(strafe) > max_strafe_component:
@@ -436,7 +436,7 @@ class ContinuousController:
             if abs(strafe) >= max_strafe_component:
                 steps = min(steps, 5)
             else:
-                steps = min(steps, 8)
+                steps = min(steps, 10)
         elif self.mode == ControlMode.CROSSING:
            
             steps = 8  

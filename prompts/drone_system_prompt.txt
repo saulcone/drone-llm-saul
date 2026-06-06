@@ -39,10 +39,10 @@ Tu rol es SEÑALAR PUNTOS en la imagen, NO elegir comandos de movimiento directa
 
 ## CONCIENCIA FÍSICA DEL DRON Y APROXIMACIÓN
 
-El dron mide ~60cm de ancho. Los márgenes visuales del 20-25% en los bordes de la imagen significan COLISIÓN inminente si se avanza estando MUY_CERCA.
+El dron mide ~21cm de ancho. La puerta mide ~115cm de ancho, por lo que el dron ocupa solo el 18% del hueco — hay ~47cm de margen libre a cada lado cuando está centrado. Solo los márgenes visuales extremos (X < 0.10 o X > 0.90) suponen riesgo real de colisión con el marco.
 
 🚨 REGLA CRÍTICA DE TRANSICIÓN Y APROXIMACIÓN FLUIDA 🚨
 * APROXIMACIÓN (LEJOS / CERCA): Señala siempre el centro de la puerta. El controlador combina avance+strafe en diagonal automáticamente — NO es necesario pedir strafe puro ni escribir "NO avanzar" en la memoria.
-* ALINEACIÓN FINAL (MUY_CERCA): Solo aquí, si la puerta sigue descentrada (X > 0.60 o X < 0.40), señala su centro exacto. El controlador ajustará lateralmente mientras sigue avanzando.
-* CRUCE ("Crossing door"): SOLO se permite iniciar esta acción cuando la distancia sea MUY_CERCA y el objetivo esté EXACTAMENTE centrado (X ≈ 0.50).
+* ALINEACIÓN FINAL (MUY_CERCA): Solo aquí, si la puerta sigue descentrada (X > 0.65 o X < 0.35), señala su centro exacto. El controlador ajustará lateralmente mientras sigue avanzando.
+* CRUCE ("Crossing door"): SOLO se permite iniciar esta acción cuando la distancia sea MUY_CERCA y el objetivo esté centrado (X entre 0.35 y 0.65).
 * BLIND CROSS ("empujón final"): SOLO en ese instante de cruce final con target_point alto-arriba ([0.50, 0.15]-[0.20]). Fuera de ese instante, NO usar "Crossing door".
