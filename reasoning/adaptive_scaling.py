@@ -10,7 +10,7 @@ This reduces total flight time while ensuring smooth traversal without overshoot
 """
 
 from enum import Enum
-from typing import Tuple, List, Dict
+from typing import Tuple, List
 
 
 class DistanceLevel(Enum):
@@ -182,52 +182,3 @@ class AdaptiveScaler:
         }
         return descriptions.get(self.last_distance, "Unknown")
 
-
-# Pre-built move_map for backward compatibility
-# Can be used when adaptive scaling is disabled
-STATIC_MOVE_MAP = {
-    # Forward
-    "A1": (10, [0, 0.1, 0, 0]),    # 10cm forward
-    "A2": (25, [0, 0.1, 0, 0]),    # 25cm forward
-    "A3": (50, [0, 0.1, 0, 0]),    # 50cm forward
-    # Rotate left (B = left)
-    "B0": (5, [0, 0, -0.1, 0]),    # 5° micro-rotation left
-    "B1": (15, [0, 0, -0.1, 0]),   # 15° rotation left
-    "B2": (30, [0, 0, -0.1, 0]),   # 30° rotation left
-    "B3": (90, [0, 0, -0.1, 0]),   # 90° rotation left
-    # Rotate right (C = right)
-    "C0": (5, [0, 0, 0.1, 0]),     # 5° micro-rotation right
-    "C1": (15, [0, 0, 0.1, 0]),    # 15° rotation right
-    "C2": (30, [0, 0, 0.1, 0]),    # 30° rotation right
-    "C3": (90, [0, 0, 0.1, 0]),    # 90° rotation right
-    # Strafe
-    "D1": (5, [-0.1, 0, 0, 0]),    # 5cm slide left
-    "D2": (5, [0.1, 0, 0, 0]),     # 5cm slide right
-    "D3": (15, [-0.1, 0, 0, 0]),   # 15cm slide left
-    "D4": (15, [0.1, 0, 0, 0]),    # 15cm slide right
-    # Wait
-    "E": (0, [0, 0, 0, 0]),        # No movement
-}
-
-
-def get_move_params(command: str, 
-                    distance: str = "DESCONOCIDO", 
-                    confidence: str = "MEDIA",
-                    use_adaptive: bool = True) -> Tuple[int, List[float]]:
-    """
-    Convenience function to get movement parameters.
-    
-    Args:
-        command: Movement command (A1, B2, etc.)
-        distance: Distance level from VLM
-        confidence: Confidence level from VLM
-        use_adaptive: If True, use adaptive scaling; if False, use static map
-        
-    Returns:
-        Tuple of (steps, movement_vector)
-    """
-    if not use_adaptive:
-        return STATIC_MOVE_MAP.get(command, (10, [0, 0, 0, 0]))
-    
-    scaler = AdaptiveScaler()
-    return scaler.get_adaptive_move(command, distance, confidence)

@@ -21,12 +21,8 @@ from mlagents_envs.side_channel.side_channel import (
 
 # Safety Guard: Detector de proximidad a paredes (sin VLM)
 from reasoning.wall_proximity_detector import WallProximityDetector, SafetyEnvelope
-# Phase 5: Depth-based reactive safety layer
-from reasoning.depth_safety_guard import DepthSafetyGuard, CombinedSafetyGuard
-# Adaptive Distance Scaling for SPF system
-from reasoning.adaptive_scaling import AdaptiveScaler, STATIC_MOVE_MAP
-# MPC Controller for smooth trajectory planning
-from reasoning.mpc_controller import MPCController, create_mpc_controller
+# Adaptive Distance Scaling for SPF system (usado en modo scanning dentro del continuous controller)
+from reasoning.adaptive_scaling import AdaptiveScaler
 # Phase 4+5 Enhanced: Continuous proportional control with safety envelope v2
 from reasoning.continuous_controller import ContinuousController, SafetyEnvelopeV2, ControlMode, VelocityCommand
 
@@ -118,55 +114,6 @@ def read_obs(env, behavior_drone):
 
     return img, real_img, real_img_2, height, pos, yaw, collision_state
 
-def show_observations(img, height, pos, yaw, state):
-
-    os.system('cls' if platform.system() == 'Windows' else 'clear')
-    print(f"Height: {height}")
-    print(f"Position: {pos}")
-    print(f"Yaw: {yaw}")
-    print(f"State: {state}")
-
-def show_state(mission_phase, room, pred_room, goal_state, query, reasoning, mission_progress):
-    """Display current mission state for manual control mode"""
-    os.system('cls' if platform.system() == 'Windows' else 'clear')
-    print(f"Mission Phase: {mission_phase}")
-    print(f"Room: {room}")
-    print(f"Predicted Room: {pred_room}")
-    print(f"Goal State: {goal_state}")
-    print(f"Query: {query}")
-    print(f"Reasoning: {reasoning}")
-    print(f"Mission Progress: {mission_progress}")
-
-def manual_control(key_ctrl):
-
-    speed = 1.0
-    rotSpeed = 1.0
-    for_back_velocity = 0
-    left_right_velocity = 0
-    up_down_velocity = 0
-    yaw_velocity = 0
-
-    if key_ctrl.is_pressed('w'):
-        for_back_velocity = speed
-    elif key_ctrl.is_pressed('s'):
-        for_back_velocity = -speed
-
-    if key_ctrl.is_pressed('d'):
-        left_right_velocity = speed
-    elif key_ctrl.is_pressed('a'):
-        left_right_velocity = -speed
-
-    if key_ctrl.is_pressed('i'):
-        up_down_velocity = speed
-    elif key_ctrl.is_pressed('k'):
-        up_down_velocity = -speed
-
-    if key_ctrl.is_pressed('l'):
-        yaw_velocity = rotSpeed
-    elif key_ctrl.is_pressed('j'):
-        yaw_velocity = -rotSpeed
-
-    return left_right_velocity, for_back_velocity, yaw_velocity, up_down_velocity
 
 def get_cmd_vel(img, query, topology, mission_phase, mission_description, target_description, 
                 current_room, prev_movement, mov_history, agent_memory="", addr = "http://localhost:5001"):
@@ -353,8 +300,6 @@ def run_simulation(args, topology, json_data=None):
     key_ctrl = KeyController()
     int_channel = IntSenderChannel()
 
-    manual = args.manual
-
     if platform.system() == "Windows":
         env = UnityEnvironment(file_name="./build/WAF_environment", side_channels=[int_channel], no_graphics=False)
     else:
@@ -420,36 +365,24 @@ def run_simulation(args, topology, json_data=None):
     
     # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
-    safety_envelope = SafetyEnvelope()  # Phase 4: Virtual safety envelope for door crossing
-    
-    # Phase 5: Depth-based reactive safety (combines edge + depth analysis)
-    depth_safety = DepthSafetyGuard(use_depth_model=False, model_type="edge_fallback")
-    use_depth_safety = getattr(args, 'depth_safety', False)  # Disabled by default, enable with --depth-safety
-    
-    safety_override = None  # Guarda info cuando Safety Guard interviene
-    use_safety_envelope = getattr(args, 'safety', True)  # Enable by default
-    
-    # Adaptive Distance Scaling: scales movement based on distance to target
+    safety_envelope = SafetyEnvelope()
+
+    safety_override = None
+    use_safety_envelope = getattr(args, 'safety', True)
+
+    # Adaptive Distance Scaling (usado en modo scanning dentro del continuous controller)
     adaptive_scaler = AdaptiveScaler()
-    use_adaptive_scaling = getattr(args, 'adaptive', True)  # Enable by default
-    
-    # MPC Controller: smooth trajectory planning (Phase 4)
-    mpc_controller = create_mpc_controller()
-    use_mpc = getattr(args, 'mpc', False)  # Disabled by default, enable with --mpc
-    
-    # Phase 4+5 Enhanced: Continuous proportional controller with safety envelope v2
+
+    # Continuous proportional controller with safety envelope v2
     continuous_controller = ContinuousController()
     safety_envelope_v2 = SafetyEnvelopeV2()
-    use_continuous = getattr(args, 'continuous', False)  # Disabled by default, enable with --continuous
-
-    # Static move_map for fallback/manual mode
-    move_map = STATIC_MOVE_MAP
+    use_continuous = getattr(args, 'continuous', False)
 
     # Video writer
     if args.save_video:
         frame_size = (480, 360)  # ajusta según tus imágenes
         frame_size_2 = (1280, 720)  # ajusta según tus imágenes de la cámara trasera
-        fps = 24 if args.manual else 1
+        fps = 1
         fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
         video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size_2)
@@ -481,36 +414,7 @@ def run_simulation(args, topology, json_data=None):
             img_with_text_2 = cv2.putText(real_img_2.copy(), img_text, (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
             video_writer_2.write(img_with_text_2)
 
-        if manual:
-
-            # Manual control mode
-            show_state(
-                mission_manager.get_phase_name(),
-                room, pred_room, goal_state, query,
-                reasoning, mission_progress
-            )
-            print(f"Query: {query}  | Room: {room} | Goal State: {goal_state}")
-
-            # set predicted room
-            pred_room = room 
-            
-            # Initialize SPF variables for manual mode
-            target_point = None
-            distance = None
-            confidence = None
-            oscillation_override = False
-            move_steps = None
-            scaling_phase = "Manual"
-            
-            movement = manual_control(key_ctrl)
-            pred = np.array([[*movement, 0]], dtype=np.float32)
-            action.add_continuous(pred)
-            env.set_actions(behavior_drone, action)
-            env.step()
-
-        else:
-
-            # Get mission context from mission manager
+        # Get mission context from mission manager
             mission_ctx = mission_manager.get_mission_context()
             
             # === STATE LATCH: Inject recovery context if needed ===
@@ -619,23 +523,6 @@ def run_simulation(args, topology, json_data=None):
                         # Log safety status even when not intervening
                         print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
             
-            # === DEPTH SAFETY GUARD (Phase 5) ===
-            # Reactive safety using depth estimation - runs AFTER envelope
-            if use_depth_safety and command.startswith("A"):
-                depth_cmd, depth_reason, depth_analysis = depth_safety.check_safety(
-                    image_cv2=real_img,
-                    intended_command=command,
-                    distance=distance
-                )
-                
-                if depth_reason:
-                    # Depth safety intervened
-                    # BLOQUEADO: Tampoco dejamos que secuestre el comando
-                    # command = depth_cmd
-                    safety_override = depth_reason
-                    # print(f"[DEPTH] Command changed: {original_command} -> {command}")
-                elif depth_analysis and depth_analysis.get("path_clear"):
-                    print(f"[DEPTH] ✓ Path clear")
             # === END SAFETY GUARDS ===
 
             # === CONTINUOUS CONTROLLER (Phase 4+5 Enhanced) ===
@@ -766,45 +653,6 @@ def run_simulation(args, topology, json_data=None):
                     print(f"[CONTINUOUS] Output: steps={move_steps}, vec={[f'{v:.2f}' for v in move_vec]}")
                     scaling_phase = f"CONTINUOUS-{mode}"
             
-            # === MPC CONTROLLER (Phase 4) ===
-            # Smooth continuous trajectory planning from waypoints
-            elif use_mpc and command != "E":
-                # Determine if we're in scanning mode
-                current_phase = mission_manager.current_phase
-                is_scanning = current_phase and "ESCANEO" in str(current_phase).upper()
-                
-                # Compute smooth velocity command
-                velocity_cmd = mpc_controller.compute_velocity(
-                    target_point=tuple(target_point),
-                    distance=distance,
-                    confidence=confidence,
-                    is_scanning=is_scanning
-                )
-                
-                # Convert to movement parameters
-                move_steps, move_vec = mpc_controller.get_movement_steps(velocity_cmd)
-                
-                # Log MPC status
-                status = mpc_controller.get_status()
-                print(f"[MPC] Mode: {status['mode']}, Cmd: vx={status['last_cmd']['vx']:.2f} vy={status['last_cmd']['vy']:.2f} vyaw={status['last_cmd']['vyaw']:.2f}")
-                scaling_phase = f"MPC-{status['mode']}"
-                
-            # === ADAPTIVE DISTANCE SCALING (legacy fallback) ===
-            # Scale movement based on distance to target
-            elif use_adaptive_scaling and command != "E":
-                move_steps, move_vec = adaptive_scaler.get_adaptive_move(command, distance, confidence)
-                scaling_phase = adaptive_scaler.get_phase_description()
-                # More descriptive output based on command type
-                if command.startswith("B") or command.startswith("C"):
-                    direction = "LEFT" if command.startswith("B") else "RIGHT"
-                    print(f"[ADAPTIVE] {scaling_phase}: ROTATE {direction} ~{move_steps}°")
-                elif command.startswith("A"):
-                    print(f"[ADAPTIVE] {scaling_phase}: FORWARD ~{move_steps}cm")
-                else:
-                    print(f"[ADAPTIVE] {scaling_phase}: {command} -> steps={move_steps}")
-            else:
-                move_steps, move_vec = move_map.get(command, (10, [0, 0, 0, 0]))
-                scaling_phase = "Static"
 
             if command != "E":  # Don't move on wait command
                 if args.fast:
@@ -823,42 +671,32 @@ def run_simulation(args, topology, json_data=None):
     
 
         if args.save_logs:
-            # Get MPC status if enabled
-            mpc_status = mpc_controller.get_status() if use_mpc else None
-            # Get continuous controller status if enabled
-            continuous_status = continuous_controller.get_status() if use_continuous else None
-            safety_v2_status = safety_envelope_v2.get_status() if use_continuous else None
-            
+            continuous_status = continuous_controller.get_status()
+            safety_v2_status = safety_envelope_v2.get_status()
+
             log_data = {
                 "step": str(total_steps),
                 "position": str(pos),
                 "yaw": str(yaw),
                 "collision_state": str(collision_state),
                 "command": command,
-                "original_command": original_command if not manual else command,
-                "safety_override": safety_override if not manual else None,
-                # SPF waypoint data
-                "target_point": target_point if not manual else None,
-                "distance": distance if not manual else None,
-                "confidence": confidence if not manual else None,
-                "oscillation_override": bool(oscillation_override) if not manual else False,
-                # Adaptive scaling data
-                "scaling_phase": scaling_phase if not manual else "Manual",
-                "move_steps": int(move_steps) if not manual and move_steps is not None else None,
-                "move_vec": [float(v) for v in move_vec] if not manual and move_vec is not None else None,
-                # MPC data (Phase 4)
-                "mpc_enabled": bool(use_mpc),
-                "mpc_status": mpc_status,
-                # Continuous Controller data (Phase 4+5 Enhanced)
+                "original_command": original_command,
+                "safety_override": safety_override,
+                "target_point": target_point,
+                "distance": distance,
+                "confidence": confidence,
+                "oscillation_override": bool(oscillation_override),
+                "scaling_phase": scaling_phase,
+                "move_steps": int(move_steps) if move_steps is not None else None,
+                "move_vec": [float(v) for v in move_vec] if move_vec is not None else None,
                 "continuous_enabled": bool(use_continuous),
                 "continuous_status": continuous_status,
                 "safety_v2_status": safety_v2_status,
-                # Mission data
-                "mission_phase": mission_manager.get_phase_name() if not manual else "Manual",
+                "mission_phase": mission_manager.get_phase_name(),
                 "room": room,
                 "pred_room": pred_room,
-                "reasoning": reasoning if not manual else "",
-                "mission_progress": mission_progress if not manual else "",
+                "reasoning": reasoning,
+                "mission_progress": mission_progress,
                 "agent_memory": agent_memory,
                 "goal_state": bool(goal_state) if goal_state is not None else None,
                 "elapsed_time": float(elapsed_time),
@@ -869,7 +707,7 @@ def run_simulation(args, topology, json_data=None):
             with open(args.output_file, "w") as info_file:
                 json.dump(json_data, info_file, indent=2, cls=NumpyEncoder)
 
-        if total_steps >= max_steps and not args.manual:
+        if total_steps >= max_steps:
             print(f"Reached maximum steps: {max_steps}. Ending simulation.")
             result = "max_steps_reached"
             break
@@ -952,42 +790,15 @@ if __name__ == "__main__":
     parser.add_argument('--save_logs', '-l', action='store_true', help='Enable logging of observations')
     parser.add_argument('--run_experiment', '-e', action='store_true', help='Run multiple executions of the simulation')
     parser.add_argument('--experiment_name', '-n', type=str, default="default_experiment", help='Name of the experiment for logging')
-    parser.add_argument('--manual', '-m', action='store_true', help='Enable manual control mode')
     parser.add_argument('--spawn_id', '-i', type=int, default=-1, help='Spawn point for the drone (1-10)')
     parser.add_argument('--num_repeats', '-r', type=int, default=1, help='Number of repeats for each spawn point')
-    # parser.add_argument('--addr', '-a', type=str, default="http://172.18.33.110:5001", help='Address of the server')
     parser.add_argument('--addr', '-a', type=str, default="http://localhost:5001", help='Address of the server')
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
     parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')
-    
-    # NEW: Mission parameters
-    parser.add_argument('--target_object', '-to', type=str, default="sink", help='Target object to reach (e.g., sink, red cup)')
-    parser.add_argument('--target_room', '-tr', type=str, default="bathroom", help='Target room where object is located')
-    
-    # NEW: Adaptive scaling
-    parser.add_argument('--adaptive', action='store_true', default=True, help='Enable adaptive distance scaling (default: True)')
-    parser.add_argument('--no-adaptive', dest='adaptive', action='store_false', help='Disable adaptive distance scaling')
-    
-    # NEW: MPC Controller (Phase 4)
-    parser.add_argument('--mpc', action='store_true', default=False, help='Enable MPC smooth trajectory controller')
-    parser.add_argument('--no-mpc', dest='mpc', action='store_false', help='Disable MPC (use discrete commands)')
-    
-    # NEW: Safety Envelope (Phase 4) - collision prevention during door crossing
     parser.add_argument('--safety', action='store_true', default=True, help='Enable safety envelope for door crossing (default: on)')
     parser.add_argument('--no-safety', dest='safety', action='store_false', help='Disable safety envelope')
-    
-    # NEW: Depth Safety Guard (Phase 5) - reactive depth-based collision prevention
-    parser.add_argument('--depth-safety', dest='depth_safety', action='store_true', default=False, 
-                        help='Enable depth-based safety guard (Phase 5)')
-    parser.add_argument('--no-depth-safety', dest='depth_safety', action='store_false', 
-                        help='Disable depth safety guard')
-    
-    # NEW: Continuous Controller (Phase 4 Enhanced) - proportional velocity control
-    parser.add_argument('--continuous', action='store_true', default=False,
-                        help='Enable continuous proportional control (Phase 4 Enhanced)')
-    parser.add_argument('--no-continuous', dest='continuous', action='store_false',
-                        help='Disable continuous control (use discrete commands)')
+    parser.add_argument('--continuous', action='store_true', default=False, help='Enable continuous proportional control')
 
     args = parser.parse_args()
 
