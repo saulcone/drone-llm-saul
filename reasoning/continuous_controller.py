@@ -1,17 +1,6 @@
-# filepath: c:\Users\saulc\Desktop\Cuarto\TFG\drone-llm-saul\reasoning\continuous_controller.py
 """
-Continuous Proportional Controller - Phase 4 Enhanced
-
-Replaces discrete commands (A2, D3, C2) with continuous velocity mapping.
-Takes target_point from VLM and computes proportional velocities for smooth motion.
-
-Key principle: 
-- target_point[0] (X) deviation from 0.5 → lateral velocity (vy) + yaw rate
-- target_point[1] (Y) position → forward velocity (vx)
-- Distance estimate → velocity scaling
-
-This creates smooth, continuous motion that naturally centers the drone
-without oscillating between discrete jumps.
+Proportional velocity controller for the SPF system.
+Maps target_point [x,y] from VLM to continuous velocities [vx, vy, vyaw].
 """
 
 import numpy as np
@@ -60,18 +49,8 @@ class VelocityCommand:
 
 class ContinuousController:
     """
-    Proportional controller that maps target_point to continuous velocities.
-    
-    Instead of discrete commands like "A2" or "D3", this computes smooth
-    velocities proportional to how far the target is from center.
-    
-    Physics model:
-    - X deviation (target_x - 0.5) maps to lateral velocity AND yaw
-    - Y position maps to forward velocity
-    - Distance estimate scales all velocities
-    
-    CRITICAL: Lateral movements must be MUCH smaller than forward movements
-    to prevent "slingshot" overshooting when centering doors.
+    Maps target_point [x,y] to continuous velocity commands.
+    Lateral gains are kept small relative to forward to avoid door-frame overshoot.
     """
     
     # === VELOCITY LIMITS (m/s and rad/s) ===
@@ -109,10 +88,7 @@ class ContinuousController:
         }
     }
     
-    # === DISTANCE SCALING ===
-    # IMPORTANT: Lateral movements should NOT scale much with distance
-    # because we want small, incremental corrections regardless of distance
-    # === DISTANCE SCALING ===
+    # Lateral corrections don't scale with distance — we want small incremental steps regardless
     DISTANCE_SCALES = {
         "MUY_LEJOS": 0.8,     
         "LEJOS": 0.6,         
@@ -260,77 +236,45 @@ class ContinuousController:
             "BAJA": 0.4
         }
         
-        # Desviaciones desde el centro
-        x_deviation = x - 0.5  # Positivo = objetivo a la derecha
-        y_factor = 1.0 - y     # Positivo = objetivo arriba (más rápido)
-        
+        x_deviation = x - 0.5
+        y_factor = 1.0 - y
+
         params = self.MODE_PARAMS[self.mode]
-        
-        # Usamos los diccionarios locales
         dist_scale = DISTANCE_SCALES.get(distance, 0.5)
         conf_scale = CONFIDENCE_SCALES.get(confidence, 0.5)
-        
-        # --- GANANCIAS ---
-        ganancia_yaw = 1.0  # Ganancia explícita para los giros en estático
+        ganancia_yaw = 1.0
 
-        # === CÁLCULO Y ESCALADO UNIFICADO (Framework SPF) ===
-        
         if self.mode == ControlMode.CROSSING:
-            # SPRINT BALÍSTICO: Atraviesa la puerta como un láser
             vx = 0.30
             vy = 0.0
             vyaw = 0.0
-            
-            # 🚨 NUEVO: INMUNIDAD DE SEGURIDAD
-            # Durante el cruce del umbral, silenciamos cualquier override de seguridad
-            # para evitar que el estrangulamiento (throttling) frene al dron.
-            if hasattr(self, 'safety_override'):
-                self.safety_override = None 
-    
 
         elif self.mode == ControlMode.CENTERING:
-            # Movimiento diagonal: corrige lateral MIENTRAS avanza hacia la puerta.
-            # El avance es proporcional al nivel de alineación (más centrado = más rápido hacia delante).
+            # Strafe puro cuando la puerta está descentrada; forward crece al centrar.
+            # alignment_factor: 1.0 cuando centrado, 0.0 cuando x_abs >= 0.125
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
-
             x_abs = abs(x_deviation)
-            # alignment_factor: 1.0 perfectamente centrado, 0.0 cuando x_abs>=0.125
-            # Strafe puro cuando la puerta está descentrada; forward crece al centrar
             alignment_factor = max(0.0, 1.0 - (x_abs * 8.0))
             vx = 0.20 * alignment_factor * conf_scale
-
             vy = vy_raw * conf_scale * 1.5
             vyaw = x_deviation * ganancia_yaw * params["yaw_scale"]
 
         elif self.mode == ControlMode.SCANNING:
-            # 3. ESCANEO (Búsqueda o pérdida de visión)
-            # Freno total de traslación. Solo rotación pura sobre su eje.
             vx = 0.0
             vy = 0.0
             vyaw = x_deviation * ganancia_yaw * 1.5
 
-        else:
-            # 4. APROXIMACIÓN FLUIDA UNIFICADA (APPROACHING)
-            # El dron avanza (vx) MIENTRAS se alinea lateralmente (vy) en diagonal.
-            
-            # A. Cálculo lateral (Proporcional a lo descentrado que esté)
+        else:  # APPROACHING
             vy_raw = self.KP_LATERAL * x_deviation * params["lateral_scale"]
             vy = vy_raw * dist_scale * conf_scale * 1.2
-            
             alignment_brake = max(0.2, 1.0 - (abs(x_deviation) * 2.0))
             vx_raw = self.KP_FORWARD * y_factor * params["forward_scale"] * alignment_brake
-            
             if abs(x_deviation) <= 0.05:
                 vx_raw *= 1.5
-                
             vx = vx_raw * dist_scale * conf_scale
-
             vyaw = 0.0
-            
 
-        # === SUAVIZADO Y RETENCIÓN (SMOOTHING) DESACTIVADO ===
-        # Al forzar el factor a 0.0, eliminamos cualquier inercia previa.
-        # El dron responderá al 100% al comando actual sin arrastrar velocidad.
+        # Smoothing disabled (factor=0): drone responds fully to current command
         smoothing_factor = 0.0
 
         vx = smoothing_factor * self.last_cmd.vx + (1 - smoothing_factor) * vx
@@ -338,7 +282,6 @@ class ContinuousController:
         vyaw = smoothing_factor * self.last_cmd.vyaw + (1 - smoothing_factor) * vyaw
 
 
-        # === CLIPPING LÍMITES ===
         max_fwd = getattr(self, 'MAX_FORWARD_VEL', 0.5)
         max_lat = getattr(self, 'MAX_LATERAL_VEL', 0.3)
         max_yaw = getattr(self, 'MAX_YAW_VEL', 0.8)
@@ -350,33 +293,16 @@ class ContinuousController:
         self.last_cmd = VelocityCommand(vx, vy, 0.0, vyaw)
         return self.last_cmd
     
-    def velocity_to_steps(self, cmd: VelocityCommand, 
+    def velocity_to_steps(self, cmd: VelocityCommand,
                           dt: float = 1.0) -> Tuple[int, list]:
-        """
-        Convert velocity command to discrete steps for Unity.
-        
-        CRITICAL: Lateral movements are capped to prevent overshooting.
-        The drone should make many small lateral corrections, not
-        one giant jump that overshoots the target.
-        
-        Args:
-            cmd: Velocity command
-            dt: Time step (affects how far we move)
-            
-        Returns:
-            (steps, move_vector) for move_drone function
-        """
-        # Create move vector [strafe, forward, yaw, unused]
+        """Convert velocity command to (steps, move_vector) for move_drone."""
         move_vec = cmd.to_move_vector()
-        
-        # Get individual components
-        strafe = move_vec[0]  # lateral
-        forward = move_vec[1]  # forward
-        yaw = move_vec[2]  # rotation
-        
-        # === CRITICAL: Cap lateral movement to prevent overshooting ===
-        # In centering, allow stronger micro-strafe so we don't get "stuck centering".
-        # For other modes keep conservative cap.
+        strafe = move_vec[0]
+        forward = move_vec[1]
+        yaw = move_vec[2]
+
+        # CENTERING allows stronger strafe to avoid getting stuck; other modes stay conservative
+
         if self.mode == ControlMode.CENTERING:
             max_strafe_component = 0.07
         else:
@@ -443,11 +369,7 @@ class ContinuousController:
         elif self.mode == ControlMode.APPROACHING:
             steps = min(steps, 10)
 
-        # === SOLUCIÓN 2: Prevenir el Tiempo Congelado de Unity ===
-        steps = max(steps, 3)
-            
-        # === SOLUCIÓN 2: Prevenir el Tiempo Congelado de Unity ===
-        # Nunca devolver 0 pasos, de lo contrario la API del VLM se colapsará
+        # Never return 0 steps — Unity freezes and VLM gets flooded with requests
         steps = max(steps, 3)
         
         return steps, move_vec
@@ -464,18 +386,10 @@ class ContinuousController:
         }
 
 
-class SafetyEnvelopeV2:
+class SafetyEnvelope:
     """
-    Phase 5: Enhanced Virtual Safety Envelope with absolute override.
-    
-    This is the "survival instinct" layer that runs locally and can
-    override ANY command from the VLM if collision is imminent.
-    
-    Key improvements over V1:
-    1. Operates on continuous velocities, not discrete commands
-    2. Has absolute override authority
-    3. Uses proportional response (stronger correction = closer to wall)
-    4. Can STOP the drone completely if danger is extreme
+    Wall proximity safety layer. Analyzes edge density in the camera image
+    and overrides velocity commands when collision is imminent.
     """
     
     # Physical parameters
@@ -496,35 +410,20 @@ class SafetyEnvelopeV2:
         self.intervention_count = 0
         self.last_analysis = None
         
-    def apply_safety_envelope(self, image_cv2, 
+    def apply_safety_envelope(self, image_cv2,
                                velocity_cmd: VelocityCommand,
                                distance: str) -> Tuple[VelocityCommand, Optional[str], Dict]:
-        """
-        Apply safety envelope to velocity command.
-        
-        This is the ABSOLUTE AUTHORITY layer - it can completely override
-        any velocity command if collision is detected.
-        
-        Args:
-            image_cv2: Current camera image
-            velocity_cmd: Proposed velocity from controller
-            distance: Estimated distance to target
-            
-        Returns:
-            (safe_velocity, override_reason, analysis)
-        """
-        # Analyze image for proximity
+        """Returns (safe_velocity, override_reason, analysis)."""
         analysis = self.wall_detector.analyze_proximity(image_cv2)
         self.last_analysis = analysis
-        
+
         left_density = analysis["left_density"]
         right_density = analysis["right_density"]
         imbalance = analysis["imbalance"]
 
         if max(left_density, right_density) < 0.08:
             imbalance = 0.0
-        
-        # Create a copy of the velocity command
+
         safe_cmd = VelocityCommand(
             vx=velocity_cmd.vx,
             vy=velocity_cmd.vy,
@@ -544,86 +443,53 @@ class SafetyEnvelopeV2:
                 override_reason = f"EMERGENCY STOP: Both sides critical (L={left_density:.2f}, R={right_density:.2f})"
                 return safe_cmd, override_reason, analysis
         
-        # === RULE 2: Block dangerous lateral movement ===
-        # If wall on left AND trying to go left → BLOCK and reverse
         if left_density > self.DANGER_THRESHOLD and velocity_cmd.vy < -0.05:
-            # Wall on left, drone wants to go left → DANGER
             correction = 0.2 * (left_density / self.CRITICAL_THRESHOLD)
-            safe_cmd.vy = correction  # Force RIGHT instead
+            safe_cmd.vy = correction
             self.intervention_count += 1
             override_reason = f"BLOCKED LEFT: Wall detected (density={left_density:.2f}). Forcing RIGHT."
-        
-        # If wall on right AND trying to go right → BLOCK and reverse
+
         elif right_density > self.DANGER_THRESHOLD and velocity_cmd.vy > 0.05:
-            # Wall on right, drone wants to go right → DANGER
             correction = -0.2 * (right_density / self.CRITICAL_THRESHOLD)
-            safe_cmd.vy = correction  # Force LEFT instead
+            safe_cmd.vy = correction
             self.intervention_count += 1
             override_reason = f"BLOCKED RIGHT: Wall detected (density={right_density:.2f}). Forcing LEFT."
-        
-        # === RULE 2.5: FRONTAL OBSTACLE DETECTION ===
-        # If center density is high AND trying to go forward, STOP
+
         center_density = analysis.get("center_density", 0.0)
         if center_density > self.DANGER_THRESHOLD and velocity_cmd.vx > 0.05:
-            # Obstacle directly in front - STOP forward movement
             safe_cmd.vx = 0.0
-            # Maybe rotate slightly to scan for better path
-            if left_density < right_density:
-                safe_cmd.vyaw = -0.3  # Rotate LEFT (away from right obstacle)
-            else:
-                safe_cmd.vyaw = 0.3   # Rotate RIGHT (away from left obstacle)
+            safe_cmd.vyaw = -0.3 if left_density < right_density else 0.3
             self.intervention_count += 1
             override_reason = f"FRONTAL OBSTACLE: center_density={center_density:.2f}. Stopping forward, rotating to find path."
-        
-        # === REGLA 3: Corrección proporcional con CONTEXTO ===
+
         elif abs(imbalance) > 0.3 and distance in ["MUY_CERCA", "CERCA"]:
-            
-            # Throttling (Freno frontal) para dar tiempo a corregir
             if abs(imbalance) > 0.7:
                 safe_cmd.vx = velocity_cmd.vx * 0.2
                 override_reason = f"PELIGRO ({imbalance:.2f}). Frenando para corregir."
-                
-            # imbalance > 0 significa pared a la IZQUIERDA -> el lado seguro es la DERECHA (vy+)
+            # imbalance > 0: más bordes a la izquierda → pared izquierda → forzar derecha
             if imbalance > 0:
-                correction = 0.12 * abs(imbalance)
-                # Tomamos el valor máximo entre lo que quería el VLM y la seguridad
-                # Si el VLM ya iba a la derecha con vy=0.15, lo respetamos.
-                safe_cmd.vy = max(velocity_cmd.vy, correction)
-                
-            # imbalance < 0 significa pared a la DERECHA -> el lado seguro es la IZQUIERDA (vy-)
+                safe_cmd.vy = max(velocity_cmd.vy, 0.12 * abs(imbalance))
             else:
-                correction = -0.12 * abs(imbalance)
-                # Tomamos el valor mínimo (el más negativo/hacia la izquierda)
-                safe_cmd.vy = min(velocity_cmd.vy, correction)
+                safe_cmd.vy = min(velocity_cmd.vy, -0.12 * abs(imbalance))
 
-        # === RULE 4: Reduce forward speed if any danger ===
         max_danger = max(left_density, right_density)
         if max_danger > self.DANGER_THRESHOLD and velocity_cmd.vx > 0.1:
-            # Scale down forward speed proportionally to danger
-            danger_factor = 1.0 - (max_danger / self.CRITICAL_THRESHOLD)
-            danger_factor = max(0.2, danger_factor)  # Never go below 20%
+            danger_factor = max(0.2, 1.0 - (max_danger / self.CRITICAL_THRESHOLD))
             safe_cmd.vx = velocity_cmd.vx * danger_factor
             if not override_reason:
                 override_reason = f"SPEED REDUCED: Obstacle detected (danger={max_danger:.2f}). Factor={danger_factor:.2f}"
-        
+
         if override_reason:
             self.intervention_count += 1
-            
+
         return safe_cmd, override_reason, analysis
-    
+
     def get_status(self) -> Dict:
         return {
             "interventions": self.intervention_count,
             "last_analysis": self.last_analysis
         }
-    
+
     def reset(self):
         self.intervention_count = 0
         self.last_analysis = None
-
-
-def create_continuous_system():
-    """Factory function to create the continuous control system"""
-    controller = ContinuousController()
-    safety = SafetyEnvelopeV2()
-    return controller, safety

@@ -19,12 +19,9 @@ from mlagents_envs.side_channel.side_channel import (
     OutgoingMessage,
 )
 
-# Safety Guard: Detector de proximidad a paredes (sin VLM)
-from reasoning.wall_proximity_detector import WallProximityDetector, SafetyEnvelope
-# Adaptive Distance Scaling for SPF system (usado en modo scanning dentro del continuous controller)
+from reasoning.wall_proximity_detector import WallProximityDetector
 from reasoning.adaptive_scaling import AdaptiveScaler
-# Phase 4+5 Enhanced: Continuous proportional control with safety envelope v2
-from reasoning.continuous_controller import ContinuousController, SafetyEnvelopeV2, ControlMode, VelocityCommand
+from reasoning.continuous_controller import ContinuousController, SafetyEnvelope, ControlMode, VelocityCommand
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -40,7 +37,6 @@ class NumpyEncoder(json.JSONEncoder):
             return bool(obj)
         return super().default(obj)
 
-# --- Teclado (pynput) ---
 class KeyController:
     def __init__(self):
         self.pressed_keys = set()
@@ -62,7 +58,6 @@ class KeyController:
     def is_pressed(self, char):
         return char in self.pressed_keys
 
-# --- Unity Side Channels ---
 class IntSenderChannel(SideChannel):
     def __init__(self):
         # Must match the GUID used in Unity!
@@ -80,23 +75,18 @@ def read_obs(env, behavior_drone):
     decision_steps, _ = env.get_steps(behavior_drone)
     obs = decision_steps.obs
 
-    # Sensor 0: Siempre es la Cámara Frontal
     img = obs[0][0]
     real_img = cv2.resize(cv2.cvtColor(img, cv2.COLOR_RGB2BGR), (480, 360)) * 255.0
     real_img = np.clip(real_img, 0, 255).astype(np.uint8)
 
-    # Lógica adaptativa según el número de sensores recibidos
     if len(obs) == 3:
-        # CASO ACTUAL: Falta la cámara trasera
-        # Creamos una imagen negra vacía para que el resto del código no falle
+        # Sin cámara trasera: imagen negra de relleno, sensores desplazados un índice
         real_img_2 = np.zeros((720, 1280, 3), dtype=np.uint8)
-
-        # Los sensores se han movido un puesto hacia arriba
-        height = obs[1][0][0]       # Altura ahora es obs[1]
-        pos_data = obs[2][0]        # Posición ahora es obs[2]
+        height = obs[1][0][0]
+        pos_data = obs[2][0]
 
     else:
-        # CASO ORIGINAL (4 sensores): Frontal, Trasera, Altura, Posición
+        # 4 sensores: Frontal, Trasera, Altura, Posición
         img_2 = obs[1][0]
         real_img_2 = cv2.cvtColor(img_2, cv2.COLOR_RGB2BGR) * 255.0
         real_img_2 = np.clip(real_img_2, 0, 255).astype(np.uint8)
@@ -104,7 +94,6 @@ def read_obs(env, behavior_drone):
         height = obs[2][0][0]
         pos_data = obs[3][0]
 
-    # Extraer datos comunes del vector de posición
     pos = pos_data[:3]
     yaw = pos_data[3]
     collision_state = pos_data[4]
@@ -117,25 +106,7 @@ def read_obs(env, behavior_drone):
 
 def get_cmd_vel(img, query, topology, mission_phase, mission_description, target_description, 
                 current_room, prev_movement, mov_history, agent_memory="", addr = "http://localhost:5001"):
-    """
-    Send image and mission context to server, get movement command.
-    
-    Args:
-        img: Current camera image
-        query: User query/goal
-        topology: Room connectivity graph
-        mission_phase: Current mission phase (e.g., "BÚSQUEDA GLOBAL")
-        mission_description: Detailed mission description
-        target_description: Target object/location
-        current_room: Current room (ground truth from simulator)
-        prev_movement: Previous movement command
-        mov_history: History of recent movements
-        agent_memory: Episodic memory from previous step
-        addr: Server address
-        
-    Returns:
-        Dict with "reasoning", "movement", "room", "mission_progress", "memory_update"
-    """
+    """POST image + context to /cmd_vel, return VLM response dict."""
     url = addr + '/cmd_vel'
     _, img_encoded = cv2.imencode('.jpg', img)
     img_bytes = BytesIO(img_encoded.tobytes())
@@ -183,7 +154,6 @@ def move_drone_fast(cont, movement, env=None, action=None, behavior_drone=None):
     env.set_actions(behavior_drone, action)
     env.step()
 
-# --- Score sistem ---
 def calculate_room(pos):
     x, y, z = pos
 
@@ -210,7 +180,6 @@ def is_close_and_facing(x1, z1, x2, z2, yaw, dist=1.5, angle=25):
     close = False
     facing = False
 
-    # Distancia euclidiana
     dx = x2 - x1
     dz = z2 - z1
     distance = math.sqrt(dx**2 + dz**2)
@@ -263,11 +232,9 @@ def calculate_goal(goal_id, pos, yaw, room=None, pred_room=None):
     if goal_id not in goals:
         return False  # ID inválido
 
-    # NUEVO: Extraemos también la habitación objetivo de la tupla
-    _, (gx, gz), target_room = goals[goal_id]  
-    
-    # CRÍTICO: Si el dron no está físicamente en la misma habitación que el objeto, 
-    # es imposible que lo haya alcanzado (evita ganar a través de paredes)
+    _, (gx, gz), target_room = goals[goal_id]
+
+    # Evita ganar a través de paredes: el dron debe estar físicamente en la misma habitación
     if room != target_room:
         return False
 
@@ -294,7 +261,6 @@ def get_query(query_id):
     else:
         return ""
 
-# --- Main Simulation Function ---
 def run_simulation(args, topology, json_data=None):
 
     key_ctrl = KeyController()
@@ -351,11 +317,11 @@ def run_simulation(args, topology, json_data=None):
     command = ""
     reasoning = ""
     mission_progress = ""
-    agent_memory = ""  # Episodic memory: the drone's own notes from previous steps
+    agent_memory = ""
     total_steps = 0
     total_time = 0.0
     elapsed_time = 0.0
-    max_steps = args.max_steps  # Maximum steps to prevent infinite loop
+    max_steps = args.max_steps
     result = None
     crossing_lock_streak = 0
     max_crossing_lock_streak = 2
@@ -363,27 +329,18 @@ def run_simulation(args, topology, json_data=None):
     CROSSING_COMMIT_FRAMES = 4
     CROSSING_COMMIT_STEPS = 14
     
-    # Safety Guard: detector de proximidad sin VLM (rápido y fiable)
     wall_detector = WallProximityDetector(edge_threshold=50, imbalance_threshold=0.25)
-    safety_envelope = SafetyEnvelope()
-
     safety_override = None
-    use_safety_envelope = getattr(args, 'safety', True)
-
-    # Adaptive Distance Scaling (usado en modo scanning dentro del continuous controller)
     adaptive_scaler = AdaptiveScaler()
-
-    # Continuous proportional controller with safety envelope v2
     continuous_controller = ContinuousController()
-    safety_envelope_v2 = SafetyEnvelopeV2()
+    safety_envelope = SafetyEnvelope()
     use_continuous = getattr(args, 'continuous', False)
 
-    # Video writer
     if args.save_video:
-        frame_size = (480, 360)  # ajusta según tus imágenes
-        frame_size_2 = (1280, 720)  # ajusta según tus imágenes de la cámara trasera
+        frame_size = (480, 360)
+        frame_size_2 = (1280, 720)
         fps = 1
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # o 'XVID' para AVI
+        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
         video_writer = cv2.VideoWriter(args.output_video, fourcc, fps, frame_size)
         video_writer_2 = cv2.VideoWriter(args.output_video.replace('.mp4', '_back.mp4'), fourcc, fps, frame_size_2)
 
@@ -485,47 +442,10 @@ def run_simulation(args, topology, json_data=None):
                 result = "Success"
                 break
 
-            # === SAFETY ENVELOPE (Phase 4) ===
-            # Virtual safety layer that overrides VLM when collision risk detected
             original_command = command
             safety_override = None
-            
-            if use_safety_envelope:
-                # Check if current phase involves crossing doors
-                current_phase = mission_manager.current_phase
-                is_crossing = current_phase and "TRAVES" in str(current_phase).upper()
-                is_approaching = current_phase and "APROXIM" in str(current_phase).upper()
-                
-                # Also check mission_progress for crossing indicators
-                crossing_progress = any(x in mission_progress.lower() for x in 
-                    ["crossing", "cruzando", "atraves", "travesía", "entering", "entrando"])
-                
-                if is_crossing or is_approaching or crossing_progress:
-                    # Activate safety envelope during door crossing/approaching
-                    safe_command, override_reason, analysis = safety_envelope.check_crossing_safety(
-                        image_cv2=real_img,
-                        target_point=target_point,
-                        distance=distance,
-                        intended_command=command
-                    )
-                    
-                    if override_reason:
-                        # Safety envelope intervened
-                        # BLOQUEADO: Ya no dejamos que la Fase 4 cambie el comando discreto
-                        # command = safe_command 
-                        safety_override = override_reason
 
-                        # Send feedback to VLM via memory update (suppressed during TRAVESIA to avoid confusing door frames with walls)
-                        _phase = mission_manager.current_phase if 'mission_manager' in dir() else None
-                        if not (_phase and "TRAVES" in str(_phase).upper()):
-                            agent_memory += f" [SAFETY ALERT: {override_reason}]"
-                    elif analysis and "imbalance" in analysis:
-                        # Log safety status even when not intervening
-                        print(f"[SAFETY] ✓ Clear (imbalance={analysis['imbalance']:.2f})")
-            
-            # === END SAFETY GUARDS ===
-
-            # === CONTINUOUS CONTROLLER (Phase 4+5 Enhanced) ===
+            # === CONTINUOUS CONTROLLER ===
             # Proportional velocity control with integrated safety envelope
             # HYBRID MODE: Use discrete commands for scanning, continuous for approach/crossing
             if use_continuous and command != "E":
@@ -618,7 +538,7 @@ def run_simulation(args, topology, json_data=None):
                         velocity_cmd.vy = lateral_correction
                         velocity_cmd.vyaw = 0.0
 
-                        # NO aplicamos el safety_envelope_v2
+                        # NO aplicamos el safety_envelope
                         safety_analysis = None
                     elif centering_travesia_skip:
                         # CENTERING during TRAVESÍA: Safety-V2 confuses door frame for wall → skip
@@ -627,7 +547,7 @@ def run_simulation(args, topology, json_data=None):
                     else:
                         # Apply safety envelope v2 (ABSOLUTE AUTHORITY for other modes)
                         # Para TODO lo demás (Scanning, Approaching, Centering), la seguridad ACTÚA
-                        safe_velocity, safety_reason, safety_analysis = safety_envelope_v2.apply_safety_envelope(
+                        safe_velocity, safety_reason, safety_analysis = safety_envelope.apply_safety_envelope(
                             image_cv2=real_img,
                             velocity_cmd=velocity_cmd,
                             distance=distance
@@ -672,7 +592,7 @@ def run_simulation(args, topology, json_data=None):
 
         if args.save_logs:
             continuous_status = continuous_controller.get_status()
-            safety_v2_status = safety_envelope_v2.get_status()
+            safety_v2_status = safety_envelope.get_status()
 
             log_data = {
                 "step": str(total_steps),
@@ -796,8 +716,6 @@ if __name__ == "__main__":
     parser.add_argument('--query', '-q', type=int, default=-1, help='Query id for the drone (0-9)')
     parser.add_argument('--save_video', '-v', action='store_true', help='Enable saving video of the simulation')
     parser.add_argument('--max_steps', '-s', type=int, default=10, help='Maximum steps to prevent infinite loop')
-    parser.add_argument('--safety', action='store_true', default=True, help='Enable safety envelope for door crossing (default: on)')
-    parser.add_argument('--no-safety', dest='safety', action='store_false', help='Disable safety envelope')
     parser.add_argument('--continuous', action='store_true', default=False, help='Enable continuous proportional control')
 
     args = parser.parse_args()
